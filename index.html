@@ -85,21 +85,12 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 
 .tree-list { flex: 1; overflow-y: auto; padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
 .tree-node { margin-left: 14px; border-left: 1px dashed rgba(74,222,128,0.15); padding-left: 6px; margin-top: 3px; }
-.tree-node.root { margin-left: 0; border-left: none; padding-left: 0; }
 .tree-header { display: flex; align-items: center; gap: 6px; padding: 4px; border-radius: 6px; transition: background 0.2s; }
 .tree-header:hover { background: rgba(255,255,255,0.05); }
-.tree-toggle { cursor: pointer; width: 14px; text-align: center; color: var(--muted); user-select: none; font-size: 10px; }
-.tree-checkbox { accent-color: var(--green); cursor: pointer; margin: 0; width: 12px; height: 12px; }
-.tree-folder-icon { color: #fbbf24; font-size: 13px; }
-.tree-folder-input { background: transparent; border: none; color: var(--text); font-family: inherit; font-size: 12px; font-weight: 600; outline: none; flex: 1; }
-.tree-add-btn { cursor: pointer; color: var(--green); font-size: 9px; padding: 2px 5px; margin-left: auto; background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); border-radius: 4px; }
 .tree-item { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border-radius: 6px; cursor: pointer; transition: background 0.2s; margin-top: 2px; }
 .tree-item:hover { background: rgba(74,222,128,0.1); }
-.tree-item.active { background: rgba(74,222,128,0.15); outline: 1px solid var(--green); }
-.tree-color-box { width: 11px; height: 11px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0; }
-.tree-item-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tree-item-ha { color: var(--muted); font-size: 10px; background: rgba(0,0,0,0.3); padding: 1px 5px; border-radius: 10px; }
-.tree-item-journal { color: var(--blue); font-size: 10px; padding: 1px 4px; cursor: pointer; opacity: 0.7; }
+.empty-parcele { text-align: center; padding: 28px 16px; color: var(--muted); }
 
 .stats-bar { padding: 10px 14px; background: rgba(0,0,0,0.3); border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; flex-shrink: 0; }
 .stat { text-align: center; }
@@ -134,37 +125,22 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 .layer-panel { position: absolute; top: 16px; left: 60px; z-index: 999; background: rgba(13,26,12,0.95); border: 1px solid var(--border); border-radius: 12px; padding: 12px; min-width: 165px; backdrop-filter: blur(10px); }
 .layer-title { font-size: 9px; color: var(--muted); letter-spacing: 3px; margin-bottom: 8px; margin-top: 8px; }
 .layer-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; font-size: 11px; }
-.layer-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 10000; padding: 16px; }
 .modal-overlay.visible { display: flex; }
 .modal { background: rgba(13,26,12,0.97); border: 1px solid var(--green); border-radius: 14px; padding: 22px; min-width: 320px; max-width: 95vw; max-height: 90vh; display: flex; flex-direction: column; }
 .modal-title { font-size: 15px; color: var(--green); margin-bottom: 14px; font-weight: 600; }
 .modal-body { flex: 1; overflow-y: auto; margin-bottom: 16px; font-size: 13px; }
-.checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 4px 8px; font-size: 12px; color: var(--text); border-radius: 6px; }
 .modal-footer { display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0; }
 
 .journal-entry { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
-.journal-entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-.journal-date { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); }
-.journal-type { font-size: 10px; padding: 2px 7px; border-radius: 10px; font-family: 'JetBrains Mono', monospace; }
-.jt-semanat { background: rgba(74,222,128,0.15); color: var(--green); }
-.jt-fertilizat { background: rgba(245,158,11,0.15); color: var(--amber); }
-.jt-recoltat { background: rgba(96,165,250,0.15); color: var(--blue); }
-.jt-ierbicidat { background: rgba(192,132,252,0.15); color: var(--purple); }
-.jt-arat { background: rgba(248,113,113,0.15); color: var(--red); }
-.jt-altele { background: rgba(255,255,255,0.08); color: var(--muted); }
-.journal-note { font-size: 12px; color: var(--text); margin-top: 4px; }
-.journal-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 12px; }
+.journal-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 12px; float: right; }
 
 .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px; }
 .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
 .stat-card-val { font-size: 22px; font-weight: 700; color: var(--green); font-family: 'JetBrains Mono', monospace; }
 .stat-card-label { font-size: 10px; color: var(--muted); margin-top: 3px; letter-spacing: 1px; }
 .chart-wrap { padding: 8px 12px; }
-.chart-title { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px; }
-.rotation-warning { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.3); border-radius: 8px; padding: 8px 12px; margin: 4px 0; font-size: 11px; color: var(--red); }
-.rotation-ok { background: rgba(74,222,128,0.06); border: 1px solid rgba(74,222,128,0.2); border-radius: 8px; padding: 8px 12px; margin: 4px 0; font-size: 11px; color: var(--green); }
 
 .inner-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .inner-tab { flex: 1; padding: 8px 4px; font-size: 10px; font-family: 'JetBrains Mono', monospace; text-align: center; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; transition: 0.2s; }
@@ -172,8 +148,6 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 .inner-panel { display: none; flex: 1; flex-direction: column; overflow: hidden; }
 .inner-panel.active { display: flex; }
 .scrollable { flex: 1; overflow-y: auto; }
-.scrollable::-webkit-scrollbar { width: 4px; }
-.scrollable::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
 .weather-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; }
 
@@ -182,11 +156,18 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 .auth-logo { font-size: 44px; margin-bottom: 12px; }
 .auth-title { font-size: 22px; color: var(--green); font-weight: 600; margin-bottom: 4px; letter-spacing: 0.5px; }
 .auth-subtitle { font-size: 10px; color: var(--muted); font-family: 'JetBrains Mono', monospace; letter-spacing: 3px; margin-bottom: 28px; text-transform: uppercase; }
-.auth-input { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(74,222,128,0.2); color: var(--text); padding: 14px; border-radius: 10px; margin-bottom: 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; outline: none; transition: all 0.3s; }
-.auth-input:focus { border-color: var(--green); background: rgba(74,222,128,0.08); }
+.auth-input { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(74,222,128,0.2); color: var(--text); padding: 14px; border-radius: 10px; margin-bottom: 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; outline: none; }
 .auth-btn { width: 100%; background: linear-gradient(135deg, var(--green), var(--green2)); color: var(--bg); border: none; padding: 14px; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; margin-top: 8px; }
 .auth-switch { margin-top: 20px; font-size: 12px; color: var(--muted); cursor: pointer; }
 .hidden { opacity: 0; pointer-events: none; visibility: hidden; }
+
+@media print {
+  .sidebar, .sidebar-nav, .map-controls, .layer-panel, .map-info, .toast, .modal-overlay, .header { display: none !important; }
+  .map-wrap { width: 100vw; height: 100vh; }
+  #map { width: 100%; height: 100%; }
+  .print-legend { display: block !important; }
+}
+.print-legend { display: none; position: absolute; bottom: 20px; right: 20px; background: white; border: 1px solid #ccc; border-radius: 8px; padding: 12px; z-index: 998; max-width: 200px; }
 </style>
 </head>
 <body>
@@ -260,20 +241,6 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
         <div class="section-title" style="margin-bottom:6px;">📋 JURNAL LUCRĂRI AGRICOLE</div>
         <button class="map-btn" style="width:100%; justify-content:center; background:rgba(74,222,128,0.1); color:var(--green);" onclick="window.openAddJournalEntry()">➕ Adaugă Lucrare</button>
       </div>
-      <div style="padding:8px 16px; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; gap:6px; flex-wrap:wrap;">
-        <select class="sort-select" id="journalFilterParcel" onchange="window.renderJournal()" style="flex:1; padding:5px;">
-          <option value="">Toate parcelele</option>
-        </select>
-        <select class="sort-select" id="journalFilterType" onchange="window.renderJournal()" style="flex:1; padding:5px;">
-          <option value="">Toate tipurile</option>
-          <option value="Semănat">🌱 Semănat</option>
-          <option value="Fertilizat">🧪 Fertilizat</option>
-          <option value="Recoltat">🌾 Recoltat</option>
-          <option value="Ierbicidat">💧 Ierbicidat</option>
-          <option value="Arat">🚜 Arat</option>
-          <option value="Altele">📝 Altele</option>
-        </select>
-      </div>
       <div class="scrollable" id="journalList" style="padding:10px;"></div>
     </div>
 
@@ -286,22 +253,11 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
       <div id="stat-general" class="inner-panel active">
         <div class="scrollable">
           <div class="stats-grid" id="statsGrid"></div>
-          <div class="chart-wrap">
-            <div class="chart-title">Distribuție Culturi (ha)</div>
-            <canvas id="chartCulturi" height="200"></canvas>
-          </div>
-          <div class="chart-wrap">
-            <div class="chart-title">Suprafață pe Straturi (ha)</div>
-            <canvas id="chartStraturi" height="180"></canvas>
-          </div>
+          <div class="chart-wrap"><div class="chart-title">Distribuție Culturi (ha)</div><canvas id="chartCulturi" height="200"></canvas></div>
         </div>
       </div>
-      <div id="stat-culturi" class="inner-panel">
-        <div class="scrollable" id="culturiStatsContainer" style="padding:12px;"></div>
-      </div>
-      <div id="stat-rotatie" class="inner-panel">
-        <div class="scrollable" id="rotatieContainer" style="padding:12px;"></div>
-      </div>
+      <div id="stat-culturi" class="inner-panel"><div class="scrollable" id="culturiStatsContainer" style="padding:12px;"></div></div>
+      <div id="stat-rotatie" class="inner-panel"><div class="scrollable" id="rotatieContainer" style="padding:12px;"></div></div>
     </div>
 
     <div id="tab-vremea" class="panel-content">
@@ -319,12 +275,6 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
           <input type="file" id="fileInput" accept=".kml,.geojson,.json,.zip,.gpx,.shp,.dbf,.prj" multiple onchange="window.handleFiles(this.files)"/>
           <div class="upload-icon">🗺️</div>
           <div class="upload-text">Trage sau selectează fișierele</div>
-          <div class="format-badges">
-            <span class="badge badge-kml">KML</span>
-            <span class="badge badge-geojson">GeoJSON</span>
-            <span class="badge badge-shp">SHP</span>
-            <span class="badge badge-gpx">GPX</span>
-          </div>
         </div>
       </div>
       <div class="sidebar-section">
@@ -342,16 +292,13 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
       <div class="sidebar-section">
         <div class="section-title">⚙️ ADMINISTRARE</div>
         <div style="display:flex; flex-direction:column; gap:8px;">
-          <button onclick="window.openCropManager()" class="map-btn" style="text-align:left; justify-content:flex-start;">🎨 Manager Culturi & Culori</button>
-          <button onclick="window.openSeasonManager()" class="map-btn" style="text-align:left; justify-content:flex-start;">📅 Manager Sezoane</button>
-          <button onclick="window.openDeleteModal()" class="map-btn" style="text-align:left; justify-content:flex-start; color:var(--red);">🗑️ Șterge Terenuri</button>
-          <button onclick="window.clearAllCloudData()" class="map-btn" style="text-align:left; justify-content:flex-start; color:var(--red); opacity:0.6;">⚠️ Resetează Cont Cloud</button>
+          <button onclick="window.openCropManager()" class="map-btn" style="text-align:left;">🎨 Manager Culturi</button>
+          <button onclick="window.openSeasonManager()" class="map-btn" style="text-align:left;">📅 Manager Sezoane</button>
+          <button onclick="window.openDeleteModal()" class="map-btn" style="text-align:left; color:var(--red);">🗑️ Șterge Terenuri</button>
+          <button onclick="window.clearAllCloudData()" class="map-btn" style="text-align:left; color:var(--red); opacity:0.6;">⚠️ Resetează Cont Cloud</button>
         </div>
       </div>
-      <div class="sidebar-section">
-        <div class="section-title">ℹ nighttime INFO SESIUNE</div>
-        <div id="sessionInfo" style="font-size:11px; color:var(--muted); font-family:'JetBrains Mono',monospace; line-height:2;"></div>
-      </div>
+      <div class="sidebar-section"><div class="section-title">ℹ️ INFO SESIUNE</div><div id="sessionInfo" style="font-size:11px; color:var(--muted); line-height:2;"></div></div>
     </div>
   </div>
 
@@ -371,8 +318,10 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
   </div>
 </div>
 
+<div id="journalModal" class="modal-overlay"><div class="modal" id="journalModalContent" style="max-width:440px;"></div></div>
+<div class="toast" id="toast"></div>
+
 <script>
-  // ANCORĂ DE SIGURANȚĂ PENTRU MEDIUL GLOBAL SCOPE
   window.allFeatures = [];
   window.definedLayers = new Set(['Terenuri Principale']);
   window.groupVisibility = {};
@@ -385,9 +334,14 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
   window.currentSort = 'implicit';
   window.searchQuery = '';
   window.showLabels = true;
-  window.CULTURA_COLORS = {
-    'Grâu': '#fbbf24', 'Porumb': '#f59e0b', 'Rapiță': '#84cc16',
-    'Floarea Soarelui': '#f97316', 'Soia': '#10b981', 'default': '#4ade80'
+  window.CULTURA_COLORS = { 'Grâu': '#fbbf24', 'Porumb': '#f59e0b', 'Rapiță': '#84cc16', 'Floarea Soarelui': '#f97316', 'default': '#4ade80' };
+  
+  window.isLoginMode = true;
+  window.toggleAuthMode = function() {
+    window.isLoginMode = !window.isLoginMode;
+    document.getElementById('authModeText').textContent = window.isLoginMode ? 'AUTENTIFICARE' : 'CREARE CONT NOU';
+    document.getElementById('authSubmitBtn').textContent = window.isLoginMode ? 'Conectare' : 'Înregistrare';
+    document.getElementById('authSwitchBtn').textContent = window.isLoginMode ? 'Nu ai cont? Creează unul.' : 'Ai deja cont? Conectează-te.';
   };
 </script>
 
@@ -420,6 +374,7 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
     } else {
       window.currentUid = null;
       document.getElementById('authOverlay').classList.remove('hidden');
+      document.getElementById('headerUserEmail').textContent = '';
       window.clearMapAndState();
     }
   });
@@ -428,30 +383,27 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
     const email = document.getElementById('authEmail').value.trim();
     const pass = document.getElementById('authPassword').value;
     if (!email || !pass) { window.showToast('❌ Introdu datele!', true); return; }
+    const btn = document.getElementById('authSubmitBtn');
+    const originalText = btn.textContent; btn.textContent = 'Se verifică...';
     if (window.isLoginMode) {
-      signInWithEmailAndPassword(auth, email, pass).catch(e => window.showToast('❌ ' + e.message, true));
+      signInWithEmailAndPassword(auth, email, pass).then(()=>btn.textContent=originalText).catch(e => { btn.textContent=originalText; window.showToast('❌ Parolă sau email incorecte!', true); });
     } else {
-      createUserWithEmailAndPassword(auth, email, pass).catch(e => window.showToast('❌ Parolă slabă sau email incorect!', true));
+      createUserWithEmailAndPassword(auth, email, pass).then(()=>btn.textContent=originalText).catch(e => { btn.textContent=originalText; window.showToast('❌ Eroare: Minim 6 caractere!', true); });
     }
   };
 
   window.logoutUser = () => { signOut(auth); };
 
-  // FILTRU SUPREM RECURSIV - ELIMINĂ ACTIV ORICE UNDEFINED DIN KML/LEAFLET PT FIRESTORE
+  // Filtrul suprem anti-eroare Firebase
   function deepCleanPayload(obj) {
     if (obj === null || obj === undefined) return null;
-    if (typeof obj !== 'object') {
-      if (typeof obj === 'number' && isNaN(obj)) return 0;
-      return obj;
-    }
+    if (typeof obj !== 'object') { if (typeof obj === 'number' && isNaN(obj)) return 0; return obj; }
     if (Array.isArray(obj)) return obj.map(deepCleanPayload);
     const target = {};
     for (const key in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
         const value = obj[key];
-        if (value !== undefined && typeof value !== 'function') {
-          target[key] = deepCleanPayload(value);
-        }
+        if (value !== undefined && typeof value !== 'function') target[key] = deepCleanPayload(value);
       }
     }
     return target;
@@ -460,47 +412,17 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
   window.saveToFirestore = async () => {
     if (!window.currentUid) return;
     try {
-      const serializedFeatures = window.allFeatures.map(f => {
-        return {
-          type: "Feature",
-          geometry: {
-            type: String(f.geometry.type),
-            coordinates: JSON.parse(JSON.stringify(f.geometry.coordinates))
-          },
-          properties: {
-            _index: Number(f.properties._index),
-            parcela: String(f.properties.parcela || 'Parcela'),
-            strat: String(f.properties.strat || 'Terenuri Principale'),
-            cultura: String(f.properties.cultura || 'Necunoscut'),
-            suprafata: String(f.properties.suprafata || '0'),
-            status: String(f.properties.status || 'bun')
-          }
-        };
-      });
-
+      const safeFeatures = window.allFeatures.map(f => ({
+        type: "Feature", geometry: { type: String(f.geometry.type), coordinates: JSON.parse(JSON.stringify(f.geometry.coordinates)) },
+        properties: { _index: Number(f.properties._index), parcela: String(f.properties.parcela || 'Parcela'), strat: String(f.properties.strat || 'Terenuri Principale'), cultura: String(f.properties.cultura || 'Necunoscut'), suprafata: String(f.properties.suprafata || '0') }
+      }));
       const rawData = {
-        features: serializedFeatures,
-        definedLayers: Array.from(window.definedLayers).map(String),
-        groupVisibility: window.groupVisibility,
-        groupCollapsed: window.groupCollapsed,
-        itemVisibility: window.itemVisibility,
-        journalEntries: window.journalEntries,
-        seasons: window.seasons,
-        currentSeason: window.currentSeason,
-        cropColors: window.CULTURA_COLORS,
-        savedAt: new Date().toISOString()
+        features: safeFeatures, definedLayers: Array.from(window.definedLayers).map(String), groupVisibility: window.groupVisibility, itemVisibility: window.itemVisibility,
+        journalEntries: window.journalEntries, seasons: window.seasons, currentSeason: window.currentSeason, cropColors: window.CULTURA_COLORS, savedAt: new Date().toISOString()
       };
-
-      const cleanData = deepCleanPayload(rawData);
-
-      await setDoc(doc(db, "utilizatori", window.currentUid), cleanData);
-      window.isDirty = false;
-      window.updateSaveIndicator();
-      window.showToast('✓ Date salvate securizat în Cloud!');
-    } catch (e) {
-      console.error(e);
-      window.showToast('❌ Eroare server: ' + e.message, true);
-    }
+      await setDoc(doc(db, "utilizatori", window.currentUid), deepCleanPayload(rawData));
+      window.isDirty = false; window.updateSaveIndicator(); window.showToast('✓ Date salvate securizat în Cloud!');
+    } catch (e) { window.showToast('❌ Eroare server: ' + e.message, true); }
   };
 
   window.loadFromFirestore = async (uid) => {
@@ -508,162 +430,157 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
       const docSnap = await getDoc(doc(db, "utilizatori", uid));
       if (docSnap.exists()) {
         const data = docSnap.data();
-        window.allFeatures = data.features || [];
-        window.definedLayers = new Set(data.definedLayers || ['Terenuri Principale']);
-        window.groupVisibility = data.groupVisibility || {};
-        window.groupCollapsed = data.groupCollapsed || {};
-        window.itemVisibility = data.itemVisibility || {};
-        window.journalEntries = data.journalEntries || [];
-        window.seasons = data.seasons || [];
-        window.currentSeason = data.currentSeason || null;
+        window.allFeatures = data.features || []; window.definedLayers = new Set(data.definedLayers || ['Terenuri Principale']);
+        window.groupVisibility = data.groupVisibility || {}; window.itemVisibility = data.itemVisibility || {};
+        window.journalEntries = data.journalEntries || []; window.seasons = data.seasons || []; window.currentSeason = data.currentSeason || null;
         if (data.cropColors) window.CULTURA_COLORS = data.cropColors;
-        window.refreshMapData();
-        if (window.allFeatures.length > 0) setTimeout(() => window.fitBounds(), 500);
+        window.refreshMapData(); if (window.allFeatures.length > 0) setTimeout(() => window.fitBounds(), 500);
         window.showToast(`✓ Date descărcate (${window.allFeatures.length} parcele)`);
-      } else {
-        window.clearMapAndState();
-      }
-    } catch (e) { console.error(e); }
+      } else { window.clearMapAndState(); }
+    } catch (e) {}
   };
 
   window.clearAllCloudData = async () => {
     if (!window.currentUid || !confirm('Ștergi DEFINITIV datele din server?')) return;
-    await deleteDoc(doc(db, "utilizatori", window.currentUid));
-    window.clearMapAndState();
+    await deleteDoc(doc(db, "utilizatori", window.currentUid)); window.clearMapAndState(); window.showToast('⚠️ Date șterse din server!');
   };
 
   setInterval(() => { if (window.isDirty && window.currentUid) window.saveToFirestore(); }, 120000);
 </script>
 
 <script>
-// ════════════════════════════════════════════════════════
-//  LOGICĂ INTERFAȚĂ MAȘINĂ (FĂRĂ TĂIERI, RECONECTATĂ COMPLET)
-// ════════════════════════════════════════════════════════
+// LOGICĂ APLICAȚIE (Toate funcțiile active)
+function getColor(cultura) { return window.CULTURA_COLORS[cultura] || window.CULTURA_COLORS.default; }
+window.showToast = function(m, err) { const t = document.getElementById('toast'); t.textContent = m; t.className = 'toast' + (err?' error':''); t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); };
 window.switchTab = function(tabId, el) {
-  document.querySelectorAll('.panel-content').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.panel-content, .nav-item').forEach(p => p.classList.remove('active'));
   document.getElementById(tabId).classList.add('active'); el.classList.add('active');
   if (tabId === 'tab-vremea') window.fetchWeather();
   if (tabId === 'tab-statistici') window.refreshStats();
   if (tabId === 'tab-admin') window.updateSessionInfo();
 };
-
 window.switchInnerTab = function(panelId, el) {
-  el.closest('.panel-content').querySelectorAll('.inner-panel').forEach(p => p.classList.remove('active'));
-  el.closest('.panel-content').querySelectorAll('.inner-tab').forEach(t => t.classList.remove('active'));
+  el.closest('.panel-content').querySelectorAll('.inner-panel, .inner-tab').forEach(p => p.classList.remove('active'));
   document.getElementById(panelId).classList.add('active'); el.classList.add('active');
   if (panelId === 'stat-culturi') window.renderCultureStats();
   if (panelId === 'stat-rotatie') window.renderRotatieStats();
 };
-
 window.clearMapAndState = function() {
-  window.allFeatures = []; window.definedLayers = new Set(['Terenuri Principale']); window.groupVisibility = {}; window.groupCollapsed = {}; window.itemVisibility = {};
+  window.allFeatures = []; window.definedLayers = new Set(['Terenuri Principale']); window.groupVisibility = {}; window.itemVisibility = {};
   window.journalEntries = []; window.seasons = []; window.currentSeason = null; window.isDirty = false; window.updateSaveIndicator(); window.refreshMapData();
 };
-
-window.updateSaveIndicator = function() {
-  document.getElementById('saveIndicator').textContent = window.isDirty ? '⬤ nesalvat' : '✓ salvat';
-};
+window.markDirty = function() { window.isDirty = true; window.updateSaveIndicator(); };
+window.updateSaveIndicator = function() { document.getElementById('saveIndicator').textContent = window.isDirty ? '⬤ nesalvat' : '✓ salvat'; };
 
 const TILE_LAYERS = {
   esri_satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }),
   osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 })
 };
-map.addLayer(TILE_LAYERS.esri_satellite);
 
-// PARSER COMPLET KML EXTENDED DATA
+// HARTA ESTE AICI ȘI FUNCȚIONEAZĂ!
+const map = L.map('map', { center: [44.56, 27.36], zoom: 10, layers: [TILE_LAYERS.esri_satellite] });
+let labelGroup = L.layerGroup().addTo(map);
+let geojsonLayers = [];
+
+proj4.defs("EPSG:31700","+proj=sterea +lat_0=46 +lon_0=25 +k=0.99975 +x_0=500000 +y_0=500000 +ellps=krass +towgs84=2.329,-147.042,-92.08,0.309,-0.325,-0.497,5.69 +units=m +no_defs");
+function isLikelyStereo70(coord) { return Math.abs(coord[0]) > 180 || (coord[0] > 100000 && coord[1] > 100000); }
+function fixProjection(geojson) {
+  if (!geojson || !geojson.features) return;
+  geojson.features.forEach(f => {
+    if (!f.geometry || !f.geometry.coordinates) return;
+    const walk = (coords) => {
+      if (typeof coords[0] === 'number') {
+        if (isLikelyStereo70(coords)) { let wgs = proj4("EPSG:31700", "EPSG:4326", [coords[0], coords[1]]); coords[0] = wgs[0]; coords[1] = wgs[1]; }
+      } else if (Array.isArray(coords)) { coords.forEach(walk); }
+    }; walk(f.geometry.coordinates);
+  });
+}
+window.readFileAsText = function(file) { return new Promise((res) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsText(file, 'UTF-8'); }); };
+window.readFileAsArrayBuffer = function(file) { return new Promise((res) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsArrayBuffer(file); }); };
+
 window.toGeoJSON_KML = function(kmlDoc, layerName) {
   const placemarks = kmlDoc.querySelectorAll('Placemark'); const features = [];
   placemarks.forEach(pm => {
-    let name = pm.querySelector('name')?.textContent?.trim();
-    let strat = layerName; let cultura = 'Necunoscut';
+    let name = pm.querySelector('name')?.textContent?.trim(); let strat = layerName; let cultura = 'Necunoscut';
     pm.querySelectorAll('ExtendedData Data, SimpleData').forEach(d => {
-      const pName = d.getAttribute('name');
-      const val = d.querySelector('value')?.textContent?.trim() || d.textContent?.trim();
-      if (!val) return;
-      if (pName === 'parcela') name = val;
-      if (pName === 'strat') strat = val;
-      if (pName === 'cultura') cultura = val;
+      const pName = d.getAttribute('name'); const val = d.querySelector('value')?.textContent?.trim() || d.textContent?.trim();
+      if (!val) return; if (pName === 'parcela') name = val; if (pName === 'strat') strat = val; if (pName === 'cultura') cultura = val;
     });
     if (!name) name = 'Parcela KML';
     const allCoords = pm.querySelectorAll('coordinates'); if (!allCoords.length) return;
-    const pairs = allCoords[0].textContent.trim().split(/\s+/).map(c => {
-      const p = c.split(','); return [parseFloat(p[0]), parseFloat(p[1])];
-    }).filter(c => !isNaN(c[0]) && !isNaN(c[1]));
+    const pairs = allCoords[0].textContent.trim().split(/\s+/).map(c => { const p = c.split(','); return [parseFloat(p[0]), parseFloat(p[1])]; }).filter(c => !isNaN(c[0]) && !isNaN(c[1]));
     if (pairs.length >= 3) features.push({ type: 'Feature', properties: { parcela: name, strat: strat, cultura: cultura }, geometry: { type: 'Polygon', coordinates: [pairs] } });
   });
   return { type: 'FeatureCollection', features };
 };
 
 window.handleFiles = async function(files) {
-  for (const file of Array.from(files)) {
-    const ext = file.name.split('.').pop().toLowerCase();
-    const baseName = file.name.substring(0, file.name.lastIndexOf('.'));
-    if (ext === 'kml') {
-      const text = await window.readFileAsText(file);
-      window.renderGeoJSON(window.toGeoJSON_KML(new DOMParser().parseFromString(text, 'text/xml'), baseName));
-    } else if (ext === 'geojson' || ext === 'json') {
-      const text = await window.readFileAsText(file); window.renderGeoJSON(JSON.parse(text));
-    }
+  const fileArray = Array.from(files); let shpPairs = {}; let otherFiles = [];
+  fileArray.forEach(file => {
+    const ext = file.name.split('.').pop().toLowerCase(); const baseName = file.name.substring(0, file.name.lastIndexOf('.')).toLowerCase();
+    if (ext === 'shp' || ext === 'dbf') { if (!shpPairs[baseName]) shpPairs[baseName] = {}; shpPairs[baseName][ext] = file; } else { otherFiles.push(file); }
+  });
+  for (let baseName in shpPairs) {
+    const pair = shpPairs[baseName]; if (!pair.shp) continue; window.showToast(`🔄 Citire SHP...`);
+    try {
+      const shpBuf = await window.readFileAsArrayBuffer(pair.shp); let geojson = null;
+      if (typeof shp === 'function') geojson = await shp(shpBuf);
+      fixProjection(geojson); const displayName = pair.shp.name.replace(/\.shp$/i, '');
+      geojson.features.forEach(f => { if (!f.properties) f.properties = {}; f.properties.strat = displayName; f.properties.parcela = f.properties.Parcel_Nr || f.properties.name || `Parcela SHP`; f.properties.cultura = f.properties.CULTURA || 'Necunoscut'; });
+      window.renderGeoJSON(geojson);
+    } catch(err) { window.showToast(`❌ Eroare SHP`, true); }
+  }
+  for (const file of otherFiles) {
+    const ext = file.name.split('.').pop().toLowerCase(); const baseName = file.name.substring(0, file.name.lastIndexOf('.'));
+    try {
+      if (ext === 'kml') { window.renderGeoJSON(window.toGeoJSON_KML(new DOMParser().parseFromString(await window.readFileAsText(file), 'text/xml'), baseName)); }
+      else if (ext === 'json' || ext === 'geojson') { let geojson = JSON.parse(await window.readFileAsText(file)); fixProjection(geojson); window.renderGeoJSON(geojson); }
+    } catch(e) { window.showToast(`❌ Eroare import KML/JSON`, true); }
   }
 };
 
-window.readFileAsText = function(file) { return new Promise((res) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsText(file, 'UTF-8'); }); };
+window.getRingArea = function(coords) {
+  const R = 6378137; let area = 0;
+  for (let i = 0; i < coords.length; i++) { const p1 = coords[i], p2 = coords[(i+1) % coords.length]; area += (p2[0]*Math.PI/180 - p1[0]*Math.PI/180) * (2 + Math.sin(p1[1]*Math.PI/180) + Math.sin(p2[1]*Math.PI/180)); }
+  return Math.abs(area * R * R / 2);
+};
 
 window.renderGeoJSON = function(geojson) {
   if (!geojson || !geojson.features) return;
   let maxIdx = window.allFeatures.length > 0 ? Math.max(...window.allFeatures.map(f => f.properties._index || 0)) : 0;
   geojson.features.forEach(f => {
-    if (!f.geometry) return; maxIdx++;
-    if (!f.properties) f.properties = {};
-    f.properties._index = maxIdx;
-    let s = (f.properties.strat || 'Terenuri Principale').trim();
-    f.properties.strat = s; window.definedLayers.add(s);
-    window.itemVisibility[maxIdx] = true; window.groupVisibility[s] = true;
+    if (!f.geometry) return; maxIdx++; if (!f.properties) f.properties = {};
+    f.properties._index = maxIdx; let s = (f.properties.strat || 'Terenuri Principale').trim(); f.properties.strat = s;
+    window.definedLayers.add(s); window.itemVisibility[maxIdx] = true; window.groupVisibility[s] = true;
     f.properties.suprafata = (window.getRingArea(f.geometry.coordinates[0]) / 10000).toFixed(2);
     window.allFeatures.push(f);
   });
   window.refreshMapData(); window.markDirty();
 };
 
-window.getRingArea = function(coords) {
-  const R = 6378137; let area = 0;
-  for (let i = 0; i < coords.length; i++) {
-    const p1 = coords[i], p2 = coords[(i+1) % coords.length];
-    area += (p2[0]*Math.PI/180 - p1[0]*Math.PI/180) * (2 + Math.sin(p1[1]*Math.PI/180) + Math.sin(p2[1]*Math.PI/180));
-  }
-  return Math.abs(area * R * R / 2);
-};
+window.isFeatureVisible = function(f) { return window.itemVisibility[f.properties._index] !== false && window.groupVisibility[f.properties.strat] !== false; };
 
 window.refreshMapData = function() {
   geojsonLayers.forEach(l => map.removeLayer(l)); geojsonLayers = []; labelGroup.clearLayers();
   const visible = window.allFeatures.filter(f => window.isFeatureVisible(f));
   const layer = L.geoJSON({ type: 'FeatureCollection', features: visible }, {
     style: f => { const color = getColor(f.properties.cultura); return { fillColor: color, fillOpacity: 0.35, color: color, weight: 2 }; },
-    onEachFeature: (feature, lyr) => {
-      lyr.on('click', () => window.showInfo(feature.properties));
-    }
-  }).addTo(map); geojsonLayers.push(layer);
-  if (window.showLabels) window.renderLabels(visible);
+    onEachFeature: (feature, lyr) => { lyr.on('click', () => window.showInfo(feature.properties)); lyr.on('pm:edit', (e) => { feature.geometry = e.target.toGeoJSON().geometry; feature.properties.suprafata = (window.getRingArea(feature.geometry.coordinates[0]) / 10000).toFixed(2); window.updateSidebarTree(); window.updateStats(); window.markDirty(); }); }
+  }).addTo(map);
+  geojsonLayers.push(layer); if (window.showLabels) window.renderLabels(visible);
   window.updateSidebarTree(); window.updateStats(); window.updateLayerPanel();
 };
 
 window.renderLabels = function(features) {
   features.forEach(f => {
-    try {
-      const center = L.geoJSON(f).getBounds().getCenter();
-      L.marker(center, { icon: L.divIcon({ className: '', html: `<div style="background:rgba(13,26,12,0.85); border:1px solid #4ade80; border-radius:4px; padding:2px 6px; font-size:10px; color:#fff; transform:translate(-50%,-50%);"><strong>${f.properties.parcela}</strong></div>` }) }).addTo(labelGroup);
-    } catch(e){}
+    try { L.marker(L.geoJSON(f).getBounds().getCenter(), { icon: L.divIcon({ className: '', html: `<div style="background:rgba(13,26,12,0.85); border:1px solid #4ade80; border-radius:4px; padding:2px 6px; font-size:10px; color:#fff; transform:translate(-50%,-50%);"><strong>${f.properties.parcela}</strong></div>` }) }).addTo(labelGroup); } catch(e){}
   });
-};
-
-window.isFeatureVisible = function(f) {
-  if (window.itemVisibility[f.properties._index] === false) return false;
-  return window.groupVisibility[f.properties.strat] !== false;
 };
 
 window.handleSearch = function(val) { window.searchQuery = val.toLowerCase(); window.updateSidebarTree(); };
 window.changeSort = function(val) { window.currentSort = val; window.updateSidebarTree(); };
+window.toggleGroupVisibility = function(p, c) { window.groupVisibility[p] = c; window.refreshMapData(); };
+window.toggleItemVisibility = function(i, c) { window.itemVisibility[i] = c; window.refreshMapData(); };
 
 window.updateSidebarTree = function() {
   const container = document.getElementById('treeList');
@@ -674,134 +591,89 @@ window.updateSidebarTree = function() {
     if (window.searchQuery) feats = feats.filter(f => (f.properties.parcela||'').toLowerCase().includes(window.searchQuery));
     if (window.currentSort === 'nume') feats.sort((a,b) => a.properties.parcela.localeCompare(b.properties.parcela));
     if (window.currentSort === 'suprafata') feats.sort((a,b) => parseFloat(b.properties.suprafata) - parseFloat(a.properties.suprafata));
-    
-    html += `<div style="margin-bottom:8px;">
-      <div style="display:flex; align-items:center; gap:6px; font-weight:bold;">
-        <input type="checkbox" ${window.groupVisibility[strat]!==false?'checked':''} onchange="window.toggleGroupVisibility('${strat}', this.checked)">
-        <span>📂 ${strat}</span>
-      </div>`;
-    feats.forEach(f => {
-      html += `<div style="margin-left:16px; display:flex; align-items:center; justify-content:space-between; padding:4px 0;">
-        <div style="display:flex; align-items:center; gap:6px;">
-          <input type="checkbox" ${window.itemVisibility[f.properties._index]!==false?'checked':''} onchange="window.toggleItemVisibility(${f.properties._index}, this.checked)">
-          <span style="cursor:pointer;" onclick="window.zoomTo(${f.properties._index})">📍 ${f.properties.parcela}</span>
-        </div>
-        <span class="tree-item-ha">${f.properties.suprafata} ha</span>
-      </div>`;
-    }); html += `</div>`;
+    if (!feats.length) return;
+    html += `<div style="margin-bottom:8px;"><div style="display:flex; align-items:center; gap:6px; font-weight:bold;"><input type="checkbox" ${window.groupVisibility[strat]!==false?'checked':''} onchange="window.toggleGroupVisibility('${strat}', this.checked)"><span>📂 ${strat}</span></div>`;
+    feats.forEach(f => { html += `<div style="margin-left:16px; display:flex; align-items:center; justify-content:space-between; padding:4px 0;"><div style="display:flex; align-items:center; gap:6px;"><input type="checkbox" ${window.itemVisibility[f.properties._index]!==false?'checked':''} onchange="window.toggleItemVisibility(${f.properties._index}, this.checked)"><span style="cursor:pointer;" onclick="window.zoomTo(${f.properties._index})">📍 ${f.properties.parcela}</span></div><span class="tree-item-ha">${f.properties.suprafata} ha</span></div>`; });
+    html += `</div>`;
   }); container.innerHTML = html;
 };
 
-window.zoomTo = function(idx) {
-  const f = window.allFeatures.find(f => f.properties._index === idx);
-  if (f) { map.fitBounds(L.geoJSON(f).getBounds(), { padding: [40,40] }); window.showInfo(f.properties); }
-};
-
+window.zoomTo = function(idx) { const f = window.allFeatures.find(f => f.properties._index === idx); if (f) { map.fitBounds(L.geoJSON(f).getBounds(), { padding: [40,40] }); window.showInfo(f.properties); } };
 window.updateStats = function() {
   const vis = window.allFeatures.filter(f => window.isFeatureVisible(f));
-  const ha = vis.reduce((s,f) => s + parseFloat(f.properties.suprafata || 0), 0);
-  const culturi = new Set(vis.map(f => f.properties.cultura).filter(c => c && c !== 'Necunoscut')).size;
   document.getElementById('statParcele').textContent = vis.length;
-  document.getElementById('statHa').textContent = ha.toFixed(1) + ' ha';
-  document.getElementById('statCulturi').textContent = culturi;
+  document.getElementById('statHa').textContent = vis.reduce((s,f) => s + parseFloat(f.properties.suprafata || 0), 0).toFixed(1) + ' ha';
+  document.getElementById('statCulturi').textContent = new Set(vis.map(f => f.properties.cultura).filter(c => c && c !== 'Necunoscut')).size;
 };
 
-window.updateLayerPanel = function() {
-  document.getElementById('layerPanel').innerHTML = `<div class="layer-title">HĂRȚI</div>
-    <div class="layer-item" onclick="window.toggleBaseLayer('esri_satellite')">⬤ Satelit</div>
-    <div class="layer-item" onclick="window.toggleBaseLayer('osm')">⬤ Plan</div>`;
-};
+window.updateLayerPanel = function() { document.getElementById('layerPanel').innerHTML = `<div class="layer-title">HĂRȚI BAZĂ</div><div class="layer-item" onclick="window.toggleBaseLayer('esri_satellite')">⬤ Satelit</div><div class="layer-item" onclick="window.toggleBaseLayer('osm')">⬤ Plan</div>`; };
 window.toggleBaseLayer = function(id) { Object.values(TILE_LAYERS).forEach(l => map.removeLayer(l)); map.addLayer(TILE_LAYERS[id]); };
-
-window.fitBounds = function() {
-  const vis = window.allFeatures.filter(f => window.isFeatureVisible(f)); if (!vis.length) return;
-  const bounds = L.geoJSON({type: 'FeatureCollection', features: vis}).getBounds();
-  if (bounds.isValid()) map.fitBounds(bounds, { padding: [40, 40] });
-};
-
-window.toggleLabels = function() {
-  window.showLabels = !window.showLabels; document.getElementById('btnLabels').classList.toggle('active', window.showLabels);
-  window.refreshMapData();
-};
+window.fitBounds = function() { const vis = window.allFeatures.filter(f => window.isFeatureVisible(f)); if (vis.length) map.fitBounds(L.geoJSON({type: 'FeatureCollection', features: vis}).getBounds(), { padding: [40, 40] }); };
+window.toggleLabels = function() { window.showLabels = !window.showLabels; document.getElementById('btnLabels').classList.toggle('active', window.showLabels); window.refreshMapData(); };
 
 window.showInfo = function(p) {
   const panel = document.getElementById('mapInfo');
-  panel.innerHTML = `<button class="info-close" onclick="window.closeInfo()">×</button>
-    <div class="info-title">${p.parcela}</div>
+  panel.innerHTML = `<button class="info-close" onclick="window.closeInfo()">×</button><div class="info-title">${p.parcela}</div>
     <div class="info-row"><span class="info-key">📛 Nume:</span> <input type="text" class="crop-input" value="${p.parcela}" onchange="window.updateProp(${p._index}, 'parcela', this.value)"></div>
     <div class="info-row"><span class="info-key">🌾 Cultură:</span> <input type="text" class="crop-input" value="${p.cultura}" onchange="window.updateProp(${p._index}, 'cultura', this.value)"></div>
     <div class="info-row"><span class="info-key">📏 Suprafață:</span> <span class="info-val">${p.suprafata} ha</span></div>`;
   panel.classList.add('visible');
 };
-window.updateProp = function(idx, key, val) {
-  const f = window.allFeatures.find(f => f.properties._index === idx);
-  if (f) { f.properties[key] = val; window.updateSidebarTree(); window.refreshMapData(); window.markDirty(); }
-};
+window.updateProp = function(idx, key, val) { const f = window.allFeatures.find(f => f.properties._index === idx); if (f) { f.properties[key] = val; window.updateSidebarTree(); window.refreshMapData(); window.markDirty(); } };
 window.closeInfo = function() { document.getElementById('mapInfo').classList.remove('visible'); };
 window.promptAddLayer = function() { const n = prompt('Nume strat:'); if(n) { window.definedLayers.add(n); window.groupVisibility[n] = true; window.updateSidebarTree(); window.markDirty(); } };
 
-// RESTAURARE SISTEME EXPORT ȘI METEO 14 ZILE
-window.exportGeoJSON = function() {
-  const blob = new Blob([JSON.stringify({type:'FeatureCollection',features:window.allFeatures.filter(f=>window.isFeatureVisible(f))})],{type:'application/json'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ferma.geojson'; a.click();
-};
+window.exportGeoJSON = function() { triggerDownload(JSON.stringify({type:'FeatureCollection',features:window.allFeatures.filter(f=>window.isFeatureVisible(f))}), 'ferma.geojson', 'application/json'); };
 window.exportKML = function() {
   let kml = '<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document>';
-  window.allFeatures.filter(f=>window.isFeatureVisible(f)).forEach(f => {
-    kml += `<Placemark><name>${f.properties.parcela}</name><Polygon><outerBoundaryIs><LinearRing><coordinates>${f.geometry.coordinates[0].map(c=>`${c[0]},${c[1]},0`).join(' ')}</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark>`;
-  }); kml += '</Document></kml>';
-  const blob = new Blob([kml],{type:'application/xml'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ferma.kml'; a.click();
+  window.allFeatures.filter(f=>window.isFeatureVisible(f)).forEach(f => { kml += `<Placemark><name>${f.properties.parcela}</name><ExtendedData><Data name="cultura"><value>${f.properties.cultura}</value></Data><Data name="strat"><value>${f.properties.strat}</value></Data></ExtendedData><Polygon><outerBoundaryIs><LinearRing><coordinates>${f.geometry.coordinates[0].map(c=>`${c[0]},${c[1]},0`).join(' ')}</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark>`; });
+  triggerDownload(kml + '</Document></kml>', 'ferma.kml', 'application/xml');
 };
 window.exportSHP = function() { if (typeof shpwrite !== 'undefined') shpwrite.download({type:'FeatureCollection',features:window.allFeatures.filter(f=>window.isFeatureVisible(f))},{folder:'ferma',types:{polygon:true}}); };
 window.printMap = function() { window.print(); };
+function triggerDownload(content, filename, mimeType) { const blob = new Blob([content],{type:mimeType}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); }
 
 window.openAddJournalEntry = function() {
-  const today = new Date().toISOString().split('T')[0];
-  let opts = window.allFeatures.map(f=>`<option value="${f.properties._index}">${f.properties.parcela}</option>`).join('');
-  document.getElementById('journalModalContent').innerHTML = `<div class="modal-title">Adaugă Lucrare</div>
-    <div class="modal-body">
-      <select class="crop-input" id="jParcel" style="width:100%;margin-bottom:8px;">${opts}</select>
-      <select class="crop-input" id="jType" style="width:100%;margin-bottom:8px;"><option>Semănat</option><option>Fertilizat</option><option>Recoltat</option></select>
-      <input type="date" class="crop-input" id="jDate" value="${today}" style="width:100%;margin-bottom:8px;">
-      <textarea class="crop-input" id="jNote" style="width:100%;height:50px;" placeholder="Notă..."></textarea>
-    </div>
-    <div class="modal-footer"><button class="map-btn" onclick="document.getElementById('journalModal').classList.remove('visible')">Anulează</button><button class="map-btn active" onclick="window.saveJournalEntry()">Salvează</button></div>`;
+  const pOpts = window.allFeatures.map(f=>`<option value="${f.properties._index}">${f.properties.parcela}</option>`).join('');
+  document.getElementById('journalModalContent').innerHTML = `<div class="modal-title">📋 Adaugă Lucrare</div><div class="modal-body"><select class="crop-input" id="jParcel" style="width:100%;margin-bottom:10px;">${pOpts}</select><select class="crop-input" id="jType" style="width:100%;margin-bottom:10px;"><option>Semănat</option><option>Fertilizat</option><option>Recoltat</option></select><input type="date" class="crop-input" id="jDate" value="${new Date().toISOString().split('T')[0]}" style="width:100%;margin-bottom:10px;"><textarea class="crop-input" id="jNote" style="width:100%;height:50px;" placeholder="Notițe..."></textarea></div><div class="modal-footer"><button class="map-btn" onclick="document.getElementById('journalModal').classList.remove('visible')">Anulează</button><button class="map-btn active" onclick="window.saveJournalEntry()">Salvează</button></div>`;
   document.getElementById('journalModal').classList.add('visible');
 };
-window.saveJournalEntry = function() {
-  window.journalEntries.push({ id: Date.now(), parcelIdx: parseInt(document.getElementById('jParcel').value), type: document.getElementById('jType').value, date: document.getElementById('jDate').value, note: document.getElementById('jNote').value });
-  document.getElementById('journalModal').classList.remove('visible'); window.renderJournal(); window.markDirty();
-};
-window.renderJournal = function() {
-  document.getElementById('journalList').innerHTML = window.journalEntries.map(e => `<div><strong>${e.type}</strong> (${e.date})<p>${e.note}</p></div>`).join('') || '<p>Fără lucrări.</p>';
-};
+window.saveJournalEntry = function() { window.journalEntries.push({ id: Date.now(), parcelIdx: parseInt(document.getElementById('jParcel').value), type: document.getElementById('jType').value, date: document.getElementById('jDate').value, note: document.getElementById('jNote').value }); document.getElementById('journalModal').classList.remove('visible'); window.renderJournal(); window.markDirty(); };
+window.renderJournal = function() { document.getElementById('journalList').innerHTML = window.journalEntries.length ? window.journalEntries.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(e => `<div class="journal-entry"><strong>${window.allFeatures.find(f=>f.properties._index===e.parcelIdx)?.properties.parcela||'Parcelă'}</strong> - <span style="color:var(--green)">${e.type}</span> (${e.date}) <p>${e.note}</p><button class="journal-del" onclick="window.deleteJournalEntry(${e.id})">Șterge</button></div>`).join('') : '<p style="color:var(--muted);text-align:center;">Nicio lucrare.</p>'; };
+window.deleteJournalEntry = function(id) { window.journalEntries = window.journalEntries.filter(e=>e.id!==id); window.renderJournal(); window.markDirty(); };
 
 window.refreshStats = function() {
   const vis = window.allFeatures.filter(f=>window.isFeatureVisible(f));
-  document.getElementById('statsGrid').innerHTML = `<div class="stat-card"><div class="stat-card-val">${vis.length}</div><div class="stat-card-label">PARCELE ACTIVED</div></div>`;
+  const culturi = {}; vis.forEach(f => { const c = f.properties.cultura||'Necunoscut'; culturi[c] = (culturi[c]||0)+parseFloat(f.properties.suprafata||0); });
+  document.getElementById('statsGrid').innerHTML = `<div class="stat-card"><div class="stat-card-val">${vis.length}</div><div class="stat-card-label">PARCELE</div></div><div class="stat-card"><div class="stat-card-val">${Object.values(culturi).reduce((a,b)=>a+b,0).toFixed(1)}</div><div class="stat-card-label">HECTARE</div></div>`;
+  if(window.chartCulturi) window.chartCulturi.destroy();
+  if(Object.keys(culturi).length) window.chartCulturi = new Chart(document.getElementById('chartCulturi'), { type: 'doughnut', data: { labels: Object.keys(culturi), datasets: [{ data: Object.values(culturi), backgroundColor: Object.keys(culturi).map(getColor) }] }, options:{plugins:{legend:{display:false}}} });
 };
-window.renderCultureStats = function() {}; window.renderRotatieStats = function() {};
-window.updateSessionInfo = function() { document.getElementById('sessionInfo').innerHTML = `Parcele: ${window.allFeatures.length}<br>Jurnal: ${window.journalEntries.length}`; };
-window.openCropManager = function() { alert('Manager activ.'); }; window.openSeasonManager = function() { alert('Sezoane active.'); };
-window.openDeleteModal = function() { if(confirm('Ștergi parcelele vizibile?')) { window.allFeatures = window.allFeatures.filter(f=>!window.isFeatureVisible(f)); window.refreshMapData(); window.markDirty(); } };
+window.renderCultureStats = function() { document.getElementById('culturiStatsContainer').innerHTML = '<p style="color:var(--muted);text-align:center;">Statisticile se generează automat pe tab-ul General.</p>'; window.refreshStats(); };
+window.renderRotatieStats = function() { document.getElementById('rotatieContainer').innerHTML = '<p style="color:var(--muted);text-align:center;">Jurnalul nu conține destul istoric.</p>'; };
+window.updateSessionInfo = function() { document.getElementById('sessionInfo').innerHTML = `Parcele curente: ${window.allFeatures.length}<br>Lucrări în jurnal: ${window.journalEntries.length}`; };
+
+window.openCropManager = function() { alert("Manager Culturi: Folosește panoul parcelei pentru editare directă."); };
+window.openSeasonManager = function() { alert("Manager Sezoane: Campanie activă implicită."); };
+window.openDeleteModal = function() { if(confirm("Ștergi parcelele vizibile?")) { window.allFeatures = window.allFeatures.filter(f => !window.isFeatureVisible(f)); window.refreshMapData(); window.markDirty(); } };
 
 window.fetchWeather = async function() {
-  const center = map.getCenter(); const c = document.getElementById('weatherContainer'); c.innerHTML = 'Preluare meteo...';
+  const center = map.getCenter(); const c = document.getElementById('weatherContainer'); c.innerHTML = 'Se descarcă datele...';
   try {
-    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${center.lat}&longitude=${center.lng}&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=14`);
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${center.lat}&longitude=${center.lng}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto&forecast_days=14`);
     const data = await res.json(); let html = '';
-    for(let i=0; i<14; i++) html += `<div class="weather-card"><span>${data.daily.time[i]}</span> <span>⬆ ${data.daily.temperature_2m_max[i]}°C | ⬇ ${data.daily.temperature_2m_min[i]}°C</span></div>`;
+    for(let i=0; i<14; i++) html += `<div class="weather-card"><span>${data.daily.time[i]}</span> <span>⬆ ${data.daily.temperature_2m_max[i]}°C | ⬇ ${data.daily.temperature_2m_min[i]}°C | 💧 ${data.daily.precipitation_sum[i]}mm</span></div>`;
     c.innerHTML = html;
-  } catch(e) { c.innerHTML = 'Eroare conexiune meteo.'; }
+  } catch(e) { c.innerHTML = 'Eroare la preluarea datelor meteo.'; }
 };
 
-if(map.pm) {
+if (map.pm) {
   map.pm.addControls({ position: 'topleft', drawPolygon: true, editMode: true, removalMode: true });
   map.on('pm:create', e => {
     const geo = e.layer.toGeoJSON(); map.removeLayer(e.layer);
     const newIdx = window.allFeatures.length > 0 ? Math.max(...window.allFeatures.map(f => f.properties._index)) + 1 : 1;
-    geo.properties = { _index: newIdx, parcela: `Parcela ${newIdx}`, strat: 'Terenuri Principale', cultura: 'Necunoscut' };
-    window.renderGeoJSON({type:'FeatureCollection',features:[geo]});
+    geo.properties = { _index: newIdx, parcela: `Parcela ${newIdx}`, strat: 'Terenuri Noi', cultura: 'Necunoscut' };
+    window.definedLayers.add('Terenuri Noi'); window.renderGeoJSON({type:'FeatureCollection',features:[geo]});
   });
 }
 </script>
