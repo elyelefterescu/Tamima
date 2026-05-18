@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AGRONOMUL AI</title>
+<title>AGRO MANAGER v2 — Hărți & Management Terenuri</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -13,7 +13,6 @@
 <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
 <script src="https://unpkg.com/shp-write@0.3.2/shpwrite.js"></script>
-<!-- Chart.js pentru statistici -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 
 <style>
@@ -234,9 +233,37 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
   .print-legend { display: block !important; }
 }
 .print-legend { display: none; position: absolute; bottom: 20px; right: 20px; background: white; border: 1px solid #ccc; border-radius: 8px; padding: 12px; z-index: 998; max-width: 200px; }
+
+/* ═══ ECRAN AUTENTIFICARE ═══ */
+.auth-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 100000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); transition: opacity 0.5s ease; }
+.auth-card { background: rgba(13,26,12,0.95); border: 1px solid var(--border); border-radius: 16px; padding: 32px 24px; width: 90%; max-width: 360px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); text-align: center; }
+.auth-logo { font-size: 44px; margin-bottom: 12px; }
+.auth-title { font-size: 22px; color: var(--green); font-weight: 600; margin-bottom: 4px; letter-spacing: 0.5px; }
+.auth-subtitle { font-size: 10px; color: var(--muted); font-family: 'JetBrains Mono', monospace; letter-spacing: 3px; margin-bottom: 28px; text-transform: uppercase; }
+.auth-input { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(74,222,128,0.2); color: var(--text); padding: 14px; border-radius: 10px; margin-bottom: 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; outline: none; transition: all 0.3s; }
+.auth-input:focus { border-color: var(--green); background: rgba(74,222,128,0.08); box-shadow: 0 0 0 2px rgba(74,222,128,0.1); }
+.auth-btn { width: 100%; background: linear-gradient(135deg, var(--green), var(--green2)); color: var(--bg); border: none; padding: 14px; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s; margin-top: 8px; font-family: 'Crimson Pro', Georgia, serif; letter-spacing: 0.5px; }
+.auth-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(74,222,128,0.2); }
+.auth-switch { margin-top: 20px; font-size: 12px; color: var(--muted); cursor: pointer; transition: 0.2s; padding: 5px; }
+.auth-switch:hover { color: var(--green); }
+.hidden { opacity: 0; pointer-events: none; visibility: hidden; }
 </style>
 </head>
 <body>
+
+<div id="authOverlay" class="auth-overlay">
+  <div class="auth-card">
+    <div class="auth-logo">🌿</div>
+    <div class="auth-title">Agronomul AI</div>
+    <div class="auth-subtitle" id="authModeText">Autentificare</div>
+
+    <input type="email" id="authEmail" class="auth-input" placeholder="Email utilizator">
+    <input type="password" id="authPassword" class="auth-input" placeholder="Parolă (minim 6 caractere)">
+
+    <button class="auth-btn" id="authSubmitBtn" onclick="window.processAuth()">Conectare</button>
+    <div class="auth-switch" onclick="toggleAuthMode()" id="authSwitchBtn">Nu ai cont? Creează unul.</div>
+  </div>
+</div>
 
 <div class="header">
   <div class="logo">
@@ -247,7 +274,9 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
     </div>
   </div>
   <div class="header-right">
-    <span class="save-indicator" id="saveIndicator">⬤ nesalvat</span>
+    <span id="headerUserEmail" style="font-size:10px; color:var(--muted); font-family:'JetBrains Mono', monospace; margin-right:8px;"></span>
+    <button class="map-btn" style="padding:5px 10px; font-size:10px; background:rgba(248,113,113,0.1); color:var(--red); border-color:rgba(248,113,113,0.3);" onclick="window.logoutUser()">Ieși din cont</button>
+    <span class="save-indicator" id="saveIndicator" style="margin-left:6px;">⬤ nesalvat</span>
     <div class="header-badge">📍 WGS84 / Stereo70</div>
     <button class="map-btn" style="padding:5px 12px; font-size:10px;" onclick="saveToLocalStorage()">💾 Salvează</button>
   </div>
@@ -266,7 +295,6 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 
   <div class="sidebar">
 
-    <!-- ══ TAB: PARCELE ══ -->
     <div id="tab-parcele" class="panel-content active">
       <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px 6px;">
         <div class="section-title" style="margin-bottom:0;">IERARHIE TERENURI</div>
@@ -296,7 +324,6 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
       </div>
     </div>
 
-    <!-- ══ TAB: JURNAL ══ -->
     <div id="tab-jurnal" class="panel-content">
       <div style="padding:12px 16px 8px; border-bottom:1px solid var(--border); flex-shrink:0;">
         <div class="section-title" style="margin-bottom:6px;">📋 JURNAL LUCRĂRI AGRICOLE</div>
@@ -324,7 +351,6 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
       </div>
     </div>
 
-    <!-- ══ TAB: STATISTICI ══ -->
     <div id="tab-statistici" class="panel-content">
       <div class="inner-tabs">
         <div class="inner-tab active" onclick="switchInnerTab('stat-general', this)">General</div>
@@ -352,7 +378,6 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
       </div>
     </div>
 
-    <!-- ══ TAB: METEO ══ -->
     <div id="tab-vremea" class="panel-content">
       <div class="sidebar-section">
         <div class="section-title">⛅ PROGNOZA METEO (14 ZILE)</div>
@@ -369,7 +394,6 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
       </div>
     </div>
 
-    <!-- ══ TAB: IMPORT ══ -->
     <div id="tab-import" class="panel-content">
       <div class="sidebar-section">
         <div class="section-title">📂 IMPORT DATE</div>
@@ -404,7 +428,6 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
       </div>
     </div>
 
-    <!-- ══ TAB: ADMIN ══ -->
     <div id="tab-admin" class="panel-content">
       <div class="sidebar-section">
         <div class="section-title">⚙️ ADMINISTRARE & SETĂRI</div>
@@ -421,9 +444,7 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
       </div>
     </div>
 
-  </div><!-- end sidebar -->
-
-  <div class="map-wrap">
+  </div><div class="map-wrap">
     <div id="map"></div>
     <div class="layer-panel" id="layerPanel"></div>
     <div class="map-controls">
@@ -446,10 +467,7 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
     <div class="print-legend" id="printLegend"></div>
   </div>
 
-</div><!-- end main -->
-
-<!-- ══ MODALS ══ -->
-<div id="cropModal" class="modal-overlay">
+</div><div id="cropModal" class="modal-overlay">
   <div class="modal" id="cropModalContent" style="max-width:400px;"></div>
 </div>
 <div id="deleteModal" class="modal-overlay">
@@ -466,6 +484,87 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 </div>
 
 <div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBhnGgOd9zj0JfbdYWbPRe0ylwtqBW-Acg",
+    authDomain: "agronomul-ai.firebaseapp.com",
+    projectId: "agronomul-ai",
+    storageBucket: "agronomul-ai.firebasestorage.app",
+    messagingSenderId: "936195294039",
+    appId: "1:936195294039:web:d6e7dec110e22427f4f412",
+    measurementId: "G-3B6ZP7THYB"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  // Monitorizează starea utilizatorului (dacă e logat sau nu)
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // Ascunde ecranul de login
+      document.getElementById('authOverlay').classList.add('hidden');
+      document.getElementById('headerUserEmail').textContent = user.email;
+      showToast(`✓ Te-ai conectat ca: ${user.email.split('@')[0]}`);
+    } else {
+      // Arată ecranul de login
+      document.getElementById('authOverlay').classList.remove('hidden');
+      document.getElementById('headerUserEmail').textContent = '';
+    }
+  });
+
+  // Funcția reală de procesare Login / Register
+  window.processAuth = () => {
+    const email = document.getElementById('authEmail').value.trim();
+    const pass = document.getElementById('authPassword').value;
+
+    if (!email || !pass) {
+      showToast('❌ Introdu adresa de email și parola!', true);
+      return;
+    }
+
+    const btn = document.getElementById('authSubmitBtn');
+    const originalText = btn.textContent;
+    btn.textContent = 'Se verifică...';
+    btn.style.opacity = '0.8';
+
+    if (window.isLoginMode) {
+      // CONECTARE CONT EXISTENT
+      signInWithEmailAndPassword(auth, email, pass)
+        .then(() => {
+          btn.textContent = originalText;
+          btn.style.opacity = '1';
+        })
+        .catch((error) => {
+          btn.textContent = originalText;
+          btn.style.opacity = '1';
+          showToast(`❌ Eroare la conectare: Verifică parola și emailul!`, true);
+        });
+    } else {
+      // CREARE CONT NOU
+      createUserWithEmailAndPassword(auth, email, pass)
+        .then(() => {
+          btn.textContent = originalText;
+          btn.style.opacity = '1';
+        })
+        .catch((error) => {
+          btn.textContent = originalText;
+          btn.style.opacity = '1';
+          showToast(`❌ Eroare creare cont (minim 6 caractere la parolă)`, true);
+        });
+    }
+  };
+
+  // Funcție de ieșire din cont
+  window.logoutUser = () => {
+    signOut(auth).then(() => {
+      showToast('Te-ai deconectat.');
+    });
+  };
+</script>
 
 <script>
 // ════════════════════════════════════════════════════════
@@ -1912,7 +2011,7 @@ function exportKML() {
     const fc = (coords) => coords.map(c=>`${c[0]},${c[1]},0`).join(' ');
     if (f.geometry.type==='Polygon') {
       kml += '      <Polygon>\n        <outerBoundaryIs><LinearRing><coordinates>'+fc(f.geometry.coordinates[0])+'</coordinates></LinearRing></outerBoundaryIs>\n';
-      for(let i=1;i<f.geometry.coordinates.length;i++) kml+='        <innerBoundaryIs><LinearRing><coordinates>'+fc(f.geometry.coordinates[i])+'</coordinates></LinearRing></innerBoundaryIs>\n';
+      for(let i=1;i<f.geometry.coordinates.length;i++) kml+='        <innerBoundaryIs><LinearRing><coordinates>'+fc(f.geometry.coordinates[i])+'</coordinates></innerBoundaryIs>\n';
       kml += '      </Polygon>\n';
     } else if (f.geometry.type==='MultiPolygon') {
       kml += '      <MultiGeometry>\n';
@@ -1986,9 +2085,20 @@ function showToast(msg, isError) {
 }
 
 // ════════════════════════════════════════════════════════
-//  AUTO-SAVE toutes les 2 min
+//  AUTO-SAVE
 // ════════════════════════════════════════════════════════
 setInterval(()=>{ if(isDirty) { saveToLocalStorage(); } }, 120000);
+
+// ════════════════════════════════════════════════════════
+//  LOGICA MOCKUP DE BAZA PT BUTONUL DE SWITCH
+// ════════════════════════════════════════════════════════
+window.isLoginMode = true;
+function toggleAuthMode() {
+  window.isLoginMode = !window.isLoginMode;
+  document.getElementById('authModeText').textContent = window.isLoginMode ? 'AUTENTIFICARE' : 'CREARE CONT NOU';
+  document.getElementById('authSubmitBtn').textContent = window.isLoginMode ? 'Conectare' : 'Înregistrare';
+  document.getElementById('authSwitchBtn').textContent = window.isLoginMode ? 'Nu ai cont? Creează unul.' : 'Ai deja cont? Conectează-te.';
+}
 
 // ════════════════════════════════════════════════════════
 //  INIT
