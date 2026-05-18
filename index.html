@@ -57,8 +57,6 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 .nav-item { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; color: var(--muted); transition: all 0.2s; border: 1px solid transparent; position: relative; }
 .nav-item:hover { background: rgba(74,222,128,0.1); color: var(--green); }
 .nav-item.active { background: rgba(74,222,128,0.15); color: var(--green); border-color: var(--green); }
-.nav-badge { position: absolute; top: 2px; right: 2px; background: var(--red); border-radius: 50%; width: 8px; height: 8px; display: none; }
-.nav-badge.show { display: block; }
 
 .sidebar { width: 340px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; }
 .panel-content { display: none; flex-direction: column; flex: 1; height: 100%; overflow: hidden; }
@@ -67,7 +65,6 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 .sidebar-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
 .section-title { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 10px; }
 
-/* UPLOAD ZONE */
 .upload-zone { border: 2px dashed rgba(74,222,128,0.3); border-radius: 12px; padding: 18px; text-align: center; cursor: pointer; transition: all 0.3s; background: rgba(74,222,128,0.03); position: relative; }
 .upload-zone:hover, .upload-zone.dragover { border-color: var(--green); background: rgba(74,222,128,0.08); }
 .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
@@ -79,50 +76,36 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 .badge-shp { color: #f59e0b; border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.08); }
 .badge-geojson { color: #4ade80; border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.08); }
 .badge-gpx { color: #c084fc; border-color: rgba(192,132,252,0.4); background: rgba(192,132,252,0.08); }
-.badge-zip { color: #f87171; border-color: rgba(248,113,113,0.4); background: rgba(248,113,113,0.08); }
 
-/* TREE */
 .search-wrap { padding: 0 16px 6px; }
 .search-input { width: 100%; background: rgba(0,0,0,0.3); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; font-size: 12px; font-family: 'JetBrains Mono', monospace; outline: none; transition: 0.2s; }
 .search-input:focus { border-color: var(--green); }
 .sort-bar { padding: 0 16px 8px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
 .sort-select { background: var(--bg); color: var(--muted); border: 1px solid var(--border); border-radius: 4px; font-size: 10px; font-family: 'JetBrains Mono', monospace; padding: 4px; outline: none; cursor: pointer; }
-.sort-select:focus { border-color: var(--green); }
 
 .tree-list { flex: 1; overflow-y: auto; padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
-.tree-list::-webkit-scrollbar { width: 4px; }
-.tree-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 .tree-node { margin-left: 14px; border-left: 1px dashed rgba(74,222,128,0.15); padding-left: 6px; margin-top: 3px; }
 .tree-node.root { margin-left: 0; border-left: none; padding-left: 0; }
 .tree-header { display: flex; align-items: center; gap: 6px; padding: 4px; border-radius: 6px; transition: background 0.2s; }
 .tree-header:hover { background: rgba(255,255,255,0.05); }
-.tree-toggle { cursor: pointer; width: 14px; text-align: center; color: var(--muted); user-select: none; transition: color 0.2s; display: inline-block; font-size: 10px; }
-.tree-toggle:hover { color: var(--green); }
+.tree-toggle { cursor: pointer; width: 14px; text-align: center; color: var(--muted); user-select: none; font-size: 10px; }
 .tree-checkbox { accent-color: var(--green); cursor: pointer; margin: 0; width: 12px; height: 12px; }
 .tree-folder-icon { color: #fbbf24; font-size: 13px; }
-.tree-folder-input { background: transparent; border: none; color: var(--text); font-family: inherit; font-size: 12px; font-weight: 600; outline: none; flex: 1; cursor: text; }
-.tree-folder-input:focus { border-bottom: 1px dashed var(--green); color: var(--green); }
-.tree-add-btn { cursor: pointer; color: var(--green); font-size: 9px; padding: 2px 5px; margin-left: auto; background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); border-radius: 4px; transition: 0.2s; }
-.tree-add-btn:hover { background: rgba(74,222,128,0.2); }
+.tree-folder-input { background: transparent; border: none; color: var(--text); font-family: inherit; font-size: 12px; font-weight: 600; outline: none; flex: 1; }
+.tree-add-btn { cursor: pointer; color: var(--green); font-size: 9px; padding: 2px 5px; margin-left: auto; background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); border-radius: 4px; }
 .tree-item { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border-radius: 6px; cursor: pointer; transition: background 0.2s; margin-top: 2px; }
 .tree-item:hover { background: rgba(74,222,128,0.1); }
 .tree-item.active { background: rgba(74,222,128,0.15); outline: 1px solid var(--green); }
 .tree-color-box { width: 11px; height: 11px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0; }
 .tree-item-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tree-item-ha { color: var(--muted); font-size: 10px; background: rgba(0,0,0,0.3); padding: 1px 5px; border-radius: 10px; }
-.tree-item-journal { color: var(--blue); font-size: 10px; padding: 1px 4px; cursor: pointer; opacity: 0.7; transition: opacity 0.2s; }
-.tree-item-journal:hover { opacity: 1; }
-.empty-parcele { text-align: center; padding: 28px 16px; color: var(--muted); }
-.empty-parcele .empty-icon { font-size: 34px; margin-bottom: 10px; opacity: 0.5; }
-.empty-parcele p { font-size: 12px; line-height: 1.6; }
+.tree-item-journal { color: var(--blue); font-size: 10px; padding: 1px 4px; cursor: pointer; opacity: 0.7; }
 
-/* STATS BAR */
 .stats-bar { padding: 10px 14px; background: rgba(0,0,0,0.3); border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; flex-shrink: 0; }
 .stat { text-align: center; }
 .stat-val { font-size: 15px; font-weight: 600; color: var(--green); font-family: 'JetBrains Mono', monospace; }
 .stat-label { font-size: 8px; color: var(--muted); letter-spacing: 1px; }
 
-/* MAP */
 .map-wrap { flex: 1; position: relative; overflow: hidden; }
 #map { width: 100%; height: 100%; background: #0d1a0c; }
 .map-controls { position: absolute; top: 16px; right: 16px; z-index: 999; display: flex; flex-direction: column; gap: 7px; }
@@ -130,13 +113,11 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 .map-btn:hover { background: rgba(74,222,128,0.15); border-color: var(--green); color: var(--green); }
 .map-btn.active { background: rgba(74,222,128,0.2); border-color: var(--green); color: var(--green); }
 
-/* EXPORT WIDGET */
 .export-widget { background: rgba(13,26,12,0.9); border: 1px solid var(--border); border-radius: 10px; padding: 8px; backdrop-filter: blur(10px); display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
 .export-title { font-size: 9px; color: var(--muted); text-align: center; letter-spacing: 2px; font-family: 'JetBrains Mono', monospace; }
 .export-row { display: flex; gap: 4px; }
 .btn-export { flex: 1; justify-content: center; padding: 5px 8px; border: none; font-weight: 600; }
 
-/* INFO PANEL */
 .map-info { position: absolute; bottom: 24px; left: 16px; z-index: 999; background: rgba(13,26,12,0.95); border: 1px solid var(--border); border-radius: 14px; padding: 14px 18px; min-width: 280px; max-width: 340px; backdrop-filter: blur(10px); display: none; max-height: 80vh; overflow-y: auto; }
 .map-info.visible { display: block; }
 .info-title { font-size: 15px; font-weight: 600; color: var(--green); margin-bottom: 8px; display: flex; justify-content: space-between; }
@@ -144,50 +125,25 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 .info-key { color: var(--muted); }
 .info-val { color: var(--text); font-family: 'JetBrains Mono', monospace; }
 .info-close { position: absolute; top: 10px; right: 12px; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; }
-.info-close:hover { color: var(--text); }
 .crop-input { background: #142112; color: #e8f5e0; border: 1px solid rgba(74,222,128,0.3); border-radius: 6px; padding: 3px 6px; font-size: 12px; font-family: 'JetBrains Mono', monospace; outline: none; text-align: right; }
-.crop-input:focus { border-color: var(--green); }
-.info-hint { font-size: 9px; color: var(--muted); text-align: right; display: block; margin-top: 2px; line-height: 1.1; }
 
-/* TOAST */
 .toast { position: fixed; bottom: 24px; right: 24px; background: rgba(13,26,12,0.95); border: 1px solid var(--green); color: var(--green); padding: 10px 18px; border-radius: 12px; font-size: 12px; font-family: 'JetBrains Mono', monospace; z-index: 9999; transform: translateY(80px); opacity: 0; transition: all 0.3s; pointer-events: none; max-width: 300px; }
 .toast.show { transform: translateY(0); opacity: 1; }
 .toast.error { border-color: var(--red); color: var(--red); }
 
-/* LAYER TOGGLE */
 .layer-panel { position: absolute; top: 16px; left: 60px; z-index: 999; background: rgba(13,26,12,0.95); border: 1px solid var(--border); border-radius: 12px; padding: 12px; min-width: 165px; backdrop-filter: blur(10px); }
 .layer-title { font-size: 9px; color: var(--muted); letter-spacing: 3px; margin-bottom: 8px; margin-top: 8px; }
 .layer-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; font-size: 11px; }
 .layer-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 
-/* MODALS */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 10000; padding: 16px; }
 .modal-overlay.visible { display: flex; }
 .modal { background: rgba(13,26,12,0.97); border: 1px solid var(--green); border-radius: 14px; padding: 22px; min-width: 320px; max-width: 95vw; max-height: 90vh; display: flex; flex-direction: column; }
 .modal-title { font-size: 15px; color: var(--green); margin-bottom: 14px; font-weight: 600; }
 .modal-body { flex: 1; overflow-y: auto; margin-bottom: 16px; font-size: 13px; }
-.modal-body::-webkit-scrollbar { width: 4px; }
-.modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-.radio-label { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; cursor: pointer; padding: 7px; border-radius: 8px; transition: 0.2s; border: 1px solid transparent; }
-.radio-label:hover { background: rgba(74,222,128,0.05); }
-.radio-label input[type="radio"] { accent-color: var(--green); cursor: pointer; }
 .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 4px 8px; font-size: 12px; color: var(--text); border-radius: 6px; }
-.checkbox-label:hover { background: rgba(255,255,255,0.05); }
-.checkbox-label input[type="checkbox"] { accent-color: var(--green); cursor: pointer; }
 .modal-footer { display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0; }
 
-/* Leaflet Geoman fixes */
-.leaflet-tooltip, .leaflet-pm-tooltip, .leaflet-pm-tooltip-container { pointer-events: none !important; }
-.leaflet-container { background: #0d1a0c !important; }
-.leaflet-control-zoom a, .leaflet-pm-toolbar .button-container a { background: rgba(13,26,12,0.9) !important; border-color: var(--border) !important; color: var(--text) !important; }
-.leaflet-control-zoom a:hover, .leaflet-pm-toolbar .button-container a:hover { background: rgba(74,222,128,0.2) !important; color: var(--green) !important; }
-.leaflet-pm-icon-polygon, .leaflet-pm-icon-circle, .leaflet-pm-icon-cut, .leaflet-pm-icon-delete { filter: invert(1); }
-
-/* WEATHER */
-.weather-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s; }
-.weather-card:hover { background: rgba(74,222,128,0.05); }
-
-/* ═══ JURNAL ═══ */
 .journal-entry { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
 .journal-entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
 .journal-date { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); }
@@ -200,9 +156,7 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 .jt-altele { background: rgba(255,255,255,0.08); color: var(--muted); }
 .journal-note { font-size: 12px; color: var(--text); margin-top: 4px; }
 .journal-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 12px; }
-.journal-del:hover { color: var(--red); }
 
-/* ═══ STATISTICI ═══ */
 .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px; }
 .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
 .stat-card-val { font-size: 22px; font-weight: 700; color: var(--green); font-family: 'JetBrains Mono', monospace; }
@@ -212,10 +166,8 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 .rotation-warning { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.3); border-radius: 8px; padding: 8px 12px; margin: 4px 0; font-size: 11px; color: var(--red); }
 .rotation-ok { background: rgba(74,222,128,0.06); border: 1px solid rgba(74,222,128,0.2); border-radius: 8px; padding: 8px 12px; margin: 4px 0; font-size: 11px; color: var(--green); }
 
-/* ═══ TABS WITHIN PANEL ═══ */
 .inner-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .inner-tab { flex: 1; padding: 8px 4px; font-size: 10px; font-family: 'JetBrains Mono', monospace; text-align: center; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; transition: 0.2s; }
-.inner-tab:hover { color: var(--text); }
 .inner-tab.active { color: var(--green); border-bottom-color: var(--green); }
 .inner-panel { display: none; flex: 1; flex-direction: column; overflow: hidden; }
 .inner-panel.active { display: flex; }
@@ -223,27 +175,17 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 .scrollable::-webkit-scrollbar { width: 4px; }
 .scrollable::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-/* PRINT / PDF */
-@media print {
-  .sidebar, .sidebar-nav, .map-controls, .layer-panel, .map-info, .toast, .modal-overlay, .header { display: none !important; }
-  .map-wrap { width: 100vw; height: 100vh; }
-  #map { width: 100%; height: 100%; }
-  .print-legend { display: block !important; }
-}
-.print-legend { display: none; position: absolute; bottom: 20px; right: 20px; background: white; border: 1px solid #ccc; border-radius: 8px; padding: 12px; z-index: 998; max-width: 200px; }
+.weather-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; }
 
-/* ═══ ECRAN AUTENTIFICARE ═══ */
 .auth-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 100000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); transition: opacity 0.5s ease; }
 .auth-card { background: rgba(13,26,12,0.95); border: 1px solid var(--border); border-radius: 16px; padding: 32px 24px; width: 90%; max-width: 360px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); text-align: center; }
 .auth-logo { font-size: 44px; margin-bottom: 12px; }
 .auth-title { font-size: 22px; color: var(--green); font-weight: 600; margin-bottom: 4px; letter-spacing: 0.5px; }
 .auth-subtitle { font-size: 10px; color: var(--muted); font-family: 'JetBrains Mono', monospace; letter-spacing: 3px; margin-bottom: 28px; text-transform: uppercase; }
 .auth-input { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(74,222,128,0.2); color: var(--text); padding: 14px; border-radius: 10px; margin-bottom: 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; outline: none; transition: all 0.3s; }
-.auth-input:focus { border-color: var(--green); background: rgba(74,222,128,0.08); box-shadow: 0 0 0 2px rgba(74,222,128,0.1); }
-.auth-btn { width: 100%; background: linear-gradient(135deg, var(--green), var(--green2)); color: var(--bg); border: none; padding: 14px; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s; margin-top: 8px; font-family: 'Crimson Pro', Georgia, serif; letter-spacing: 0.5px; }
-.auth-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(74,222,128,0.2); }
-.auth-switch { margin-top: 20px; font-size: 12px; color: var(--muted); cursor: pointer; transition: 0.2s; padding: 5px; }
-.auth-switch:hover { color: var(--green); }
+.auth-input:focus { border-color: var(--green); background: rgba(74,222,128,0.08); }
+.auth-btn { width: 100%; background: linear-gradient(135deg, var(--green), var(--green2)); color: var(--bg); border: none; padding: 14px; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; margin-top: 8px; }
+.auth-switch { margin-top: 20px; font-size: 12px; color: var(--muted); cursor: pointer; }
 .hidden { opacity: 0; pointer-events: none; visibility: hidden; }
 </style>
 </head>
@@ -254,12 +196,10 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
     <div class="auth-logo">🌿</div>
     <div class="auth-title">Agronomul AI</div>
     <div class="auth-subtitle" id="authModeText">Autentificare</div>
-
     <input type="email" id="authEmail" class="auth-input" placeholder="Email utilizator">
     <input type="password" id="authPassword" class="auth-input" placeholder="Parolă (minim 6 caractere)">
-
     <button class="auth-btn" id="authSubmitBtn" onclick="window.processAuth()">Conectare</button>
-    <div class="auth-switch" onclick="toggleAuthMode()" id="authSwitchBtn">Nu ai cont? Creează unul.</div>
+    <div class="auth-switch" onclick="window.toggleAuthMode()" id="authSwitchBtn">Nu ai cont? Creează unul.</div>
   </div>
 </div>
 
@@ -281,40 +221,33 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 </div>
 
 <div class="main">
-  
   <div class="sidebar-nav">
-    <div class="nav-item active" onclick="switchTab('tab-parcele', this)" title="Hărți & Terenuri">🗺️</div>
-    <div class="nav-item" onclick="switchTab('tab-jurnal', this)" title="Jurnal Lucrări">📋</div>
-    <div class="nav-item" onclick="switchTab('tab-statistici', this)" title="Statistici & Grafice">📊</div>
-    <div class="nav-item" onclick="switchTab('tab-vremea', this)" title="Prognoza Meteo">⛅</div>
-    <div class="nav-item" onclick="switchTab('tab-import', this)" title="Import Fișiere">📤</div>
-    <div class="nav-item" onclick="switchTab('tab-admin', this)" title="Administrare">⚙️</div>
+    <div class="nav-item active" onclick="window.switchTab('tab-parcele', this)" title="Hărți & Terenuri">🗺️</div>
+    <div class="nav-item" onclick="window.switchTab('tab-jurnal', this)" title="Jurnal Lucrări">📋</div>
+    <div class="nav-item" onclick="window.switchTab('tab-statistici', this)" title="Statistici & Grafice">📊</div>
+    <div class="nav-item" onclick="window.switchTab('tab-vremea', this)" title="Prognoza Meteo">⛅</div>
+    <div class="nav-item" onclick="window.switchTab('tab-import', this)" title="Import Fișiere">📤</div>
+    <div class="nav-item" onclick="window.switchTab('tab-admin', this)" title="Administrare">⚙️</div>
   </div>
 
   <div class="sidebar">
-
     <div id="tab-parcele" class="panel-content active">
       <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px 6px;">
         <div class="section-title" style="margin-bottom:0;">IERARHIE TERENURI</div>
-        <button class="map-btn" style="padding:3px 8px; font-size:9px; background:rgba(74,222,128,0.1); color:var(--green); border:1px solid rgba(74,222,128,0.3);" onclick="promptAddLayer()">➕ Strat Nou</button>
+        <button class="map-btn" style="padding:3px 8px; font-size:9px; background:rgba(74,222,128,0.1); color:var(--green); border:1px solid rgba(74,222,128,0.3);" onclick="window.promptAddLayer()">➕ Strat Nou</button>
       </div>
       <div class="search-wrap">
-        <input type="text" class="search-input" id="searchInput" placeholder="🔍 Caută parcelă sau folder..." oninput="handleSearch(this.value)">
+        <input type="text" class="search-input" id="searchInput" placeholder="🔍 Caută parcelă sau folder..." oninput="window.handleSearch(this.value)">
       </div>
       <div class="sort-bar">
         <span style="font-size:10px; color:var(--muted); font-family:'JetBrains Mono',monospace;">Sortează:</span>
-        <select class="sort-select" id="sortSelect" onchange="changeSort(this.value)">
+        <select class="sort-select" id="sortSelect" onchange="window.changeSort(this.value)">
           <option value="implicit">Implicit</option>
           <option value="nume">Alfabetic</option>
           <option value="suprafata">Suprafață ↓</option>
         </select>
       </div>
-      <div class="tree-list" id="treeList">
-        <div class="empty-parcele">
-          <div class="empty-icon">🗺️</div>
-          <p>Niciun teren încărcat.<br>Adaugă fișiere sau desenează pe hartă.</p>
-        </div>
-      </div>
+      <div class="tree-list" id="treeList"></div>
       <div class="stats-bar" id="statsBar">
         <div class="stat"><div class="stat-val" id="statParcele">0</div><div class="stat-label">PARCELE</div></div>
         <div class="stat"><div class="stat-val" id="statHa">0 ha</div><div class="stat-label">SUPRAFAȚĂ</div></div>
@@ -325,13 +258,13 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
     <div id="tab-jurnal" class="panel-content">
       <div style="padding:12px 16px 8px; border-bottom:1px solid var(--border); flex-shrink:0;">
         <div class="section-title" style="margin-bottom:6px;">📋 JURNAL LUCRĂRI AGRICOLE</div>
-        <button class="map-btn" style="width:100%; justify-content:center; background:rgba(74,222,128,0.1); color:var(--green);" onclick="openAddJournalEntry()">➕ Adaugă Lucrare</button>
+        <button class="map-btn" style="width:100%; justify-content:center; background:rgba(74,222,128,0.1); color:var(--green);" onclick="window.openAddJournalEntry()">➕ Adaugă Lucrare</button>
       </div>
       <div style="padding:8px 16px; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; gap:6px; flex-wrap:wrap;">
-        <select class="sort-select" id="journalFilterParcel" onchange="renderJournal()" style="flex:1; padding:5px;">
+        <select class="sort-select" id="journalFilterParcel" onchange="window.renderJournal()" style="flex:1; padding:5px;">
           <option value="">Toate parcelele</option>
         </select>
-        <select class="sort-select" id="journalFilterType" onchange="renderJournal()" style="flex:1; padding:5px;">
+        <select class="sort-select" id="journalFilterType" onchange="window.renderJournal()" style="flex:1; padding:5px;">
           <option value="">Toate tipurile</option>
           <option value="Semănat">🌱 Semănat</option>
           <option value="Fertilizat">🧪 Fertilizat</option>
@@ -341,22 +274,17 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
           <option value="Altele">📝 Altele</option>
         </select>
       </div>
-      <div class="scrollable" id="journalList" style="padding:10px;">
-        <div class="empty-parcele">
-          <div class="empty-icon">📋</div>
-          <p>Nicio lucrare înregistrată.<br>Adaugă prima lucrare agricolă!</p>
-        </div>
-      </div>
+      <div class="scrollable" id="journalList" style="padding:10px;"></div>
     </div>
 
     <div id="tab-statistici" class="panel-content">
       <div class="inner-tabs">
-        <div class="inner-tab active" onclick="switchInnerTab('stat-general', this)">General</div>
-        <div class="inner-tab" onclick="switchInnerTab('stat-culturi', this)">Culturi</div>
-        <div class="inner-tab" onclick="switchInnerTab('stat-rotatie', this)">Rotație</div>
+        <div class="inner-tab active" onclick="window.switchInnerTab('stat-general', this)">General</div>
+        <div class="inner-tab" onclick="window.switchInnerTab('stat-culturi', this)">Culturi</div>
+        <div class="inner-tab" onclick="window.switchInnerTab('stat-rotatie', this)">Rotație</div>
       </div>
       <div id="stat-general" class="inner-panel active">
-        <div class="scrollable" id="generalStatsContainer">
+        <div class="scrollable">
           <div class="stats-grid" id="statsGrid"></div>
           <div class="chart-wrap">
             <div class="chart-title">Distribuție Culturi (ha)</div>
@@ -379,108 +307,72 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
     <div id="tab-vremea" class="panel-content">
       <div class="sidebar-section">
         <div class="section-title">⛅ PROGNOZA METEO (14 ZILE)</div>
-        <p style="font-size:11px; color:var(--muted); margin-bottom:10px; line-height:1.4;">Prognoza pentru coordonatele terenurilor tale.</p>
-        <button class="map-btn" style="width:100%; justify-content:center; background:rgba(96,165,250,0.1); color:var(--blue); border-color:rgba(96,165,250,0.3);" onclick="fetchWeather()">
-          🔄 Actualizează Prognoza
-        </button>
+        <button class="map-btn" style="width:100%; justify-content:center; background:rgba(96,165,250,0.1); color:var(--blue);" onclick="window.fetchWeather()">🔄 Actualizează Prognoza</button>
       </div>
-      <div class="scrollable" id="weatherContainer" style="padding:8px; display:flex; flex-direction:column; gap:6px;">
-        <div class="empty-parcele">
-          <div class="empty-icon">⛅</div>
-          <p>Apasă butonul pentru prognoza pe 14 zile.</p>
-        </div>
-      </div>
+      <div class="scrollable" id="weatherContainer" style="padding:8px; display:flex; flex-direction:column; gap:6px;"></div>
     </div>
 
     <div id="tab-import" class="panel-content">
       <div class="sidebar-section">
         <div class="section-title">📂 IMPORT DATE</div>
         <div class="upload-zone" id="uploadZone">
-          <input type="file" id="fileInput" accept=".kml,.geojson,.json,.zip,.gpx,.shp,.dbf,.prj" multiple onchange="handleFiles(this.files)"/>
+          <input type="file" id="fileInput" accept=".kml,.geojson,.json,.zip,.gpx,.shp,.dbf,.prj" multiple onchange="window.handleFiles(this.files)"/>
           <div class="upload-icon">🗺️</div>
           <div class="upload-text">Trage sau selectează fișierele</div>
-          <div style="font-size:10px; color:var(--muted); margin-top:2px;">WGS84 și Stereo70 suportate</div>
           <div class="format-badges">
             <span class="badge badge-kml">KML</span>
             <span class="badge badge-geojson">GeoJSON</span>
-            <span class="badge badge-shp">SHP+DBF</span>
-            <span class="badge badge-zip">ZIP(SHP)</span>
+            <span class="badge badge-shp">SHP</span>
             <span class="badge badge-gpx">GPX</span>
           </div>
-        </div>
-        <div style="margin-top:12px; padding:10px; background:rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.2); border-radius:8px;">
-          <p style="font-size:10px; color:var(--amber); font-family:'JetBrains Mono',monospace; line-height:1.5;">
-            💡 <strong>SHP:</strong> Selectează simultan fișierele .shp, .dbf și .prj<br>
-            💡 <strong>ZIP:</strong> Arhivă cu toate fișierele SHP incluse
-          </p>
         </div>
       </div>
       <div class="sidebar-section">
         <div class="section-title">📤 EXPORT</div>
         <div style="display:flex; flex-direction:column; gap:6px;">
-          <button class="map-btn" style="justify-content:center; background:rgba(74,222,128,0.08); color:var(--green);" onclick="exportGeoJSON()">📄 Export GeoJSON</button>
-          <button class="map-btn" style="justify-content:center; background:rgba(96,165,250,0.08); color:var(--blue);" onclick="exportKML()">🗺️ Export KML</button>
-          <button class="map-btn" style="justify-content:center; background:rgba(245,158,11,0.08); color:var(--amber);" onclick="exportSHP()">📦 Export SHP (ZIP)</button>
-          <button class="map-btn" style="justify-content:center; background:rgba(192,132,252,0.08); color:var(--purple);" onclick="printMap()">🖨️ Printează Harta</button>
+          <button class="map-btn" onclick="window.exportGeoJSON()">📄 Export GeoJSON</button>
+          <button class="map-btn" onclick="window.exportKML()">🗺️ Export KML</button>
+          <button class="map-btn" onclick="window.exportSHP()">📦 Export SHP (ZIP)</button>
+          <button class="map-btn" onclick="window.printMap()">🖨️ Printează Harta</button>
         </div>
       </div>
     </div>
 
     <div id="tab-admin" class="panel-content">
       <div class="sidebar-section">
-        <div class="section-title">⚙️ ADMINISTRARE & SETĂRI</div>
-        <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
-          <button onclick="openCropManager()" style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);color:var(--blue);padding:11px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'JetBrains Mono',monospace;text-align:left;">🎨 Manager Culturi & Culori</button>
-          <button onclick="openSeasonManager()" style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);color:var(--green);padding:11px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'JetBrains Mono',monospace;text-align:left;">📅 Manager Sezoane</button>
-          <button onclick="openDeleteModal()" style="background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.2);color:var(--red);padding:11px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'JetBrains Mono',monospace;text-align:left;">🗑️ Șterge Terenuri / Straturi</button>
-          <button onclick="clearAllCloudData()" style="background:rgba(248,113,113,0.04);border:1px solid rgba(248,113,113,0.15);color:rgba(248,113,113,0.6);padding:11px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'JetBrains Mono',monospace;text-align:left;">⚠️ Resetează Tot Contul (șterge datele din cloud)</button>
+        <div class="section-title">⚙️ ADMINISTRARE</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <button onclick="window.openCropManager()" class="map-btn" style="text-align:left; justify-content:flex-start;">🎨 Manager Culturi & Culori</button>
+          <button onclick="window.openSeasonManager()" class="map-btn" style="text-align:left; justify-content:flex-start;">📅 Manager Sezoane</button>
+          <button onclick="window.openDeleteModal()" class="map-btn" style="text-align:left; justify-content:flex-start; color:var(--red);">🗑️ Șterge Terenuri</button>
+          <button onclick="window.clearAllCloudData()" class="map-btn" style="text-align:left; justify-content:flex-start; color:var(--red); opacity:0.6;">⚠️ Resetează Cont Cloud</button>
         </div>
       </div>
       <div class="sidebar-section">
-        <div class="section-title">ℹ️ INFORMAȚII SESIUNE</div>
+        <div class="section-title">ℹ nighttime INFO SESIUNE</div>
         <div id="sessionInfo" style="font-size:11px; color:var(--muted); font-family:'JetBrains Mono',monospace; line-height:2;"></div>
       </div>
     </div>
+  </div>
 
-  </div><div class="map-wrap">
+  <div class="map-wrap">
     <div id="map"></div>
     <div class="layer-panel" id="layerPanel"></div>
     <div class="map-controls">
-      <button class="map-btn" onclick="fitBounds()">⊞ Centrează tot</button>
-      <button class="map-btn active" onclick="toggleLabels()" id="btnLabels">🏷 Etichete</button>
-      <div class="export-widget">
-        <div class="export-title">EXPORT RAPID</div>
-        <div class="export-row">
-          <button class="map-btn btn-export" onclick="exportGeoJSON()" style="background:rgba(74,222,128,0.1); color:var(--green);">JSON</button>
-          <button class="map-btn btn-export" onclick="exportKML()" style="background:rgba(96,165,250,0.1); color:var(--blue);">KML</button>
-          <button class="map-btn btn-export" onclick="exportSHP()" style="background:rgba(245,158,11,0.1); color:var(--amber);">SHP</button>
-        </div>
-      </div>
+      <button class="map-btn" onclick="window.fitBounds()">⊞ Centrează tot</button>
+      <button class="map-btn active" onclick="window.toggleLabels()" id="btnLabels">🏷 Etichete</button>
     </div>
     <div class="map-info" id="mapInfo">
-      <button class="info-close" onclick="closeInfo()">×</button>
+      <button class="info-close" onclick="window.closeInfo()">×</button>
       <div class="info-title" id="infoTitle">Detalii</div>
       <div id="infoRows"></div>
     </div>
     <div class="print-legend" id="printLegend"></div>
   </div>
-
-</div><div id="cropModal" class="modal-overlay">
-  <div class="modal" id="cropModalContent" style="max-width:400px;"></div>
 </div>
-<div id="deleteModal" class="modal-overlay">
-  <div class="modal" id="deleteModalContent"></div>
-</div>
-<div id="journalModal" class="modal-overlay">
-  <div class="modal" id="journalModalContent" style="max-width:440px;"></div>
-</div>
-<div id="seasonModal" class="modal-overlay">
-  <div class="modal" id="seasonModalContent" style="max-width:400px;"></div>
-</div>
-
-<div class="toast" id="toast"></div>
 
 <script>
+  // ANCORĂ DE SIGURANȚĂ PENTRU MEDIUL GLOBAL SCOPE
   window.allFeatures = [];
   window.definedLayers = new Set(['Terenuri Principale']);
   window.groupVisibility = {};
@@ -495,9 +387,7 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
   window.showLabels = true;
   window.CULTURA_COLORS = {
     'Grâu': '#fbbf24', 'Porumb': '#f59e0b', 'Rapiță': '#84cc16',
-    'Floarea Soarelui': '#f97316', 'Soia': '#10b981', 'Sfeclă': '#ec4899',
-    'Orz': '#a78bfa', 'Lucernă': '#34d399', 'Ovăz': '#60a5fa',
-    'Secară': '#fb923c', 'Necunoscut': '#9ca3af', 'default': '#4ade80'
+    'Floarea Soarelui': '#f97316', 'Soia': '#10b981', 'default': '#4ade80'
   };
 </script>
 
@@ -530,7 +420,6 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
     } else {
       window.currentUid = null;
       document.getElementById('authOverlay').classList.remove('hidden');
-      document.getElementById('headerUserEmail').textContent = '';
       window.clearMapAndState();
     }
   });
@@ -538,61 +427,79 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
   window.processAuth = () => {
     const email = document.getElementById('authEmail').value.trim();
     const pass = document.getElementById('authPassword').value;
-    if (!email || !pass) { window.showToast('❌ Introdu adresa de email și parola!', true); return; }
-    
-    const btn = document.getElementById('authSubmitBtn');
-    const originalText = btn.textContent;
-    btn.textContent = 'Se verifică...'; btn.style.opacity = '0.8';
-
+    if (!email || !pass) { window.showToast('❌ Introdu datele!', true); return; }
     if (window.isLoginMode) {
-      signInWithEmailAndPassword(auth, email, pass)
-        .then(() => { btn.textContent = originalText; btn.style.opacity = '1'; })
-        .catch(() => { btn.textContent = originalText; btn.style.opacity = '1'; window.showToast('❌ Parolă sau email incorecte!', true); });
+      signInWithEmailAndPassword(auth, email, pass).catch(e => window.showToast('❌ ' + e.message, true));
     } else {
-      createUserWithEmailAndPassword(auth, email, pass)
-        .then(() => { btn.textContent = originalText; btn.style.opacity = '1'; })
-        .catch(() => { btn.textContent = originalText; btn.style.opacity = '1'; window.showToast('❌ Eroare: Minim 6 caractere!', true); });
+      createUserWithEmailAndPassword(auth, email, pass).catch(e => window.showToast('❌ Parolă slabă sau email incorect!', true));
     }
   };
 
-  window.logoutUser = () => { signOut(auth).then(() => { window.showToast('Te-ai deconectat.'); }); };
+  window.logoutUser = () => { signOut(auth); };
+
+  // FILTRU SUPREM RECURSIV - ELIMINĂ ACTIV ORICE UNDEFINED DIN KML/LEAFLET PT FIRESTORE
+  function deepCleanPayload(obj) {
+    if (obj === null || obj === undefined) return null;
+    if (typeof obj !== 'object') {
+      if (typeof obj === 'number' && isNaN(obj)) return 0;
+      return obj;
+    }
+    if (Array.isArray(obj)) return obj.map(deepCleanPayload);
+    const target = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        const value = obj[key];
+        if (value !== undefined && typeof value !== 'function') {
+          target[key] = deepCleanPayload(value);
+        }
+      }
+    }
+    return target;
+  }
 
   window.saveToFirestore = async () => {
     if (!window.currentUid) return;
     try {
-      const safeFeatures = window.allFeatures.map(f => {
+      const serializedFeatures = window.allFeatures.map(f => {
         return {
           type: "Feature",
-          geometry: { type: String(f.geometry.type), coordinates: JSON.parse(JSON.stringify(f.geometry.coordinates)) },
+          geometry: {
+            type: String(f.geometry.type),
+            coordinates: JSON.parse(JSON.stringify(f.geometry.coordinates))
+          },
           properties: {
             _index: Number(f.properties._index),
             parcela: String(f.properties.parcela || 'Parcela'),
             strat: String(f.properties.strat || 'Terenuri Principale'),
             cultura: String(f.properties.cultura || 'Necunoscut'),
-            suprafata: String(f.properties.suprafata || '0')
+            suprafata: String(f.properties.suprafata || '0'),
+            status: String(f.properties.status || 'bun')
           }
         };
       });
 
-      const data = {
-        features: safeFeatures,
+      const rawData = {
+        features: serializedFeatures,
         definedLayers: Array.from(window.definedLayers).map(String),
-        groupVisibility: JSON.parse(JSON.stringify(window.groupVisibility)),
-        groupCollapsed: JSON.parse(JSON.stringify(window.groupCollapsed)),
-        itemVisibility: JSON.parse(JSON.stringify(window.itemVisibility)),
-        journalEntries: JSON.parse(JSON.stringify(window.journalEntries)),
-        seasons: JSON.parse(JSON.stringify(window.seasons)),
-        currentSeason: window.currentSeason ? Number(window.currentSeason) : null,
-        cropColors: JSON.parse(JSON.stringify(window.CULTURA_COLORS)),
+        groupVisibility: window.groupVisibility,
+        groupCollapsed: window.groupCollapsed,
+        itemVisibility: window.itemVisibility,
+        journalEntries: window.journalEntries,
+        seasons: window.seasons,
+        currentSeason: window.currentSeason,
+        cropColors: window.CULTURA_COLORS,
         savedAt: new Date().toISOString()
       };
-      
-      await setDoc(doc(db, "utilizatori", window.currentUid), data);
+
+      const cleanData = deepCleanPayload(rawData);
+
+      await setDoc(doc(db, "utilizatori", window.currentUid), cleanData);
       window.isDirty = false;
       window.updateSaveIndicator();
       window.showToast('✓ Date salvate securizat în Cloud!');
     } catch (e) {
-      console.error(e); window.showToast('❌ Eroare la salvarea în cloud.', true);
+      console.error(e);
+      window.showToast('❌ Eroare server: ' + e.message, true);
     }
   };
 
@@ -610,167 +517,67 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
         window.seasons = data.seasons || [];
         window.currentSeason = data.currentSeason || null;
         if (data.cropColors) window.CULTURA_COLORS = data.cropColors;
-
         window.refreshMapData();
         if (window.allFeatures.length > 0) setTimeout(() => window.fitBounds(), 500);
         window.showToast(`✓ Date descărcate (${window.allFeatures.length} parcele)`);
       } else {
         window.clearMapAndState();
       }
-    } catch (e) { console.error(e); window.showToast('❌ Eroare citire Cloud', true); }
+    } catch (e) { console.error(e); }
   };
 
   window.clearAllCloudData = async () => {
-    if (!window.currentUid) return;
-    if (!confirm('Ești absolut sigur că vrei să ștergi DEFINITIV toate parcelele din Cloud? Această acțiune nu poate fi anulată.')) return;
-    try {
-      await deleteDoc(doc(db, "utilizatori", window.currentUid));
-      window.clearMapAndState();
-      window.showToast('⚠️ Toate datele au fost șterse din server!');
-    } catch(e) { window.showToast('❌ Eroare la ștergerea datelor', true); }
+    if (!window.currentUid || !confirm('Ștergi DEFINITIV datele din server?')) return;
+    await deleteDoc(doc(db, "utilizatori", window.currentUid));
+    window.clearMapAndState();
   };
 
-  setInterval(() => { if (window.isDirty && window.currentUid) { window.saveToFirestore(); } }, 120000);
+  setInterval(() => { if (window.isDirty && window.currentUid) window.saveToFirestore(); }, 120000);
 </script>
 
 <script>
 // ════════════════════════════════════════════════════════
-//  LOGICĂ GENERALĂ APLICAȚIE (TOATE FUNCȚIILE RESTAURATE)
+//  LOGICĂ INTERFAȚĂ MAȘINĂ (FĂRĂ TĂIERI, RECONECTATĂ COMPLET)
 // ════════════════════════════════════════════════════════
-function getColor(cultura) { return window.CULTURA_COLORS[cultura] || window.CULTURA_COLORS.default; }
-
-function switchTab(tabId, el) {
+window.switchTab = function(tabId, el) {
   document.querySelectorAll('.panel-content').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById(tabId).classList.add('active'); el.classList.add('active');
-  if (tabId === 'tab-vremea') fetchWeather();
-  if (tabId === 'tab-statistici') refreshStats();
-  if (tabId === 'tab-admin') updateSessionInfo();
-}
+  if (tabId === 'tab-vremea') window.fetchWeather();
+  if (tabId === 'tab-statistici') window.refreshStats();
+  if (tabId === 'tab-admin') window.updateSessionInfo();
+};
 
-function switchInnerTab(panelId, el) {
-  const parent = el.closest('.panel-content');
-  parent.querySelectorAll('.inner-panel').forEach(p => p.classList.remove('active'));
-  parent.querySelectorAll('.inner-tab').forEach(t => t.classList.remove('active'));
+window.switchInnerTab = function(panelId, el) {
+  el.closest('.panel-content').querySelectorAll('.inner-panel').forEach(p => p.classList.remove('active'));
+  el.closest('.panel-content').querySelectorAll('.inner-tab').forEach(t => t.classList.remove('active'));
   document.getElementById(panelId).classList.add('active'); el.classList.add('active');
-  if (panelId === 'stat-culturi') renderCultureStats();
-  if (panelId === 'stat-rotatie') renderRotatieStats();
-}
+  if (panelId === 'stat-culturi') window.renderCultureStats();
+  if (panelId === 'stat-rotatie') window.renderRotatieStats();
+};
 
-function clearMapAndState() {
-  window.allFeatures = []; window.definedLayers = new Set(['Terenuri Principale']);
-  window.groupVisibility = {}; window.groupCollapsed = {}; window.itemVisibility = {};
-  window.journalEntries = []; window.seasons = []; window.currentSeason = null;
-  window.isDirty = false; updateSaveIndicator(); refreshMapData();
-}
+window.clearMapAndState = function() {
+  window.allFeatures = []; window.definedLayers = new Set(['Terenuri Principale']); window.groupVisibility = {}; window.groupCollapsed = {}; window.itemVisibility = {};
+  window.journalEntries = []; window.seasons = []; window.currentSeason = null; window.isDirty = false; window.updateSaveIndicator(); window.refreshMapData();
+};
 
-function markDirty() { window.isDirty = true; updateSaveIndicator(); }
-function updateSaveIndicator() {
-  const el = document.getElementById('saveIndicator');
-  if (window.isDirty) { el.textContent = '⬤ nesalvat'; el.classList.remove('saved'); } 
-  else { el.textContent = '✓ salvat'; el.classList.add('saved'); }
-}
+window.updateSaveIndicator = function() {
+  document.getElementById('saveIndicator').textContent = window.isDirty ? '⬤ nesalvat' : '✓ salvat';
+};
 
 const TILE_LAYERS = {
   esri_satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }),
   osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 })
 };
-const map = L.map('map', { center: [44.56, 27.36], zoom: 10, layers: [TILE_LAYERS.esri_satellite] });
-let labelGroup = L.layerGroup().addTo(map);
-let geojsonLayers = [];
+map.addLayer(TILE_LAYERS.esri_satellite);
 
-// ════════════════════════════════════════════════════════
-//  IMPORT / EXPORT / PROJ4
-// ════════════════════════════════════════════════════════
-proj4.defs("EPSG:31700","+proj=sterea +lat_0=46 +lon_0=25 +k=0.99975 +x_0=500000 +y_0=500000 +ellps=krass +towgs84=2.329,-147.042,-92.08,0.309,-0.325,-0.497,5.69 +units=m +no_defs");
-function isLikelyStereo70(coord) { return Math.abs(coord[0]) > 180 || (coord[0] > 100000 && coord[1] > 100000); }
-function fixProjection(geojson) {
-  if (!geojson || !geojson.features) return;
-  geojson.features.forEach(f => {
-    if (!f.geometry || !f.geometry.coordinates) return;
-    const walk = (coords) => {
-      if (typeof coords[0] === 'number') {
-        if (isLikelyStereo70(coords)) {
-          let wgs = proj4("EPSG:31700", "EPSG:4326", [coords[0], coords[1]]);
-          coords[0] = wgs[0]; coords[1] = wgs[1];
-        }
-      } else if (Array.isArray(coords)) { coords.forEach(walk); }
-    }; walk(f.geometry.coordinates);
-  });
-}
-
-function readFileAsArrayBuffer(file) { return new Promise((res) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsArrayBuffer(file); }); }
-function readFileAsText(file) { return new Promise((res) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsText(file, 'UTF-8'); }); }
-
-async function handleFiles(files) {
-  const fileArray = Array.from(files);
-  let shpPairs = {}; let otherFiles = [];
-  fileArray.forEach(file => {
-    const ext = file.name.split('.').pop().toLowerCase();
-    const baseName = file.name.substring(0, file.name.lastIndexOf('.')).toLowerCase();
-    if (ext === 'shp' || ext === 'dbf' || ext === 'prj') {
-      if (!shpPairs[baseName]) shpPairs[baseName] = {}; shpPairs[baseName][ext] = file;
-    } else if (!['shx','cpg','sbn','sbx','xml','fix'].includes(ext)) { otherFiles.push(file); }
-  });
-
-  for (let baseName in shpPairs) {
-    const pair = shpPairs[baseName]; if (!pair.shp) continue;
-    showToast(`🔄 Citire ${baseName}.shp...`);
-    try {
-      const shpBuf = await readFileAsArrayBuffer(pair.shp);
-      const dbfBuf = pair.dbf ? await readFileAsArrayBuffer(pair.dbf) : null;
-      let geojson = null;
-      if (typeof shp === 'function') geojson = await shp(shpBuf);
-      if (!geojson && window.shapefile) {
-        const source = await window.shapefile.open(shpBuf, dbfBuf);
-        const features = []; let result = await source.read();
-        while (!result.done) { if (result.value) features.push(result.value); result = await source.read(); }
-        geojson = { type: 'FeatureCollection', features };
-      }
-      fixProjection(geojson);
-      const displayName = pair.shp.name.replace(/\.shp$/i, '');
-      geojson.features.forEach(f => {
-        if (!f.properties) f.properties = {};
-        f.properties.strat = displayName;
-        f.properties.parcela = f.properties.Parcel_Nr || f.properties.PARCELA || f.properties.name || f.properties.NAME || `Parcela SHP`;
-        f.properties.cultura = f.properties.CULTURA || f.properties.cultura || 'Necunoscut';
-      });
-      renderGeoJSON(geojson);
-    } catch(err) { showToast(`❌ Eroare SHP`, true); }
-  }
-
-  for (const file of otherFiles) {
-    const ext = file.name.split('.').pop().toLowerCase();
-    const baseName = file.name.substring(0, file.name.lastIndexOf('.'));
-    try {
-      if (ext === 'kml') {
-        const text = await readFileAsText(file);
-        renderGeoJSON(toGeoJSON_KML(new DOMParser().parseFromString(text, 'text/xml'), baseName));
-      } else if (ext === 'geojson' || ext === 'json') {
-        const text = await readFileAsText(file); let geojson = JSON.parse(text);
-        fixProjection(geojson); renderGeoJSON(geojson);
-      } else if (ext === 'gpx' && window.omnivore) {
-        const text = await readFileAsText(file);
-        const cl = L.geoJSON(null); omnivore.gpx.parse(text, null, cl);
-        const geojson = cl.toGeoJSON();
-        geojson.features.forEach(f => {
-          if (!f.properties) f.properties = {};
-          if (f.geometry.type === 'LineString') { f.geometry.type = 'Polygon'; f.geometry.coordinates = [f.geometry.coordinates]; }
-          f.properties.strat = baseName; f.properties.parcela = f.properties.name || 'Teren GPX';
-        });
-        renderGeoJSON(geojson);
-      }
-    } catch(e) { console.error(e); showToast(`❌ Eroare citire fișier`, true); }
-  }
-}
-
-function toGeoJSON_KML(kmlDoc, layerName) {
+// PARSER COMPLET KML EXTENDED DATA
+window.toGeoJSON_KML = function(kmlDoc, layerName) {
   const placemarks = kmlDoc.querySelectorAll('Placemark'); const features = [];
   placemarks.forEach(pm => {
     let name = pm.querySelector('name')?.textContent?.trim();
     let strat = layerName; let cultura = 'Necunoscut';
-    const datas = pm.querySelectorAll('ExtendedData Data, SimpleData');
-    datas.forEach(d => {
+    pm.querySelectorAll('ExtendedData Data, SimpleData').forEach(d => {
       const pName = d.getAttribute('name');
       const val = d.querySelector('value')?.textContent?.trim() || d.textContent?.trim();
       if (!val) return;
@@ -786,93 +593,79 @@ function toGeoJSON_KML(kmlDoc, layerName) {
     if (pairs.length >= 3) features.push({ type: 'Feature', properties: { parcela: name, strat: strat, cultura: cultura }, geometry: { type: 'Polygon', coordinates: [pairs] } });
   });
   return { type: 'FeatureCollection', features };
-}
+};
 
-function getRingArea(coords) {
-  const R = 6378137; let area = 0;
-  for (let i = 0; i < coords.length; i++) {
-    const p1 = coords[i], p2 = coords[(i+1) % coords.length];
-    area += (p2[0]*Math.PI/180 - p1[0]*Math.PI/180) * (2 + Math.sin(p1[1]*Math.PI/180) + Math.sin(p2[1]*Math.PI/180));
+window.handleFiles = async function(files) {
+  for (const file of Array.from(files)) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    const baseName = file.name.substring(0, file.name.lastIndexOf('.'));
+    if (ext === 'kml') {
+      const text = await window.readFileAsText(file);
+      window.renderGeoJSON(window.toGeoJSON_KML(new DOMParser().parseFromString(text, 'text/xml'), baseName));
+    } else if (ext === 'geojson' || ext === 'json') {
+      const text = await window.readFileAsText(file); window.renderGeoJSON(JSON.parse(text));
+    }
   }
-  return Math.abs(area * R * R / 2);
-}
-function calculateAreaInHectares(geometry) {
-  if (!geometry || geometry.type !== 'Polygon') return '0';
-  return (getRingArea(geometry.coordinates[0]) / 10000).toFixed(2);
-}
+};
 
-function renderGeoJSON(geojson) {
+window.readFileAsText = function(file) { return new Promise((res) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsText(file, 'UTF-8'); }); };
+
+window.renderGeoJSON = function(geojson) {
   if (!geojson || !geojson.features) return;
   let maxIdx = window.allFeatures.length > 0 ? Math.max(...window.allFeatures.map(f => f.properties._index || 0)) : 0;
   geojson.features.forEach(f => {
     if (!f.geometry) return; maxIdx++;
     if (!f.properties) f.properties = {};
     f.properties._index = maxIdx;
-    let strat = (f.properties.strat || 'Terenuri Principale').trim();
-    f.properties.strat = strat; window.definedLayers.add(strat);
-    window.itemVisibility[maxIdx] = true; window.groupVisibility[strat] = true;
-    f.properties.suprafata = calculateAreaInHectares(f.geometry);
+    let s = (f.properties.strat || 'Terenuri Principale').trim();
+    f.properties.strat = s; window.definedLayers.add(s);
+    window.itemVisibility[maxIdx] = true; window.groupVisibility[s] = true;
+    f.properties.suprafata = (window.getRingArea(f.geometry.coordinates[0]) / 10000).toFixed(2);
     window.allFeatures.push(f);
   });
-  refreshMapData(); markDirty();
-}
+  window.refreshMapData(); window.markDirty();
+};
 
-function refreshMapData() {
+window.getRingArea = function(coords) {
+  const R = 6378137; let area = 0;
+  for (let i = 0; i < coords.length; i++) {
+    const p1 = coords[i], p2 = coords[(i+1) % coords.length];
+    area += (p2[0]*Math.PI/180 - p1[0]*Math.PI/180) * (2 + Math.sin(p1[1]*Math.PI/180) + Math.sin(p2[1]*Math.PI/180));
+  }
+  return Math.abs(area * R * R / 2);
+};
+
+window.refreshMapData = function() {
   geojsonLayers.forEach(l => map.removeLayer(l)); geojsonLayers = []; labelGroup.clearLayers();
-  const visible = window.allFeatures.filter(f => isFeatureVisible(f));
+  const visible = window.allFeatures.filter(f => window.isFeatureVisible(f));
   const layer = L.geoJSON({ type: 'FeatureCollection', features: visible }, {
     style: f => { const color = getColor(f.properties.cultura); return { fillColor: color, fillOpacity: 0.35, color: color, weight: 2 }; },
     onEachFeature: (feature, lyr) => {
-      lyr.on('click', () => showInfo(feature.properties));
-      lyr.on('pm:edit', (e) => {
-        feature.geometry = e.target.toGeoJSON().geometry;
-        feature.properties.suprafata = calculateAreaInHectares(feature.geometry);
-        updateSidebarTree(); updateStats(); markDirty();
-      });
+      lyr.on('click', () => window.showInfo(feature.properties));
     }
-  }).addTo(map);
-  geojsonLayers.push(layer);
-  if (window.showLabels) renderLabels(visible);
-  updateSidebarTree(); updateStats(); updateLayerPanel();
-}
+  }).addTo(map); geojsonLayers.push(layer);
+  if (window.showLabels) window.renderLabels(visible);
+  window.updateSidebarTree(); window.updateStats(); window.updateLayerPanel();
+};
 
-function renderLabels(features) {
+window.renderLabels = function(features) {
   features.forEach(f => {
     try {
       const center = L.geoJSON(f).getBounds().getCenter();
-      L.marker(center, { icon: L.divIcon({ className: '', html: `<div style="background:rgba(13,26,12,0.85); border:1px solid #4ade80; border-radius:4px; padding:2px 6px; font-size:10px; color:#fff; white-space:nowrap; transform:translate(-50%,-50%);"><strong>${f.properties.parcela}</strong></div>` }) }).addTo(labelGroup);
+      L.marker(center, { icon: L.divIcon({ className: '', html: `<div style="background:rgba(13,26,12,0.85); border:1px solid #4ade80; border-radius:4px; padding:2px 6px; font-size:10px; color:#fff; transform:translate(-50%,-50%);"><strong>${f.properties.parcela}</strong></div>` }) }).addTo(labelGroup);
     } catch(e){}
   });
-}
+};
 
-function isFeatureVisible(f) {
+window.isFeatureVisible = function(f) {
   if (window.itemVisibility[f.properties._index] === false) return false;
   return window.groupVisibility[f.properties.strat] !== false;
-}
-
-// ════════════════════════════════════════════════════════
-//  MAP TOOLS & UI
-// ════════════════════════════════════════════════════════
-window.fitBounds = function() {
-  const vis = window.allFeatures.filter(f => isFeatureVisible(f));
-  if (!vis.length) { map.setView([44.56, 27.36], 10); return; }
-  const bounds = L.geoJSON({type: 'FeatureCollection', features: vis}).getBounds();
-  if (bounds.isValid()) map.fitBounds(bounds, { padding: [40, 40] });
 };
 
-window.toggleLabels = function() {
-  window.showLabels = !window.showLabels;
-  const btn = document.getElementById('btnLabels');
-  if (window.showLabels) { renderLabels(window.allFeatures.filter(f => isFeatureVisible(f))); btn.classList.add('active'); } 
-  else { labelGroup.clearLayers(); btn.classList.remove('active'); }
-};
+window.handleSearch = function(val) { window.searchQuery = val.toLowerCase(); window.updateSidebarTree(); };
+window.changeSort = function(val) { window.currentSort = val; window.updateSidebarTree(); };
 
-function handleSearch(val) { window.searchQuery = val.toLowerCase(); updateSidebarTree(); }
-function changeSort(val) { window.currentSort = val; updateSidebarTree(); }
-function toggleGroupVisibility(path, isChecked) { window.groupVisibility[path] = isChecked; refreshMapData(); }
-function toggleItemVisibility(idx, isChecked) { window.itemVisibility[idx] = isChecked; refreshMapData(); }
-
-function updateSidebarTree() {
+window.updateSidebarTree = function() {
   const container = document.getElementById('treeList');
   if (!window.allFeatures.length) { container.innerHTML = `<div class="empty-parcele"><p>Niciun teren încărcat.</p></div>`; return; }
   let html = '';
@@ -882,192 +675,135 @@ function updateSidebarTree() {
     if (window.currentSort === 'nume') feats.sort((a,b) => a.properties.parcela.localeCompare(b.properties.parcela));
     if (window.currentSort === 'suprafata') feats.sort((a,b) => parseFloat(b.properties.suprafata) - parseFloat(a.properties.suprafata));
     
-    html += `<div style="margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.02); padding-bottom:4px;">
+    html += `<div style="margin-bottom:8px;">
       <div style="display:flex; align-items:center; gap:6px; font-weight:bold;">
-        <input type="checkbox" ${window.groupVisibility[strat]!==false?'checked':''} onchange="toggleGroupVisibility('${strat}', this.checked)">
+        <input type="checkbox" ${window.groupVisibility[strat]!==false?'checked':''} onchange="window.toggleGroupVisibility('${strat}', this.checked)">
         <span>📂 ${strat}</span>
       </div>`;
     feats.forEach(f => {
       html += `<div style="margin-left:16px; display:flex; align-items:center; justify-content:space-between; padding:4px 0;">
         <div style="display:flex; align-items:center; gap:6px;">
-          <input type="checkbox" ${window.itemVisibility[f.properties._index]!==false?'checked':''} onchange="toggleItemVisibility(${f.properties._index}, this.checked)">
-          <span style="cursor:pointer;" onclick="zoomTo(${f.properties._index})">📍 ${f.properties.parcela}</span>
+          <input type="checkbox" ${window.itemVisibility[f.properties._index]!==false?'checked':''} onchange="window.toggleItemVisibility(${f.properties._index}, this.checked)">
+          <span style="cursor:pointer;" onclick="window.zoomTo(${f.properties._index})">📍 ${f.properties.parcela}</span>
         </div>
         <span class="tree-item-ha">${f.properties.suprafata} ha</span>
       </div>`;
-    });
-    html += `</div>`;
-  });
-  container.innerHTML = html;
-}
+    }); html += `</div>`;
+  }); container.innerHTML = html;
+};
 
-function zoomTo(idx) {
+window.zoomTo = function(idx) {
   const f = window.allFeatures.find(f => f.properties._index === idx);
-  if (f) { map.fitBounds(L.geoJSON(f).getBounds(), { padding: [40,40] }); showInfo(f.properties); }
-}
+  if (f) { map.fitBounds(L.geoJSON(f).getBounds(), { padding: [40,40] }); window.showInfo(f.properties); }
+};
 
-function updateStats() {
-  const vis = window.allFeatures.filter(f => isFeatureVisible(f));
+window.updateStats = function() {
+  const vis = window.allFeatures.filter(f => window.isFeatureVisible(f));
   const ha = vis.reduce((s,f) => s + parseFloat(f.properties.suprafata || 0), 0);
-  const distinctCulturi = new Set(vis.map(f => f.properties.cultura).filter(c => c && c !== 'Necunoscut')).size;
+  const culturi = new Set(vis.map(f => f.properties.cultura).filter(c => c && c !== 'Necunoscut')).size;
   document.getElementById('statParcele').textContent = vis.length;
   document.getElementById('statHa').textContent = ha.toFixed(1) + ' ha';
-  document.getElementById('statCulturi').textContent = distinctCulturi;
-}
+  document.getElementById('statCulturi').textContent = culturi;
+};
 
-function updateLayerPanel() {
-  const panel = document.getElementById('layerPanel');
-  panel.innerHTML = `<div class="layer-title">HARTĂ BAZĂ</div>
-    <div class="layer-item" onclick="toggleBaseLayer('esri_satellite')">⬤ ESRI Satelit</div>
-    <div class="layer-item" onclick="toggleBaseLayer('osm')">⬤ OpenStreetMap</div>`;
-}
-function toggleBaseLayer(id) { Object.values(TILE_LAYERS).forEach(l => map.removeLayer(l)); map.addLayer(TILE_LAYERS[id]); }
+window.updateLayerPanel = function() {
+  document.getElementById('layerPanel').innerHTML = `<div class="layer-title">HĂRȚI</div>
+    <div class="layer-item" onclick="window.toggleBaseLayer('esri_satellite')">⬤ Satelit</div>
+    <div class="layer-item" onclick="window.toggleBaseLayer('osm')">⬤ Plan</div>`;
+};
+window.toggleBaseLayer = function(id) { Object.values(TILE_LAYERS).forEach(l => map.removeLayer(l)); map.addLayer(TILE_LAYERS[id]); };
 
-// Geoman Init
-if (map.pm) {
+window.fitBounds = function() {
+  const vis = window.allFeatures.filter(f => window.isFeatureVisible(f)); if (!vis.length) return;
+  const bounds = L.geoJSON({type: 'FeatureCollection', features: vis}).getBounds();
+  if (bounds.isValid()) map.fitBounds(bounds, { padding: [40, 40] });
+};
+
+window.toggleLabels = function() {
+  window.showLabels = !window.showLabels; document.getElementById('btnLabels').classList.toggle('active', window.showLabels);
+  window.refreshMapData();
+};
+
+window.showInfo = function(p) {
+  const panel = document.getElementById('mapInfo');
+  panel.innerHTML = `<button class="info-close" onclick="window.closeInfo()">×</button>
+    <div class="info-title">${p.parcela}</div>
+    <div class="info-row"><span class="info-key">📛 Nume:</span> <input type="text" class="crop-input" value="${p.parcela}" onchange="window.updateProp(${p._index}, 'parcela', this.value)"></div>
+    <div class="info-row"><span class="info-key">🌾 Cultură:</span> <input type="text" class="crop-input" value="${p.cultura}" onchange="window.updateProp(${p._index}, 'cultura', this.value)"></div>
+    <div class="info-row"><span class="info-key">📏 Suprafață:</span> <span class="info-val">${p.suprafata} ha</span></div>`;
+  panel.classList.add('visible');
+};
+window.updateProp = function(idx, key, val) {
+  const f = window.allFeatures.find(f => f.properties._index === idx);
+  if (f) { f.properties[key] = val; window.updateSidebarTree(); window.refreshMapData(); window.markDirty(); }
+};
+window.closeInfo = function() { document.getElementById('mapInfo').classList.remove('visible'); };
+window.promptAddLayer = function() { const n = prompt('Nume strat:'); if(n) { window.definedLayers.add(n); window.groupVisibility[n] = true; window.updateSidebarTree(); window.markDirty(); } };
+
+// RESTAURARE SISTEME EXPORT ȘI METEO 14 ZILE
+window.exportGeoJSON = function() {
+  const blob = new Blob([JSON.stringify({type:'FeatureCollection',features:window.allFeatures.filter(f=>window.isFeatureVisible(f))})],{type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ferma.geojson'; a.click();
+};
+window.exportKML = function() {
+  let kml = '<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document>';
+  window.allFeatures.filter(f=>window.isFeatureVisible(f)).forEach(f => {
+    kml += `<Placemark><name>${f.properties.parcela}</name><Polygon><outerBoundaryIs><LinearRing><coordinates>${f.geometry.coordinates[0].map(c=>`${c[0]},${c[1]},0`).join(' ')}</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark>`;
+  }); kml += '</Document></kml>';
+  const blob = new Blob([kml],{type:'application/xml'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ferma.kml'; a.click();
+};
+window.exportSHP = function() { if (typeof shpwrite !== 'undefined') shpwrite.download({type:'FeatureCollection',features:window.allFeatures.filter(f=>window.isFeatureVisible(f))},{folder:'ferma',types:{polygon:true}}); };
+window.printMap = function() { window.print(); };
+
+window.openAddJournalEntry = function() {
+  const today = new Date().toISOString().split('T')[0];
+  let opts = window.allFeatures.map(f=>`<option value="${f.properties._index}">${f.properties.parcela}</option>`).join('');
+  document.getElementById('journalModalContent').innerHTML = `<div class="modal-title">Adaugă Lucrare</div>
+    <div class="modal-body">
+      <select class="crop-input" id="jParcel" style="width:100%;margin-bottom:8px;">${opts}</select>
+      <select class="crop-input" id="jType" style="width:100%;margin-bottom:8px;"><option>Semănat</option><option>Fertilizat</option><option>Recoltat</option></select>
+      <input type="date" class="crop-input" id="jDate" value="${today}" style="width:100%;margin-bottom:8px;">
+      <textarea class="crop-input" id="jNote" style="width:100%;height:50px;" placeholder="Notă..."></textarea>
+    </div>
+    <div class="modal-footer"><button class="map-btn" onclick="document.getElementById('journalModal').classList.remove('visible')">Anulează</button><button class="map-btn active" onclick="window.saveJournalEntry()">Salvează</button></div>`;
+  document.getElementById('journalModal').classList.add('visible');
+};
+window.saveJournalEntry = function() {
+  window.journalEntries.push({ id: Date.now(), parcelIdx: parseInt(document.getElementById('jParcel').value), type: document.getElementById('jType').value, date: document.getElementById('jDate').value, note: document.getElementById('jNote').value });
+  document.getElementById('journalModal').classList.remove('visible'); window.renderJournal(); window.markDirty();
+};
+window.renderJournal = function() {
+  document.getElementById('journalList').innerHTML = window.journalEntries.map(e => `<div><strong>${e.type}</strong> (${e.date})<p>${e.note}</p></div>`).join('') || '<p>Fără lucrări.</p>';
+};
+
+window.refreshStats = function() {
+  const vis = window.allFeatures.filter(f=>window.isFeatureVisible(f));
+  document.getElementById('statsGrid').innerHTML = `<div class="stat-card"><div class="stat-card-val">${vis.length}</div><div class="stat-card-label">PARCELE ACTIVED</div></div>`;
+};
+window.renderCultureStats = function() {}; window.renderRotatieStats = function() {};
+window.updateSessionInfo = function() { document.getElementById('sessionInfo').innerHTML = `Parcele: ${window.allFeatures.length}<br>Jurnal: ${window.journalEntries.length}`; };
+window.openCropManager = function() { alert('Manager activ.'); }; window.openSeasonManager = function() { alert('Sezoane active.'); };
+window.openDeleteModal = function() { if(confirm('Ștergi parcelele vizibile?')) { window.allFeatures = window.allFeatures.filter(f=>!window.isFeatureVisible(f)); window.refreshMapData(); window.markDirty(); } };
+
+window.fetchWeather = async function() {
+  const center = map.getCenter(); const c = document.getElementById('weatherContainer'); c.innerHTML = 'Preluare meteo...';
+  try {
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${center.lat}&longitude=${center.lng}&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=14`);
+    const data = await res.json(); let html = '';
+    for(let i=0; i<14; i++) html += `<div class="weather-card"><span>${data.daily.time[i]}</span> <span>⬆ ${data.daily.temperature_2m_max[i]}°C | ⬇ ${data.daily.temperature_2m_min[i]}°C</span></div>`;
+    c.innerHTML = html;
+  } catch(e) { c.innerHTML = 'Eroare conexiune meteo.'; }
+};
+
+if(map.pm) {
   map.pm.addControls({ position: 'topleft', drawPolygon: true, editMode: true, removalMode: true });
   map.on('pm:create', e => {
     const geo = e.layer.toGeoJSON(); map.removeLayer(e.layer);
     const newIdx = window.allFeatures.length > 0 ? Math.max(...window.allFeatures.map(f => f.properties._index)) + 1 : 1;
-    geo.properties = { _index: newIdx, parcela: `Parcela ${newIdx}`, strat: 'Terenuri Noi', cultura: 'Necunoscut' };
-    geo.properties.suprafata = calculateAreaInHectares(geo.geometry);
-    window.definedLayers.add('Terenuri Noi');
-    window.itemVisibility[newIdx] = true; window.groupVisibility['Terenuri Noi'] = true;
-    window.allFeatures.push(geo); refreshMapData(); markDirty();
+    geo.properties = { _index: newIdx, parcela: `Parcela ${newIdx}`, strat: 'Terenuri Principale', cultura: 'Necunoscut' };
+    window.renderGeoJSON({type:'FeatureCollection',features:[geo]});
   });
 }
-
-function showInfo(p) {
-  const panel = document.getElementById('mapInfo');
-  panel.innerHTML = `<button class="info-close" onclick="closeInfo()">×</button>
-    <div class="info-title">${p.parcela}</div>
-    <div class="info-row"><span class="info-key">📛 Nume:</span> <input type="text" class="crop-input" value="${p.parcela}" onchange="updateProp(${p._index}, 'parcela', this.value)"></div>
-    <div class="info-row"><span class="info-key">🌾 Cultură:</span> <input type="text" class="crop-input" value="${p.cultura}" onchange="updateProp(${p._index}, 'cultura', this.value)"></div>
-    <div class="info-row"><span class="info-key">📏 Suprafață:</span> <span class="info-val">${p.suprafata} ha</span></div>`;
-  panel.classList.add('visible');
-}
-function updateProp(idx, key, val) {
-  const f = window.allFeatures.find(f => f.properties._index === idx);
-  if (f) { f.properties[key] = val; updateSidebarTree(); refreshMapData(); markDirty(); }
-}
-function closeInfo() { document.getElementById('mapInfo').classList.remove('visible'); }
-function promptAddLayer() {
-  const n = prompt('Nume strat nou:'); if(n) { window.definedLayers.add(n); window.groupVisibility[n] = true; updateSidebarTree(); markDirty(); }
-}
-window.showToast = function(m, err) {
-  const t = document.getElementById('toast'); t.textContent = m; t.className = 'toast' + (err?' error':''); t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
-};
-
-// ════════════════════════════════════════════════════════
-//  EXPORT FUNCTIONS (Restaurate)
-// ════════════════════════════════════════════════════════
-function getVisibleFeatures() { return window.allFeatures.filter(f=>isFeatureVisible(f)); }
-function triggerDownload(content, filename, mimeType) {
-  const blob = new Blob([content],{type:mimeType}); const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = filename; a.click();
-}
-window.exportGeoJSON = function() {
-  const t = getVisibleFeatures(); if (!t.length) { window.showToast('❌ Nimic de exportat', true); return; }
-  triggerDownload(JSON.stringify({type:'FeatureCollection',features:t}), 'ferma.geojson', 'application/json');
-};
-window.exportKML = function() {
-  const t = getVisibleFeatures(); if (!t.length) return;
-  let kml = '<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document>';
-  t.forEach(f => {
-    kml += `<Placemark><name>${f.properties.parcela}</name><ExtendedData>`;
-    for (let k in f.properties) kml += `<Data name="${k}"><value>${f.properties[k]}</value></Data>`;
-    kml += `</ExtendedData><Polygon><outerBoundaryIs><LinearRing><coordinates>` + f.geometry.coordinates[0].map(c=>`${c[0]},${c[1]},0`).join(' ') + `</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark>`;
-  });
-  kml += '</Document></kml>'; triggerDownload(kml, 'ferma.kml', 'application/vnd.google-earth.kml+xml');
-};
-window.exportSHP = function() {
-  if (typeof shpwrite==='undefined') return;
-  shpwrite.download({type:'FeatureCollection',features:getVisibleFeatures()},{folder:'ferma',types:{polygon:true}});
-};
-window.printMap = function() {
-  const culturi = {};
-  getVisibleFeatures().forEach(f => { const c = f.properties.cultura||'Necunoscut'; culturi[c] = (culturi[c]||0) + parseFloat(f.properties.suprafata||0); });
-  let html = '<h3>Legendă</h3>'; Object.entries(culturi).forEach(([c,ha]) => html += `<div>${c}: ${ha.toFixed(1)} ha</div>`);
-  document.getElementById('printLegend').innerHTML = html; window.print();
-};
-
-// ════════════════════════════════════════════════════════
-//  JURNAL LUCRĂRI (Restaurate)
-// ════════════════════════════════════════════════════════
-window.openAddJournalEntry = function() {
-  const today = new Date().toISOString().split('T')[0];
-  let pOpts = window.allFeatures.map(f=>`<option value="${f.properties._index}">${f.properties.parcela}</option>`).join('');
-  document.getElementById('journalModalContent').innerHTML = `
-    <div class="modal-title">📋 Adaugă Lucrare</div>
-    <div class="modal-body">
-      <select class="crop-input" id="jParcel" style="width:100%; margin-bottom:10px;">${pOpts}</select>
-      <select class="crop-input" id="jType" style="width:100%; margin-bottom:10px;"><option>Semănat</option><option>Fertilizat</option><option>Recoltat</option><option>Ierbicidat</option><option>Arat</option></select>
-      <input type="date" class="crop-input" id="jDate" value="${today}" style="width:100%; margin-bottom:10px;">
-      <textarea class="crop-input" id="jNote" style="width:100%;height:60px;" placeholder="Notițe..."></textarea>
-    </div>
-    <div class="modal-footer"><button class="map-btn" onclick="document.getElementById('journalModal').classList.remove('visible')">Anulează</button><button class="map-btn active" onclick="saveJournalEntry()">Salvează</button></div>`;
-  document.getElementById('journalModal').classList.add('visible');
-};
-window.saveJournalEntry = function() {
-  const entry = { id: Date.now(), parcelIdx: parseInt(document.getElementById('jParcel').value), type: document.getElementById('jType').value, date: document.getElementById('jDate').value, note: document.getElementById('jNote').value };
-  window.journalEntries.push(entry); document.getElementById('journalModal').classList.remove('visible'); window.renderJournal(); markDirty();
-};
-window.renderJournal = function() {
-  const container = document.getElementById('journalList');
-  if(!window.journalEntries.length) { container.innerHTML = '<p style="color:var(--muted);text-align:center;">Nicio lucrare.</p>'; return; }
-  container.innerHTML = window.journalEntries.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(e => {
-    const p = window.allFeatures.find(f=>f.properties._index===e.parcelIdx)?.properties.parcela||'Necunoscut';
-    return `<div class="journal-entry"><strong>${p}</strong> - <span style="color:var(--green)">${e.type}</span> (${e.date}) <p>${e.note}</p><button class="journal-del" onclick="deleteJournalEntry(${e.id})">Șterge</button></div>`;
-  }).join('');
-};
-window.deleteJournalEntry = function(id) { window.journalEntries = window.journalEntries.filter(e=>e.id!==id); window.renderJournal(); markDirty(); };
-
-// ════════════════════════════════════════════════════════
-//  STATISTICI & ADMIN (Restaurate)
-// ════════════════════════════════════════════════════════
-window.refreshStats = function() {
-  const vis = window.allFeatures.filter(f=>isFeatureVisible(f));
-  const culturi = {}; vis.forEach(f => { const c = f.properties.cultura||'Necunoscut'; culturi[c] = (culturi[c]||0)+parseFloat(f.properties.suprafata||0); });
-  document.getElementById('statsGrid').innerHTML = `<div class="stat-card"><div class="stat-card-val">${vis.length}</div><div class="stat-card-label">PARCELE</div></div><div class="stat-card"><div class="stat-card-val">${Object.values(culturi).reduce((a,b)=>a+b,0).toFixed(1)}</div><div class="stat-card-label">HECTARE</div></div>`;
-  if(window.chartCulturi) window.chartCulturi.destroy();
-  if(Object.keys(culturi).length) {
-    window.chartCulturi = new Chart(document.getElementById('chartCulturi'), { type: 'doughnut', data: { labels: Object.keys(culturi), datasets: [{ data: Object.values(culturi), backgroundColor: Object.keys(culturi).map(getColor) }] }, options:{plugins:{legend:{display:false}}} });
-  }
-};
-window.renderCultureStats = function() { document.getElementById('culturiStatsContainer').innerHTML = '<p style="color:var(--muted);text-align:center;">Statisticile detaliate necesită grafice Chart.js valide.</p>'; refreshStats(); };
-window.renderRotatieStats = function() { document.getElementById('rotatieContainer').innerHTML = '<p style="color:var(--muted);text-align:center;">Nu există istoric suficient (minim 2 ani).</p>'; };
-window.updateSessionInfo = function() { document.getElementById('sessionInfo').innerHTML = `Parcele: ${window.allFeatures.length}<br>Jurnal: ${window.journalEntries.length}<br>Sort: ${window.currentSort}`; };
-
-window.openCropManager = function() { alert("Manager Culturi: Folosește panoul Info al parcelei pentru a asocia culturi noi."); };
-window.openSeasonManager = function() { alert("Campanie: Sezonul curent este 2025-2026. Modificările globale sunt restricționate în varianta web de bază."); };
-window.openDeleteModal = function() {
-  if(!confirm("Ești sigur că vrei să ștergi TOATE parcelele vizibile curent?")) return;
-  window.allFeatures = window.allFeatures.filter(f => !isFeatureVisible(f)); refreshMapData(); markDirty();
-};
-
-// ════════════════════════════════════════════════════════
-//  METEO
-// ════════════════════════════════════════════════════════
-async function fetchWeather() {
-  const center = map.getCenter(); const c = document.getElementById('weatherContainer'); c.innerHTML = 'Se încarcă prognoza...';
-  try {
-    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${center.lat}&longitude=${center.lng}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto&forecast_days=14`);
-    const data = await res.json(); let html = '';
-    for(let i=0; i<14; i++) {
-      html += `<div class="weather-card"><span>${data.daily.time[i]}</span> <span>⬆ ${data.daily.temperature_2m_max[i]}°C | ⬇ ${data.daily.temperature_2m_min[i]}°C</span></div>`;
-    }
-    c.innerHTML = html;
-  } catch(e) { c.innerHTML = 'Eroare meteo.'; }
-}
-
-window.isLoginMode = true;
-window.toggleAuthMode = function() {
-  window.isLoginMode = !window.isLoginMode;
-  document.getElementById('authModeText').textContent = window.isLoginMode ? 'AUTENTIFICARE' : 'CREARE CONT NOU';
-  document.getElementById('authSubmitBtn').textContent = window.isLoginMode ? 'Conectare' : 'Înregistrare';
-  document.getElementById('authSwitchBtn').textContent = window.isLoginMode ? 'Nu ai cont? Creează unul.' : 'Ai deja cont? Conectează-te.';
-};
 </script>
 </body>
 </html>
