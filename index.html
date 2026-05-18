@@ -556,25 +556,66 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
   window.saveToFirestore = async () => {
     if (!currentUid) return;
     try {
+      // FILTRU SUPREM PENTRU KML: Reconstruim tabloul de parcele cu proprietăți sigure, de tip text primitiv
+      // Asta previne erorile de tip "Unsupported field value: undefined" sau obiecte Leaflet nestructurate în Firestore
+      const safeFeatures = allFeatures.map(f => {
+        return {
+          type: "Feature",
+          geometry: {
+            type: f.geometry.type,
+            coordinates: JSON.parse(JSON.stringify(f.geometry.coordinates))
+          },
+          properties: {
+            _index: Number(f.properties._index),
+            parcela: String(f.properties.parcela || 'Parcela'),
+            strat: String(f.properties.strat || 'Terenuri Principale'),
+            cultura: String(f.properties.cultura || 'Necunoscut'),
+            suprafata: String(f.properties.suprafata || '0')
+          }
+        };
+      });
+
+      const safeJournal = journalEntries.map(j => {
+        return {
+          id: Number(j.id),
+          parcelIdx: Number(j.parcelIdx),
+          parcelName: String(j.parcelName || ''),
+          type: String(j.type || 'Altele'),
+          date: String(j.date || ''),
+          note: String(j.note || ''),
+          cultura: String(j.cultura || ''),
+          suprafata: String(j.suprafata || '')
+        };
+      });
+
+      const safeSeasons = seasons.map(s => {
+        return {
+          id: Number(s.id),
+          name: String(s.name || ''),
+          year: Number(s.year || new Date().getFullYear())
+        };
+      });
+
       const data = {
-        features: allFeatures,
-        definedLayers: Array.from(definedLayers),
-        groupVisibility, groupCollapsed, itemVisibility,
-        journalEntries, seasons, currentSeason,
-        cropColors: CULTURA_COLORS,
+        features: safeFeatures,
+        definedLayers: Array.from(definedLayers).map(String),
+        groupVisibility: JSON.parse(JSON.stringify(groupVisibility)),
+        groupCollapsed: JSON.parse(JSON.stringify(groupCollapsed)),
+        itemVisibility: JSON.parse(JSON.stringify(itemVisibility)),
+        journalEntries: safeJournal,
+        seasons: safeSeasons,
+        currentSeason: currentSeason ? Number(currentSeason) : null,
+        cropColors: JSON.parse(JSON.stringify(CULTURA_COLORS)),
         savedAt: new Date().toISOString()
       };
       
-      // TRUCUL MAGIC: Curățăm datele de absolut orice eroare Leaflet invizibilă (undefined fields)
-      const dataCurata = JSON.parse(JSON.stringify(data));
-      
-      await setDoc(doc(db, "utilizatori", currentUid), dataCurata);
+      await setDoc(doc(db, "utilizatori", currentUid), data);
       isDirty = false;
       updateSaveIndicator();
       showToast('✓ Date salvate securizat în Cloud!');
     } catch (e) {
-      console.error(e);
-      showToast('❌ Eroare la salvarea în baza de date Cloud', true);
+      console.error("Eroare detaliata Firestore:", e);
+      showToast('❌ Eroare la salvarea în cloud. Date KML necompatibile.', true);
     }
   };
 
@@ -883,12 +924,6 @@ function renderLabels(features) {
       }).addTo(labelGroup);
     } catch(e){}
   });
-}
-
-function isFeatureVisible(f) {
-  const idx = f.properties._index;
-  if (itemVisibility[idx] === false) return false;
-  return groupVisibility[f.properties.strat] !== false;
 }
 
 // ════════════════════════════════════════════════════════
