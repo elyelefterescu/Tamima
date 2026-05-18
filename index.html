@@ -278,7 +278,7 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
     <button class="map-btn" style="padding:5px 10px; font-size:10px; background:rgba(248,113,113,0.1); color:var(--red); border-color:rgba(248,113,113,0.3);" onclick="window.logoutUser()">Ieși din cont</button>
     <span class="save-indicator" id="saveIndicator" style="margin-left:6px;">⬤ nesalvat</span>
     <div class="header-badge">📍 WGS84 / Stereo70</div>
-    <button class="map-btn" style="padding:5px 12px; font-size:10px;" onclick="saveToLocalStorage()">💾 Salvează</button>
+    <button class="map-btn" style="padding:5px 12px; font-size:10px;" onclick="window.saveToFirestore()">💾 Salvează</button>
   </div>
 </div>
 
@@ -435,7 +435,7 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
           <button onclick="openCropManager()" style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);color:var(--blue);padding:11px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'JetBrains Mono',monospace;text-align:left;">🎨 Manager Culturi & Culori</button>
           <button onclick="openSeasonManager()" style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);color:var(--green);padding:11px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'JetBrains Mono',monospace;text-align:left;">📅 Manager Sezoane</button>
           <button onclick="openDeleteModal()" style="background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.2);color:var(--red);padding:11px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'JetBrains Mono',monospace;text-align:left;">🗑️ Șterge Terenuri / Straturi</button>
-          <button onclick="clearAllData()" style="background:rgba(248,113,113,0.04);border:1px solid rgba(248,113,113,0.15);color:rgba(248,113,113,0.6);padding:11px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'JetBrains Mono',monospace;text-align:left;">⚠️ Resetează Tot (șterge local storage)</button>
+          <button onclick="clearAllCloudData()" style="background:rgba(248,113,113,0.04);border:1px solid rgba(248,113,113,0.15);color:rgba(248,113,113,0.6);padding:11px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'JetBrains Mono',monospace;text-align:left;">⚠️ Resetează Tot Contul (șterge datele din cloud)</button>
         </div>
       </div>
       <div class="sidebar-section">
@@ -488,6 +488,7 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBhnGgOd9zj0JfbdYWbPRe0ylwtqBW-Acg",
@@ -501,22 +502,26 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+  const db = getFirestore(app);
 
-  // Monitorizează starea utilizatorului (dacă e logat sau nu)
+  let currentUid = null;
+
+  // Monitorizare utilizator logat
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      // Ascunde ecranul de login
+      currentUid = user.uid;
       document.getElementById('authOverlay').classList.add('hidden');
       document.getElementById('headerUserEmail').textContent = user.email;
-      showToast(`✓ Te-ai conectat ca: ${user.email.split('@')[0]}`);
+      window.loadFromFirestore(user.uid);
     } else {
-      // Arată ecranul de login
+      currentUid = null;
       document.getElementById('authOverlay').classList.remove('hidden');
       document.getElementById('headerUserEmail').textContent = '';
+      window.clearMapAndState();
     }
   });
 
-  // Funcția reală de procesare Login / Register
+  // Autentificare / Înregistrare
   window.processAuth = () => {
     const email = document.getElementById('authEmail').value.trim();
     const pass = document.getElementById('authPassword').value;
@@ -532,38 +537,91 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
     btn.style.opacity = '0.8';
 
     if (window.isLoginMode) {
-      // CONECTARE CONT EXISTENT
       signInWithEmailAndPassword(auth, email, pass)
-        .then(() => {
-          btn.textContent = originalText;
-          btn.style.opacity = '1';
-        })
-        .catch((error) => {
-          btn.textContent = originalText;
-          btn.style.opacity = '1';
-          showToast(`❌ Eroare la conectare: Verifică parola și emailul!`, true);
-        });
+        .then(() => { btn.textContent = originalText; btn.style.opacity = '1'; })
+        .catch(() => { btn.textContent = originalText; btn.style.opacity = '1'; showToast('❌ Parolă sau email incorecte!', true); });
     } else {
-      // CREARE CONT NOU
       createUserWithEmailAndPassword(auth, email, pass)
-        .then(() => {
-          btn.textContent = originalText;
-          btn.style.opacity = '1';
-        })
-        .catch((error) => {
-          btn.textContent = originalText;
-          btn.style.opacity = '1';
-          showToast(`❌ Eroare creare cont (minim 6 caractere la parolă)`, true);
-        });
+        .then(() => { btn.textContent = originalText; btn.style.opacity = '1'; })
+        .catch(() => { btn.textContent = originalText; btn.style.opacity = '1'; showToast('❌ Eroare: Parola trebuie să aibă minim 6 caractere!', true); });
     }
   };
 
-  // Funcție de ieșire din cont
+  // Logout
   window.logoutUser = () => {
-    signOut(auth).then(() => {
-      showToast('Te-ai deconectat.');
-    });
+    signOut(auth).then(() => { showToast('Te-ai deconectat.'); });
   };
+
+  // Salvare în Firebase Firestore (Înlocuiește LocalStorage)
+  window.saveToFirestore = async () => {
+    if (!currentUid) return;
+    try {
+      const data = {
+        features: allFeatures,
+        definedLayers: Array.from(definedLayers),
+        groupVisibility, groupCollapsed, itemVisibility,
+        journalEntries, seasons, currentSeason,
+        cropColors: CULTURA_COLORS,
+        savedAt: new Date().toISOString()
+      };
+      await setDoc(doc(db, "utilizatori", currentUid), data);
+      isDirty = false;
+      updateSaveIndicator();
+      showToast('✓ Date salvate securizat în Cloud!');
+    } catch (e) {
+      console.error(e);
+      showToast('❌ Eroare la salvarea în baza de date Cloud', true);
+    }
+  };
+
+  // Încărcare din Firebase Firestore
+  window.loadFromFirestore = async (uid) => {
+    try {
+      const docSnap = await getDoc(doc(db, "utilizatori", uid));
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        allFeatures = data.features || [];
+        definedLayers = new Set(data.definedLayers || ['Terenuri Principale']);
+        groupVisibility = data.groupVisibility || {};
+        groupCollapsed = data.groupCollapsed || {};
+        itemVisibility = data.itemVisibility || {};
+        journalEntries = data.journalEntries || [];
+        seasons = data.seasons || [];
+        currentSeason = data.currentSeason || null;
+        if (data.cropColors) CULTURA_COLORS = data.cropColors;
+
+        refreshMapData();
+        if (allFeatures.length > 0) {
+          setTimeout(() => fitBounds(), 500);
+        }
+        showToast(`✓ Datele tale au fost descărcate (${allFeatures.length} parcele)`);
+      } else {
+        showToast('🌱 Cont nou! Harta este goală, gata de lucru.');
+        window.clearMapAndState();
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('❌ Eroare la citirea datelor din Cloud', true);
+    }
+  };
+
+  // Ștergere completă cont din cloud
+  window.clearAllCloudData = async () => {
+    if (!currentUid) return;
+    if (!confirm('Ești absolut sigur că vrei să ștergi DEFINITIV toate parcelele din Cloud? Această acțiune nu poate fi anulată.')) return;
+    try {
+      await deleteDoc(doc(db, "utilizatori", currentUid));
+      window.clearMapAndState();
+      showToast('⚠️ Toate datele au fost șterse din server!');
+    } catch(e) {
+      showToast('❌ Eroare la ștergerea datelor', true);
+    }
+  };
+
+  // Auto-salvare la fiecare 2 minute dacă s-au făcut modificări
+  setInterval(() => {
+    if (isDirty && currentUid) { window.saveToFirestore(); }
+  }, 120000);
 </script>
 
 <script>
@@ -606,7 +664,7 @@ const map = L.map('map', { center: [44.56, 27.36], zoom: 10, zoomControl: true, 
 let labelGroup = L.layerGroup().addTo(map);
 
 // ════════════════════════════════════════════════════════
-//  STATE
+//  STATE GENERAL APPLICATION
 // ════════════════════════════════════════════════════════
 let currentBaseLayer = 'esri_satellite';
 let geojsonLayers = [];
@@ -622,69 +680,29 @@ let currentlyEditingIdx = null;
 let targetObstacleIdx = null;
 let isDirty = false;
 
-// Jurnal lucrări agricole: [{id, parcelIdx, parcelName, date, type, note, cultura, suprafata}]
 let journalEntries = [];
-// Sezoane: [{id, name, year, active}]
 let seasons = [];
 let currentSeason = null;
 
-// ════════════════════════════════════════════════════════
-//  CULORI CULTURI
-// ════════════════════════════════════════════════════════
 const defaultColorsPreset = {
   'Grâu': '#fbbf24', 'Porumb': '#f59e0b', 'Rapiță': '#84cc16',
   'Floarea Soarelui': '#f97316', 'Soia': '#10b981', 'Sfeclă': '#ec4899',
   'Orz': '#a78bfa', 'Lucernă': '#34d399', 'Ovăz': '#60a5fa',
   'Secară': '#fb923c', 'Necunoscut': '#9ca3af', 'default': '#4ade80'
 };
-let storedColors = localStorage.getItem('agro_crop_colors');
-let CULTURA_COLORS = storedColors ? JSON.parse(storedColors) : { ...defaultColorsPreset };
+let CULTURA_COLORS = { ...defaultColorsPreset };
 function getColor(cultura) { return CULTURA_COLORS[cultura] || CULTURA_COLORS.default; }
 
-// ════════════════════════════════════════════════════════
-//  LOCAL STORAGE SAVE / LOAD
-// ════════════════════════════════════════════════════════
-function saveToLocalStorage() {
-  try {
-    const data = {
-      features: allFeatures,
-      definedLayers: Array.from(definedLayers),
-      groupVisibility, groupCollapsed, itemVisibility,
-      journalEntries, seasons, currentSeason,
-      savedAt: new Date().toISOString()
-    };
-    localStorage.setItem('agro_manager_v2_data', JSON.stringify(data));
-    localStorage.setItem('agro_crop_colors', JSON.stringify(CULTURA_COLORS));
-    isDirty = false;
-    updateSaveIndicator();
-    showToast('✓ Date salvate cu succes!');
-  } catch(e) {
-    showToast('❌ Eroare la salvare (prea multe date?)', true);
-  }
-}
-
-function loadFromLocalStorage() {
-  try {
-    const raw = localStorage.getItem('agro_manager_v2_data');
-    if (!raw) return;
-    const data = JSON.parse(raw);
-    allFeatures = data.features || [];
-    definedLayers = new Set(data.definedLayers || ['Terenuri Principale']);
-    groupVisibility = data.groupVisibility || {};
-    groupCollapsed = data.groupCollapsed || {};
-    itemVisibility = data.itemVisibility || {};
-    journalEntries = data.journalEntries || [];
-    seasons = data.seasons || [];
-    currentSeason = data.currentSeason || null;
-    // Re-index max idx
-    refreshMapData();
-    if (allFeatures.length > 0) {
-      setTimeout(() => fitBounds(), 500);
-    }
-    showToast(`✓ Date încărcate (${allFeatures.length} parcele)`);
-  } catch(e) {
-    console.error('Load error:', e);
-  }
+// Resetare stare aplicație (la logout sau erori)
+function clearMapAndState() {
+  allFeatures = [];
+  definedLayers = new Set(['Terenuri Principale']);
+  groupVisibility = {}; groupCollapsed = {}; itemVisibility = {};
+  journalEntries = []; seasons = []; currentSeason = null;
+  CULTURA_COLORS = { ...defaultColorsPreset };
+  isDirty = false;
+  updateSaveIndicator();
+  refreshMapData();
 }
 
 function markDirty() {
@@ -695,28 +713,18 @@ function markDirty() {
 function updateSaveIndicator() {
   const el = document.getElementById('saveIndicator');
   if (isDirty) {
-    el.textContent = '⬤ nesalvat';
-    el.classList.remove('saved');
+    el.textContent = '⬤ nesalvat'; el.classList.remove('saved');
   } else {
-    el.textContent = '✓ salvat';
-    el.classList.add('saved');
+    el.textContent = '✓ salvat'; el.classList.add('saved');
   }
 }
 
-function clearAllData() {
-  if (!confirm('Ești sigur că vrei să ștergi TOATE datele și să resetezi aplicația?')) return;
-  localStorage.removeItem('agro_manager_v2_data');
-  localStorage.removeItem('agro_crop_colors');
-  location.reload();
-}
-
 // ════════════════════════════════════════════════════════
-//  PROJ4 STEREO70
+//  PROJ4 STEREO70 & IMPORT LOGIC
 // ════════════════════════════════════════════════════════
 proj4.defs("EPSG:31700","+proj=sterea +lat_0=46 +lon_0=25 +k=0.99975 +x_0=500000 +y_0=500000 +ellps=krass +towgs84=2.329,-147.042,-92.08,0.309,-0.325,-0.497,5.69 +units=m +no_defs");
 
 function isLikelyStereo70(coord) {
-  // Stereo70: X roughly 200000-700000, Y roughly 300000-700000
   return Math.abs(coord[0]) > 180 || (coord[0] > 100000 && coord[1] > 100000);
 }
 
@@ -736,97 +744,48 @@ function fixProjection(geojson) {
   });
 }
 
-// ════════════════════════════════════════════════════════
-//  IMPORT FIȘIERE (fix SHP complet)
-// ════════════════════════════════════════════════════════
-function readFileAsArrayBuffer(file) {
-  return new Promise((res, rej) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.onerror = rej; r.readAsArrayBuffer(file); });
-}
-function readFileAsText(file) {
-  return new Promise((res, rej) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.onerror = rej; r.readAsText(file, 'UTF-8'); });
-}
+function readFileAsArrayBuffer(file) { return new Promise((res) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsArrayBuffer(file); }); }
+function readFileAsText(file) { return new Promise((res) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsText(file, 'UTF-8'); }); }
 
 async function handleFiles(files) {
   const fileArray = Array.from(files);
-  let shpPairs = {};
-  let otherFiles = [];
+  let shpPairs = {}; let otherFiles = [];
 
   fileArray.forEach(file => {
     const ext = file.name.split('.').pop().toLowerCase();
     const baseName = file.name.substring(0, file.name.lastIndexOf('.')).toLowerCase();
     if (ext === 'shp' || ext === 'dbf' || ext === 'prj') {
-      if (!shpPairs[baseName]) shpPairs[baseName] = {};
-      shpPairs[baseName][ext] = file;
-    } else if (!['shx','cpg','sbn','sbx','xml','fix'].includes(ext)) {
-      otherFiles.push(file);
-    }
+      if (!shpPairs[baseName]) shpPairs[baseName] = {}; shpPairs[baseName][ext] = file;
+    } else if (!['shx','cpg','sbn','sbx','xml','fix'].includes(ext)) { otherFiles.push(file); }
   });
 
-  // ── SHP: folosim shpjs (mai robust decât shapefile.js)
   for (let baseName in shpPairs) {
-    const pair = shpPairs[baseName];
-    if (!pair.shp) continue;
+    const pair = shpPairs[baseName]; if (!pair.shp) continue;
     showToast(`🔄 Citire ${baseName}.shp...`);
     try {
       const shpBuf = await readFileAsArrayBuffer(pair.shp);
       const dbfBuf = pair.dbf ? await readFileAsArrayBuffer(pair.dbf) : null;
-      let geojson;
-
-      // Încearcă mai întâi cu shpjs (mai bun pentru .zip și .shp simplu)
-      try {
-        // Construim un fake zip cu shpjs dacă avem buffer-urile
-        // Alternativ: folosim direct shpjs cu ArrayBuffer
-        if (typeof shp === 'function') {
-          // shpjs poate citi direct ArrayBuffer de .shp + .dbf
-          geojson = await shp(shpBuf);
-        }
-      } catch(e1) {
-        console.warn('shpjs failed, trying manual parse:', e1);
-        geojson = null;
+      let geojson = null;
+      if (typeof shp === 'function') { geojson = await shp(shpBuf); }
+      if (!geojson && window.shapefile) {
+        const source = await window.shapefile.open(shpBuf, dbfBuf);
+        const features = []; let result = await source.read();
+        while (!result.done) { if (result.value) features.push(result.value); result = await source.read(); }
+        geojson = { type: 'FeatureCollection', features };
       }
-
-      // Fallback: parsare manuală cu shapefile.js
-      if (!geojson || !geojson.features || geojson.features.length === 0) {
-        if (window.shapefile) {
-          const source = await window.shapefile.open(shpBuf, dbfBuf);
-          const features = [];
-          let result = await source.read();
-          while (!result.done) {
-            if (result.value) features.push(result.value);
-            result = await source.read();
-          }
-          geojson = { type: 'FeatureCollection', features };
-        } else {
-          throw new Error('Nu există parser disponibil pentru SHP');
-        }
-      }
-
-      if (!geojson || !geojson.features) throw new Error('GeoJSON invalid');
-
+      if (!geojson || !geojson.features) throw new Error('Fișier invalid.');
       fixProjection(geojson);
       const displayName = pair.shp.name.replace(/\.shp$/i, '');
       geojson.features.forEach(f => {
         if (!f.properties) f.properties = {};
         f.properties.strat = displayName;
-        f.properties.parcela = f.properties.Parcel_Nr || f.properties.parcel_nr || 
-                               f.properties.PARCELA || f.properties.NAME || 
-                               f.properties.Name || f.properties.name || 
-                               f.properties.NUMECADAST || f.properties.ID ||
-                               `Parcela ${Math.floor(Math.random()*9000)+1000}`;
-        f.properties.cultura = f.properties.CULTURA || f.properties.cultura ||
-                               f.properties.CROP || f.properties.crop ||
-                               f.properties.crop_name || 'Necunoscut';
-        f.properties.suprafata_orig = f.properties.SUPRAFATA || f.properties.suprafata || f.properties.AREA || '';
+        f.properties.parcela = f.properties.Parcel_Nr || f.properties.PARCELA || f.properties.name || f.properties.NAME || `Parcela SHP`;
+        f.properties.cultura = f.properties.CULTURA || f.properties.cultura || 'Necunoscut';
       });
       renderGeoJSON(geojson, displayName);
-      showToast(`✓ ${geojson.features.length} parcele importate din ${displayName}.shp`);
-    } catch(err) {
-      console.error('SHP error:', err);
-      showToast(`❌ Eroare SHP (${baseName}): ${err.message}`, true);
-    }
+    } catch(err) { showToast(`❌ Eroare SHP: ${err.message}`, true); }
   }
 
-  // ── Alte formate
   for (const file of otherFiles) {
     const ext = file.name.split('.').pop().toLowerCase();
     const baseName = file.name.substring(0, file.name.lastIndexOf('.'));
@@ -835,103 +794,31 @@ async function handleFiles(files) {
         const text = await readFileAsText(file);
         const geojson = toGeoJSON_KML(new DOMParser().parseFromString(text, 'text/xml'), baseName);
         renderGeoJSON(geojson, file.name);
-        showToast(`✓ KML importat: ${geojson.features.length} parcele`);
+      } else if (ext === 'geojson' || ext === 'json') {
+        const text = await readFileAsText(file); let geojson = JSON.parse(text);
+        fixProjection(geojson); renderGeoJSON(geojson, file.name);
       }
-      else if (ext === 'geojson' || ext === 'json') {
-        const text = await readFileAsText(file);
-        let geojson = JSON.parse(text);
-        if (!geojson.features && geojson.type === 'Feature') geojson = { type: 'FeatureCollection', features: [geojson] };
-        fixProjection(geojson);
-        geojson.features.forEach(f => {
-          if (!f.properties) f.properties = {};
-          f.properties.strat = f.properties.strat || baseName;
-          if (!f.properties.parcela) f.properties.parcela = f.properties.name || f.properties.NAME || `Parcela ${Math.floor(Math.random()*9000)+1000}`;
-        });
-        renderGeoJSON(geojson, file.name);
-        showToast(`✓ GeoJSON importat: ${geojson.features.length} parcele`);
-      }
-      else if (ext === 'gpx') {
-        const text = await readFileAsText(file);
-        const cl = L.geoJSON(null);
-        omnivore.gpx.parse(text, null, cl);
-        const geojson = cl.toGeoJSON();
-        geojson.features.forEach(f => {
-          if (!f.properties) f.properties = {};
-          if (f.geometry.type === 'LineString') { f.geometry.type = 'Polygon'; f.geometry.coordinates = [f.geometry.coordinates]; }
-          else if (f.geometry.type === 'MultiLineString') { f.geometry.type = 'MultiPolygon'; f.geometry.coordinates = f.geometry.coordinates.map(l => [l]); }
-          f.properties.strat = baseName;
-          f.properties.parcela = f.properties.name || 'Teren GPX';
-        });
-        renderGeoJSON(geojson, file.name);
-        showToast(`✓ GPX importat: ${geojson.features.length} parcele`);
-      }
-      else if (ext === 'zip') {
-        showToast('🔄 Se procesează arhiva ZIP SHP...');
-        const buf = await readFileAsArrayBuffer(file);
-        const result = await shp(buf);
-        const processG = (g) => {
-          fixProjection(g);
-          g.features.forEach(f => {
-            if (!f.properties) f.properties = {};
-            f.properties.strat = f.properties.strat || baseName;
-            f.properties.parcela = f.properties.parcel_nr || f.properties.NAME || f.properties.name || `Parcela ZIP`;
-            f.properties.cultura = f.properties.CULTURA || f.properties.crop_name || 'Necunoscut';
-          });
-          renderGeoJSON(g, file.name);
-        };
-        if (Array.isArray(result)) result.forEach(processG); else processG(result);
-        showToast(`✓ ZIP SHP procesat`);
-      }
-      else { showToast(`❌ Format nesuportat: .${ext}`, true); }
-    } catch(err) {
-      console.error(`Error processing ${file.name}:`, err);
-      showToast(`❌ Eroare la ${file.name}: ${err.message}`, true);
-    }
+    } catch(e) { showToast(`❌ Eroare la citirea fișierului`, true); }
   }
-  // Reset file input
-  document.getElementById('fileInput').value = '';
 }
 
 function toGeoJSON_KML(kmlDoc, layerName) {
   const placemarks = kmlDoc.querySelectorAll('Placemark');
   const features = [];
   placemarks.forEach(pm => {
-    const name = pm.querySelector('name')?.textContent?.trim() || 'Parcela';
-    const allCoords = pm.querySelectorAll('coordinates');
-    if (!allCoords.length) return;
-    
-    // Suport MultiPolygon (mai multe <Polygon> în <MultiGeometry>)
-    const polys = pm.querySelectorAll('Polygon');
-    if (polys.length > 1) {
-      const rings = [];
-      polys.forEach(poly => {
-        const outerCoords = poly.querySelector('outerBoundaryIs coordinates');
-        if (outerCoords) {
-          const pairs = outerCoords.textContent.trim().split(/\s+/).map(c => {
-            const p = c.split(','); return [parseFloat(p[0]), parseFloat(p[1])];
-          }).filter(c => !isNaN(c[0]));
-          if (pairs.length >= 3) rings.push([pairs]);
-        }
-      });
-      if (rings.length > 0) {
-        features.push({ type: 'Feature', properties: { parcela: name, strat: layerName, cultura: 'Necunoscut', status: 'bun' }, geometry: { type: 'MultiPolygon', coordinates: rings } });
-      }
-    } else {
-      const coords = allCoords[0];
-      const pairs = coords.textContent.trim().split(/\s+/).map(c => {
-        const p = c.split(','); return [parseFloat(p[0]), parseFloat(p[1])];
-      }).filter(c => !isNaN(c[0]) && !isNaN(c[1]));
-      if (pairs.length >= 3) {
-        features.push({ type: 'Feature', properties: { parcela: name, strat: layerName, cultura: 'Necunoscut', status: 'bun' }, geometry: { type: 'Polygon', coordinates: [pairs] } });
-      }
+    const name = pm.querySelector('name')?.textContent?.trim() || 'Parcela KML';
+    const allCoords = pm.querySelectorAll('coordinates'); if (!allCoords.length) return;
+    const coords = allCoords[0];
+    const pairs = coords.textContent.trim().split(/\s+/).map(c => {
+      const p = c.split(','); return [parseFloat(p[0]), parseFloat(p[1])];
+    }).filter(c => !isNaN(c[0]) && !isNaN(c[1]));
+    if (pairs.length >= 3) {
+      features.push({ type: 'Feature', properties: { parcela: name, strat: layerName, cultura: 'Necunoscut' }, geometry: { type: 'Polygon', coordinates: [pairs] } });
     }
   });
   return { type: 'FeatureCollection', features };
 }
 
-// ════════════════════════════════════════════════════════
-//  CALCUL SUPRAFATĂ
-// ════════════════════════════════════════════════════════
 function getRingArea(coords) {
   const R = 6378137; let area = 0;
   for (let i = 0; i < coords.length; i++) {
@@ -941,97 +828,38 @@ function getRingArea(coords) {
   return Math.abs(area * R * R / 2);
 }
 function calculateAreaInHectares(geometry) {
-  if (!geometry) return '—';
-  let totalArea = 0;
-  if (geometry.type === 'Polygon') {
-    totalArea += getRingArea(geometry.coordinates[0]);
-    for (let i=1; i<geometry.coordinates.length; i++) totalArea -= getRingArea(geometry.coordinates[i]);
-  } else if (geometry.type === 'MultiPolygon') {
-    geometry.coordinates.forEach(poly => {
-      totalArea += getRingArea(poly[0]);
-      for (let i=1; i<poly.length; i++) totalArea -= getRingArea(poly[i]);
-    });
-  } else return '—';
+  if (!geometry || geometry.type !== 'Polygon') return '0';
+  let totalArea = getRingArea(geometry.coordinates[0]);
   return (totalArea / 10000).toFixed(2);
 }
 
-// ════════════════════════════════════════════════════════
-//  RENDER GEOJSON
-// ════════════════════════════════════════════════════════
 function renderGeoJSON(geojson, fileName) {
   if (!geojson || !geojson.features) return;
   let maxIdx = allFeatures.length > 0 ? Math.max(...allFeatures.map(f => f.properties._index || 0)) : 0;
-  
   geojson.features.forEach(f => {
-    if (!f.geometry) return;
-    maxIdx++;
+    if (!f.geometry) return; maxIdx++;
     if (!f.properties) f.properties = {};
     f.properties._index = maxIdx;
     let strat = (f.properties.strat || 'Terenuri Principale').trim();
-    f.properties.strat = strat;
-    definedLayers.add(strat);
-    itemVisibility[maxIdx] = true;
-    let parts = strat.split('/').map(p=>p.trim()).filter(p=>p);
-    let path = '';
-    parts.forEach((p,i) => {
-      path += (i===0?'':'/')+p;
-      if (groupVisibility[path] === undefined) groupVisibility[path] = true;
-    });
+    f.properties.strat = strat; definedLayers.add(strat);
+    itemVisibility[maxIdx] = true; groupVisibility[strat] = true;
     f.properties.suprafata = calculateAreaInHectares(f.geometry);
     allFeatures.push(f);
   });
-  registerImportedCrops();
-  refreshMapData();
-  markDirty();
-  if (geojson.features.length > 0) {
-    try {
-      const layer = L.geoJSON({ type: 'FeatureCollection', features: geojson.features });
-      if (layer.getBounds().isValid()) map.fitBounds(layer.getBounds(), { padding: [40,40], maxZoom:16 });
-    } catch(e){}
-  }
-}
-
-function registerImportedCrops() {
-  let changed = false;
-  allFeatures.forEach(f => {
-    let c = f.properties.cultura;
-    if (c && c !== 'Necunoscut' && !CULTURA_COLORS[c]) {
-      CULTURA_COLORS[c] = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6,'0');
-      changed = true;
-    }
-  });
-  if (changed) localStorage.setItem('agro_crop_colors', JSON.stringify(CULTURA_COLORS));
+  refreshMapData(); markDirty();
 }
 
 function refreshMapData() {
-  geojsonLayers.forEach(l => map.removeLayer(l));
-  geojsonLayers = [];
-  labelGroup.clearLayers();
+  geojsonLayers.forEach(l => map.removeLayer(l)); geojsonLayers = []; labelGroup.clearLayers();
   const visible = allFeatures.filter(f => isFeatureVisible(f));
   const layer = L.geoJSON({ type: 'FeatureCollection', features: visible }, {
-    style: f => {
-      const p = f.properties;
-      const color = getColor(p.cultura || '');
-      const status = p.status || 'bun';
-      const opacity = status === 'critic' ? 0.85 : 0.65;
-      return { fillColor: color, fillOpacity: opacity*0.5, color: color, weight: 2, opacity, dashArray: status === 'critic' ? '5,5' : null };
-    },
+    style: f => { const color = getColor(f.properties.cultura); return { fillColor: color, fillOpacity: 0.35, color: color, weight: 2 }; },
     onEachFeature: (feature, lyr) => {
-      lyr.on('click', e => {
-        if (map.pm.globalDrawModeEnabled()) return;
-        if (currentlyEditingIdx !== null && currentlyEditingIdx !== feature.properties._index) saveEdit(currentlyEditingIdx);
-        showInfo(feature.properties);
-      });
-      lyr.on('mouseover', e => e.target.setStyle({ weight: 3, fillOpacity: 0.75 }));
-      lyr.on('mouseout', e => e.target.setStyle({ weight: 2, fillOpacity: 0.35 }));
-      lyr.on('pm:edit', e => {
-        const idx = feature.properties._index;
-        const feat = allFeatures.find(f => f.properties._index === idx);
-        if (feat) {
-          feat.geometry = e.target.toGeoJSON().geometry;
-          feat.properties.suprafata = calculateAreaInHectares(feat.geometry);
-          updateSidebarTree(); updateStats();
-        }
+      lyr.on('click', () => showInfo(feature.properties));
+      lyr.on('pm:edit', (e) => {
+        feature.geometry = e.target.toGeoJSON().geometry;
+        feature.properties.suprafata = calculateAreaInHectares(feature.geometry);
+        updateSidebarTree(); updateStats(); markDirty();
       });
     }
   }).addTo(map);
@@ -1042,1056 +870,144 @@ function refreshMapData() {
 
 function renderLabels(features) {
   features.forEach(f => {
-    if (!f.geometry) return;
     try {
       const center = L.geoJSON(f).getBounds().getCenter();
-      const p = f.properties;
-      const label = L.marker(center, {
+      L.marker(center, {
         icon: L.divIcon({
-          className: '',
-          iconSize: null,
-          html: `<div style="background:rgba(13,26,12,0.88);border:1px solid rgba(74,222,128,0.45);border-radius:5px;padding:3px 8px;font-size:10px;color:#e8f5e0;font-family:'JetBrains Mono',monospace;white-space:nowrap;pointer-events:none;box-shadow:0 2px 4px rgba(0,0,0,0.5);transform:translate(-50%,-50%);display:inline-block;width:max-content;">
-            <strong style="color:${getColor(p.cultura||'')}">${p.parcela||p.name||'Parcela'}</strong>${p.cultura && p.cultura!=='Necunoscut' ? ' · '+p.cultura : ''}</div>`
+          className: '', html: `<div style="background:rgba(13,26,12,0.85); border:1px solid #4ade80; border-radius:4px; padding:2px 6px; font-size:10px; color:#fff; white-space:nowrap; transform:translate(-50%,-50%);"><strong>${f.properties.parcela}</strong></div>`
         })
-      });
-      label._index = p._index;
-      label.addTo(labelGroup);
+      }).addTo(labelGroup);
     } catch(e){}
   });
 }
 
-// ════════════════════════════════════════════════════════
-//  STRATURI VIZIBILITATE
-// ════════════════════════════════════════════════════════
 function isFeatureVisible(f) {
   const idx = f.properties._index;
   if (itemVisibility[idx] === false) return false;
-  let strat = (f.properties.strat || 'Terenuri Principale').trim();
-  let parts = strat.split('/').map(p=>p.trim()).filter(p=>p);
-  if (!parts.length) parts = ['Terenuri Principale'];
-  let path = '';
-  for (let i=0; i<parts.length; i++) {
-    path += (i===0?'':'/')+parts[i];
-    if (groupVisibility[path] === false) return false;
-  }
-  return true;
+  return groupVisibility[f.properties.strat] !== false;
 }
 
 // ════════════════════════════════════════════════════════
-//  SIDEBAR TREE
+//  SIDEBAR TREE & INTERACTION
 // ════════════════════════════════════════════════════════
-function handleSearch(val) { searchQuery = val.toLowerCase().trim(); updateSidebarTree(); }
+function handleSearch(val) { searchQuery = val.toLowerCase(); updateSidebarTree(); }
 function changeSort(val) { currentSort = val; updateSidebarTree(); }
-function toggleGroupVisibility(path, isChecked) { groupVisibility[path] = isChecked; refreshMapData(); markDirty(); }
-function toggleItemVisibility(idx, isChecked) { itemVisibility[idx] = isChecked; refreshMapData(); markDirty(); }
-function toggleCollapse(path) { groupCollapsed[path] = !groupCollapsed[path]; updateSidebarTree(); }
-
-function renameTreeGroup(oldPath, newName) {
-  newName = newName.trim();
-  if (!newName || oldPath === newName) return;
-  let parts = oldPath.split('/');
-  parts[parts.length-1] = newName;
-  let newPath = parts.join('/');
-  allFeatures.forEach(f => {
-    let s = f.properties.strat || 'Terenuri Principale';
-    if (s === oldPath) f.properties.strat = newPath;
-    else if (s.startsWith(oldPath+'/')) f.properties.strat = newPath + s.substring(oldPath.length);
-  });
-  let toUpdate = Array.from(definedLayers).filter(l => l === oldPath || l.startsWith(oldPath+'/'));
-  toUpdate.forEach(p => {
-    definedLayers.delete(p);
-    definedLayers.add(p === oldPath ? newPath : newPath + p.substring(oldPath.length));
-  });
-  groupVisibility[newPath] = groupVisibility[oldPath];
-  groupCollapsed[newPath] = groupCollapsed[oldPath];
-  delete groupVisibility[oldPath]; delete groupCollapsed[oldPath];
-  refreshMapData(); markDirty();
-  showToast(`✓ Redenumit: "${newName}"`);
-}
+function toggleGroupVisibility(path, isChecked) { groupVisibility[path] = isChecked; refreshMapData(); }
+function toggleItemVisibility(idx, isChecked) { itemVisibility[idx] = isChecked; refreshMapData(); }
 
 function updateSidebarTree() {
   const container = document.getElementById('treeList');
-  if (!definedLayers.size && !allFeatures.length) {
-    container.innerHTML = `<div class="empty-parcele"><div class="empty-icon">🗺️</div><p>Niciun teren încărcat.<br>Adaugă fișiere sau desenează.</p></div>`;
-    return;
+  if (!allFeatures.length) {
+    container.innerHTML = `<div class="empty-parcele"><p>Niciun teren salvat în cloud.</p></div>`; return;
   }
-  let root = { name:'Root', path:'', children:{}, items:[] };
-  if (!searchQuery) {
-    Array.from(definedLayers).forEach(strat => {
-      let parts = strat.split('/').map(x=>x.trim()).filter(x=>x);
-      if (!parts.length) return;
-      let cur = root; let curPath = '';
-      parts.forEach((p,i) => {
-        curPath += (i===0?'':'/')+p;
-        if (!cur.children[p]) {
-          cur.children[p] = { name:p, path:curPath, children:{}, items:[] };
-          if (groupVisibility[curPath]===undefined) groupVisibility[curPath] = true;
-          if (groupCollapsed[curPath]===undefined) groupCollapsed[curPath] = false;
-        }
-        cur = cur.children[p];
-      });
+  let html = '';
+  Array.from(definedLayers).forEach(strat => {
+    let feats = allFeatures.filter(f => f.properties.strat === strat);
+    if (searchQuery) feats = feats.filter(f => (f.properties.parcela||'').toLowerCase().includes(searchQuery));
+    
+    html += `<div style="margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.02); padding-bottom:4px;">
+      <div style="display:flex; align-items:center; gap:6px; font-weight:bold;">
+        <input type="checkbox" ${groupVisibility[strat]!==false?'checked':''} onchange="toggleGroupVisibility('${strat}', this.checked)">
+        <span>📂 ${strat}</span>
+      </div>`;
+    feats.forEach(f => {
+      html += `<div style="margin-left:16px; display:flex; align-items:center; justify-content:space-between; padding:4px 0;">
+        <div style="display:flex; align-items:center; gap:6px;">
+          <input type="checkbox" ${itemVisibility[f.properties._index]!==false?'checked':''} onchange="toggleItemVisibility(${f.properties._index}, this.checked)">
+          <span style="cursor:pointer;" onclick="zoomTo(${f.properties._index})">📍 ${f.properties.parcela}</span>
+        </div>
+        <span class="tree-item-ha">${f.properties.suprafata} ha</span>
+      </div>`;
     });
-  }
-  allFeatures.forEach(f => {
-    let p = f.properties;
-    if (searchQuery) {
-      let mName = (p.parcela||'').toLowerCase().includes(searchQuery);
-      let mStrat = (p.strat||'').toLowerCase().includes(searchQuery);
-      let mCultura = (p.cultura||'').toLowerCase().includes(searchQuery);
-      if (!mName && !mStrat && !mCultura) return;
-    }
-    let strat = (p.strat||'Terenuri Principale').trim();
-    let parts = strat.split('/').map(x=>x.trim()).filter(x=>x);
-    if (!parts.length) parts = ['Terenuri Principale'];
-    let cur = root; let curPath = '';
-    parts.forEach((part,i) => {
-      curPath += (i===0?'':'/')+part;
-      if (!cur.children[part]) {
-        cur.children[part] = { name:part, path:curPath, children:{}, items:[] };
-        if (groupVisibility[curPath]===undefined) groupVisibility[curPath] = true;
-        if (groupCollapsed[curPath]===undefined) groupCollapsed[curPath] = false;
-      }
-      if (searchQuery) groupCollapsed[curPath] = false;
-      cur = cur.children[part];
-    });
-    cur.items.push(f);
+    html += `</div>`;
   });
-
-  const jCount = {};
-  journalEntries.forEach(e => { jCount[e.parcelIdx] = (jCount[e.parcelIdx]||0)+1; });
-
-  function renderNode(node, level) {
-    let html = '';
-    Object.keys(node.children).sort((a,b)=>a.localeCompare(b)).forEach(k => {
-      let child = node.children[k];
-      let isCol = groupCollapsed[child.path];
-      let isVis = groupVisibility[child.path];
-      html += `<div class="tree-node ${level===0?'root':''}">
-        <div class="tree-header">
-          <span class="tree-toggle" onclick="toggleCollapse('${esc(child.path)}')">${isCol?'▶':'▼'}</span>
-          <input type="checkbox" class="tree-checkbox" ${isVis?'checked':''} onchange="toggleGroupVisibility('${esc(child.path)}',this.checked)">
-          <span class="tree-folder-icon">📂</span>
-          <input type="text" class="tree-folder-input" value="${child.name.replace(/"/g,'&quot;')}" onchange="renameTreeGroup('${esc(child.path)}',this.value)">
-          <span class="tree-add-btn" onclick="promptAddSubLayer('${esc(child.path)}')" title="Substrat nou">➕</span>
-        </div>
-        <div style="display:${isCol?'none':'block'}">
-          ${renderNode(child, level+1)}
-        </div>
-      </div>`;
-    });
-    let items = [...node.items];
-    if (currentSort==='nume') items.sort((a,b)=>(a.properties.parcela||'').localeCompare(b.properties.parcela||''));
-    else if (currentSort==='suprafata') items.sort((a,b)=>(parseFloat(b.properties.suprafata)||0)-(parseFloat(a.properties.suprafata)||0));
-    else items.sort((a,b)=>a.properties._index-b.properties._index);
-    items.forEach(f => {
-      let p = f.properties;
-      let isVis = itemVisibility[p._index];
-      let color = getColor(p.cultura);
-      let jc = jCount[p._index]||0;
-      html += `<div class="tree-node">
-        <div class="tree-item ${currentlyEditingIdx===p._index?'active':''}">
-          <input type="checkbox" class="tree-checkbox" ${isVis?'checked':''} onchange="toggleItemVisibility(${p._index},this.checked)">
-          <div class="tree-color-box" style="background:${color}"></div>
-          <span class="tree-item-name" onclick="zoomTo(${p._index})">${p.parcela||'Fără Nume'}</span>
-          <span class="tree-item-ha">${p.suprafata} ha</span>
-          ${jc>0?`<span class="tree-item-journal" onclick="openJournalForParcel(${p._index})" title="Lucrări">📋${jc}</span>`:''}
-        </div>
-      </div>`;
-    });
-    return html;
-  }
-
-  let finalHtml = renderNode(root, 0);
-  if (!finalHtml && searchQuery) finalHtml = `<div class="empty-parcele"><p>Niciun rezultat pentru "${searchQuery}".</p></div>`;
-  container.innerHTML = finalHtml;
+  container.innerHTML = html;
 }
 
-function esc(s) { return (s+'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+function zoomTo(idx) {
+  const f = allFeatures.find(f => f.properties._index === idx);
+  if (f) { map.fitBounds(L.geoJSON(f).getBounds(), { padding: [40,40] }); showInfo(f.properties); }
+}
 
 function updateStats() {
-  const vis = allFeatures.filter(f=>isFeatureVisible(f));
-  const ha = vis.reduce((s,f)=>s+(parseFloat(f.properties?.suprafata)||0),0);
-  const culturi = new Set(vis.map(f=>f.properties?.cultura).filter(c=>c&&c!=='Necunoscut')).size;
+  const vis = allFeatures.filter(f => isFeatureVisible(f));
+  const ha = vis.reduce((s,f) => s + parseFloat(f.properties.suprafata || 0), 0);
   document.getElementById('statParcele').textContent = vis.length;
-  document.getElementById('statHa').textContent = ha.toFixed(1)+' ha';
-  document.getElementById('statCulturi').textContent = culturi;
+  document.getElementById('statHa').textContent = ha.toFixed(1) + ' ha';
 }
 
 function updateLayerPanel() {
   const panel = document.getElementById('layerPanel');
-  let html = `<div class="layer-title" style="margin-top:0;">HĂRȚI BAZĂ</div>`;
-  [
-    {id:'esri_satellite', name:'ESRI Satelit', color:'#4ade80'},
-    {id:'osm', name:'OpenStreetMap', color:'#fbbf24'},
-    {id:'terrain', name:'Teren Topo', color:'#f87171'}
-  ].forEach(b => {
-    const act = currentBaseLayer===b.id;
-    html += `<div class="layer-item" onclick="toggleBaseLayer('${b.id}')"><div class="layer-dot" style="background:${b.color};"></div><span>${b.name}</span><span style="display:${act?'inline':'none'}; color:var(--green); margin-left:auto;">✓</span></div>`;
-  });
-  if (definedLayers.size>0) {
-    html += `<div class="layer-title">STRATURI</div>`;
-    let roots = new Set();
-    Array.from(definedLayers).forEach(l=>roots.add(l.split('/')[0].trim()));
-    Array.from(roots).sort().forEach(n => {
-      const vis = groupVisibility[n]!==false;
-      html += `<div class="layer-item" onclick="toggleGroupVisibility('${esc(n)}',${!vis})">
-        <div class="layer-dot" style="background:${vis?'var(--green)':'transparent'}; border:1px solid var(--green);"></div>
-        <span style="color:${vis?'var(--text)':'var(--muted)'}">${n}</span>
-      </div>`;
-    });
-  }
-  panel.innerHTML = html;
+  panel.innerHTML = `<div class="layer-title">HARȚĂ BAZĂ</div>
+    <div class="layer-item" onclick="toggleBaseLayer('esri_satellite')">⬤ ESRI Satelit</div>
+    <div class="layer-item" onclick="toggleBaseLayer('osm')">⬤ OpenStreetMap</div>`;
 }
-
-function toggleBaseLayer(name) {
-  Object.values(TILE_LAYERS).forEach(l => { try { map.removeLayer(l); } catch(e){} });
-  map.addLayer(TILE_LAYERS[name]);
-  currentBaseLayer = name;
-  updateLayerPanel();
+function toggleBaseLayer(id) {
+  Object.values(TILE_LAYERS).forEach(l => map.removeLayer(l)); map.addLayer(TILE_LAYERS[id]);
 }
 
 // ════════════════════════════════════════════════════════
-//  GEOMAN DRAW
+//  GEOMAN DRAWING
 // ════════════════════════════════════════════════════════
-map.pm.setGlobalOptions({ snappable: false, allowSelfIntersection: true });
-map.pm.addControls({ position:'topleft', drawMarker:false, drawCircleMarker:false, drawPolyline:false, drawRectangle:false, drawPolygon:true, drawCircle:true, editMode:false, dragMode:false, cutPolygon:false, removalMode:false });
-map.pm.setLang('ro', { tooltips: { firstVertex:'Primul punct', continueLine:'Continuă', finishPoly:'ENTER / Dublu-click pt a finaliza' } });
-
-document.addEventListener('keydown', e => {
-  if (e.key==='Enter') {
-    try {
-      if (map.pm.globalDrawModeEnabled() && map.pm.Draw.Polygon) map.pm.Draw.Polygon._finishShape();
-      if (currentlyEditingIdx!==null) saveEdit(currentlyEditingIdx);
-    } catch(err){}
-  }
-});
-
-map.on('pm:drawend', () => { setTimeout(()=>{ targetObstacleIdx=null; },100); });
+map.pm.addControls({ position: 'topleft', drawPolygon: true, editMode: true, removalMode: true });
 map.on('pm:create', e => {
-  const layer = e.layer, shape = e.shape;
-  let newGeo = shape==='Circle' ? circleToPolygon(layer.getLatLng(),layer.getRadius(),64) : layer.toGeoJSON();
-  map.removeLayer(layer);
-  if (targetObstacleIdx!==null) {
-    const tf = allFeatures.find(f=>f.properties._index===targetObstacleIdx);
-    if (tf) {
-      let hole = newGeo.geometry.type==='Polygon' ? newGeo.geometry.coordinates[0] : newGeo.geometry.coordinates[0][0];
-      if (tf.geometry.type==='Polygon') tf.geometry.coordinates.push(hole);
-      else if (tf.geometry.type==='MultiPolygon') tf.geometry.coordinates[0].push(hole);
-      tf.properties.suprafata = calculateAreaInHectares(tf.geometry);
-      showToast(`✓ Obstacol adăugat! Rămas: ${tf.properties.suprafata} ha`);
-    }
-    targetObstacleIdx = null;
-    refreshMapData(); markDirty(); return;
-  }
-  const newIdx = allFeatures.length>0 ? Math.max(...allFeatures.map(f=>f.properties._index))+1 : 1;
-  if (!definedLayers.has('Terenuri Noi')) definedLayers.add('Terenuri Noi');
-  newGeo.properties = { _index:newIdx, parcela:'Parcela '+newIdx, strat:'Terenuri Noi', cultura:'Necunoscut', status:'bun', proprietar:'Arendă/Local' };
-  itemVisibility[newIdx] = true;
-  groupVisibility['Terenuri Noi'] = true;
-  allFeatures.push(newGeo);
-  newGeo.properties.suprafata = calculateAreaInHectares(newGeo.geometry);
+  const layer = e.layer; const geo = layer.toGeoJSON(); map.removeLayer(layer);
+  const newIdx = allFeatures.length > 0 ? Math.max(...allFeatures.map(f => f.properties._index)) + 1 : 1;
+  geo.properties = { _index: newIdx, parcela: `Parcela ${newIdx}`, strat: 'Terenuri Principale', cultura: 'Necunoscut' };
+  geo.properties.suprafata = calculateAreaInHectares(geo.geometry);
+  itemVisibility[newIdx] = true; allFeatures.push(geo);
   refreshMapData(); markDirty();
-  try {
-    const lb = L.geoJSON(newGeo);
-    if (lb.getBounds().isValid()) map.fitBounds(lb.getBounds(),{padding:[40,40],maxZoom:16});
-  } catch(e){}
 });
 
-function circleToPolygon(latlng, radius, sides) {
-  const R=6378137, lat=latlng.lat*Math.PI/180, lng=latlng.lng*Math.PI/180, d=radius/R;
-  const pts = [];
-  for (let i=0; i<=sides; i++) {
-    const b = i*2*Math.PI/sides;
-    let dLat = Math.asin(Math.sin(lat)*Math.cos(d)+Math.cos(lat)*Math.sin(d)*Math.cos(b));
-    let dLng = lng+Math.atan2(Math.sin(b)*Math.sin(d)*Math.cos(lat), Math.cos(d)-Math.sin(lat)*Math.sin(dLat));
-    pts.push([dLng*180/Math.PI, dLat*180/Math.PI]);
-  }
-  return { type:'Feature', geometry:{ type:'Polygon', coordinates:[pts] } };
-}
-
 // ════════════════════════════════════════════════════════
-//  INFO PANEL
+//  INFO DETAILS PANEL
 // ════════════════════════════════════════════════════════
 function showInfo(p) {
   const panel = document.getElementById('mapInfo');
-  let culturiList = Object.keys(CULTURA_COLORS).filter(c=>c!=='default').sort((a,b)=>a.localeCompare(b));
-  let selectCropHtml = `<select class="crop-input" style="width:140px;" onchange="updateFeatureProp(${p._index},'cultura',this.value)">`;
-  culturiList.forEach(c => { selectCropHtml += `<option value="${c}" ${p.cultura===c?'selected':''}>${c}</option>`; });
-  if (p.cultura && !culturiList.includes(p.cultura)) selectCropHtml += `<option value="${p.cultura}" selected>${p.cultura}</option>`;
-  selectCropHtml += '</select>';
-  let selectLayerHtml = `<select class="crop-input" style="width:130px;" onchange="updateFeatureProp(${p._index},'strat',this.value)">`;
-  Array.from(definedLayers).sort().forEach(l => { selectLayerHtml += `<option value="${l.replace(/"/g,'&quot;')}" ${p.strat===l?'selected':''}>${l}</option>`; });
-  selectLayerHtml += '</select>';
-  
-  // Număr lucrări pentru această parcelă
-  const jCount = journalEntries.filter(j=>j.parcelIdx===p._index).length;
-  
-  const rows = [
-    ['📛 Nume', `<input class="crop-input" style="width:140px;" type="text" value="${p.parcela||''}" onchange="updateFeatureProp(${p._index},'parcela',this.value)">`],
-    ['📂 Strat', selectLayerHtml],
-    ['🌾 Cultură', selectCropHtml],
-    ['📏 Suprafață', `<span class="info-val" style="color:var(--green)">${p.suprafata||'—'} ha</span>`],
-    ['📋 Lucrări', `<span class="info-val" style="color:var(--blue); cursor:pointer;" onclick="openJournalForParcel(${p._index})">${jCount} înregistrate →</span>`],
-  ];
-  const actionBtns = `
-    <div style="margin-top:10px; display:flex; gap:6px;">
-      <button id="btnEditShape" class="map-btn" style="flex:1; justify-content:center; background:rgba(96,165,250,0.1); color:var(--blue);" onclick="enableEdit(${p._index})">✏️ Forma</button>
-      <button id="btnSaveShape" class="map-btn active" style="flex:1; justify-content:center; display:none;" onclick="saveEdit(${p._index})">💾 Salvează</button>
-    </div>
-    <div style="margin-top:6px; display:flex; gap:6px;">
-      <button class="map-btn" style="flex:1; justify-content:center; background:rgba(245,158,11,0.1); color:var(--amber);" onclick="startObstacle(${p._index},'Polygon')">✂️ Obstacol</button>
-      <button class="map-btn" style="flex:1; justify-content:center; background:rgba(74,222,128,0.1); color:var(--green);" onclick="quickAddJournal(${p._index})">📋 Lucrare</button>
-    </div>
+  let html = `
+    <div class="info-row"><span class="info-key">📛 Nume:</span> <input type="text" class="crop-input" value="${p.parcela}" onchange="updateProp(${p._index}, 'parcela', this.value)"></div>
+    <div class="info-row"><span class="info-key">🌾 Cultură:</span> <input type="text" class="crop-input" value="${p.cultura}" onchange="updateProp(${p._index}, 'cultura', this.value)"></div>
+    <div class="info-row"><span class="info-key">📏 Suprafață:</span> <span class="info-val">${p.suprafata} ha</span></div>
   `;
-  document.getElementById('infoRows').innerHTML = rows.map(([k,v])=>`<div class="info-row"><span class="info-key">${k}</span>${v}</div>`).join('')+actionBtns;
+  document.getElementById('infoRows').innerHTML = html;
   panel.classList.add('visible');
-  if (currentlyEditingIdx===p._index) {
-    document.getElementById('btnEditShape').style.display='none';
-    document.getElementById('btnSaveShape').style.display='flex';
-  }
 }
-
-function updateFeatureProp(idx, prop, val) {
-  const f = allFeatures.find(f=>f.properties._index===idx);
-  if (!f) return;
-  if (prop==='strat') {
-    let parts = val.split('/').map(p=>p.trim()).filter(p=>p);
-    let path = '';
-    parts.forEach((p,i) => { path+=(i===0?'':'/')+p; groupVisibility[path]=true; groupCollapsed[path]=false; });
-  }
-  f.properties[prop] = val;
-  refreshMapData(); markDirty();
-  showToast('✓ Actualizat');
-  setTimeout(()=>showInfo(f.properties), 50);
+function updateProp(idx, key, val) {
+  const f = allFeatures.find(f => f.properties._index === idx);
+  if (f) { f.properties[key] = val; updateSidebarTree(); refreshMapData(); markDirty(); }
 }
-
-function zoomTo(idx) {
-  const f = allFeatures.find(f=>f.properties._index===idx);
-  if (!f||!f.geometry) return;
-  try { map.fitBounds(L.geoJSON(f).getBounds(),{padding:[60,60],maxZoom:17}); showInfo(f.properties); } catch(e){}
-}
-
-function findLayerByIndex(idx) {
-  let found = null;
-  geojsonLayers.forEach(l => l.eachLayer(sub => { if(sub.feature?.properties._index===idx) found=sub; }));
-  return found;
-}
-
-function enableEdit(idx) {
-  if (currentlyEditingIdx!==null && currentlyEditingIdx!==idx) saveEdit(currentlyEditingIdx);
-  const tl = findLayerByIndex(idx);
-  if (tl) {
-    tl.pm.enable({ allowSelfIntersection:true, snappable:false });
-    currentlyEditingIdx = idx;
-    document.getElementById('btnEditShape').style.display='none';
-    document.getElementById('btnSaveShape').style.display='flex';
-    showToast('ℹ️ Trage de puncte. Click-dreapta să ștergi.');
-    updateSidebarTree();
-  }
-}
-
-function saveEdit(idx) {
-  const tl = findLayerByIndex(idx);
-  if (tl) {
-    tl.pm.disable();
-    const f = allFeatures.find(f=>f.properties._index===idx);
-    if(f){ f.geometry=tl.toGeoJSON().geometry; f.properties.suprafata=calculateAreaInHectares(f.geometry); }
-  }
-  currentlyEditingIdx = null;
-  refreshMapData(); markDirty();
-  const uf = allFeatures.find(f=>f.properties._index===idx);
-  if(uf) showInfo(uf.properties);
-  showToast('✓ Forma salvată.');
-}
-
-function startObstacle(idx, mode) {
-  targetObstacleIdx = idx; closeInfo();
-  map.pm.enableDraw(mode, { snappable:false, allowSelfIntersection:true });
-  showToast(mode==='Polygon' ? '✂️ Desenează obstacolul, Enter pentru a finaliza.' : '⭕ Trage pentru obstacol circular.');
-}
-
-function closeInfo() {
-  if (currentlyEditingIdx!==null) saveEdit(currentlyEditingIdx);
-  document.getElementById('mapInfo').classList.remove('visible');
-}
+function closeInfo() { document.getElementById('mapInfo').classList.remove('visible'); }
 
 // ════════════════════════════════════════════════════════
-//  MAP TOOLS
-// ════════════════════════════════════════════════════════
-function fitBounds() {
-  const vis = allFeatures.filter(f=>isFeatureVisible(f));
-  if (!vis.length) { map.setView([44.56,27.36],10); return; }
-  const bounds = L.geoJSON({type:'FeatureCollection',features:vis}).getBounds();
-  if (bounds.isValid()) map.fitBounds(bounds,{padding:[40,40]});
-}
-
-function toggleLabels() {
-  showLabels = !showLabels;
-  const btn = document.getElementById('btnLabels');
-  if (showLabels) { renderLabels(allFeatures.filter(f=>isFeatureVisible(f))); btn.classList.add('active'); }
-  else { labelGroup.clearLayers(); btn.classList.remove('active'); }
-}
-
-function printMap() {
-  buildPrintLegend();
-  window.print();
-}
-
-function buildPrintLegend() {
-  const culturi = {};
-  allFeatures.filter(f=>isFeatureVisible(f)).forEach(f => {
-    const c = f.properties.cultura||'Necunoscut';
-    culturi[c] = (culturi[c]||0) + (parseFloat(f.properties.suprafata)||0);
-  });
-  let html = '<h3 style="font-size:12px; margin-bottom:8px;">Legendă Culturi</h3>';
-  Object.entries(culturi).forEach(([c,ha]) => {
-    html += `<div style="display:flex; align-items:center; gap:6px; margin-bottom:4px; font-size:11px;">
-      <div style="width:12px;height:12px;background:${getColor(c)};border-radius:2px;flex-shrink:0;"></div>
-      <span>${c} — ${ha.toFixed(1)} ha</span></div>`;
-  });
-  document.getElementById('printLegend').innerHTML = html;
-}
-
-// ════════════════════════════════════════════════════════
-//  STRATURI / PROMPTURI
-// ════════════════════════════════════════════════════════
-function promptAddLayer() {
-  const name = prompt("Nou strat (folosește '/' pentru sub-straturi, ex: Ferma Sud/Lot 1):");
-  if (!name?.trim()) return;
-  const clean = name.trim();
-  definedLayers.add(clean);
-  let parts = clean.split('/').map(p=>p.trim()).filter(p=>p);
-  let path = '';
-  parts.forEach((p,i) => { path+=(i===0?'':'/')+p; groupVisibility[path]=true; if(groupCollapsed[path]===undefined) groupCollapsed[path]=false; });
-  updateSidebarTree(); updateLayerPanel(); markDirty();
-  showToast(`✓ Strat creat: ${clean}`);
-}
-
-function promptAddSubLayer(parent) {
-  const name = prompt(`Sub-strat pentru "${parent.split('/').pop()}":`);
-  if (!name?.trim()) return;
-  const newPath = parent+'/'+name.trim();
-  definedLayers.add(newPath);
-  groupVisibility[newPath]=true; groupCollapsed[newPath]=false; groupCollapsed[parent]=false;
-  updateSidebarTree(); updateLayerPanel(); markDirty();
-  showToast(`✓ Sub-strat creat: ${name.trim()}`);
-}
-
-// ════════════════════════════════════════════════════════
-//  METEO
+//  METEO LUCRU
 // ════════════════════════════════════════════════════════
 async function fetchWeather() {
   const center = map.getCenter();
-  const lat = center.lat.toFixed(4), lon = center.lng.toFixed(4);
-  const container = document.getElementById('weatherContainer');
-  container.innerHTML = `<div style="text-align:center;padding:30px;color:var(--muted);font-size:12px;">Se descarcă prognoza...<br><span style="font-size:10px;">(${lat}, ${lon})</span></div>`;
+  const c = document.getElementById('weatherContainer');
+  c.innerHTML = 'Se încarcă prognoza...';
   try {
-    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max,et0_fao_evapotranspiration&timezone=auto&forecast_days=14`);
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${center.lat}&longitude=${center.lng}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto`);
     const data = await res.json();
-    if (!data.daily) throw new Error('No data');
-    const { time, temperature_2m_max:maxT, temperature_2m_min:minT, precipitation_sum:prec, weathercode:codes, windspeed_10m_max:wind, et0_fao_evapotranspiration:et0 } = data.daily;
-    
-    // Alertă frost
-    const frostDays = time.filter((d,i) => minT[i] < 2);
-    let alertHtml = '';
-    if (frostDays.length > 0) {
-      alertHtml = `<div style="margin:4px 0; padding:8px 10px; background:rgba(96,165,250,0.1); border:1px solid rgba(96,165,250,0.3); border-radius:8px; font-size:11px; color:var(--blue);">
-        ❄️ Risc îngheț în ${frostDays.length} zi(le) din prognoză
-      </div>`;
+    let html = '';
+    for(let i=0; i<7; i++) {
+      html += `<div class="weather-card"><span>${data.daily.time[i]}</span> <span>⬆ ${data.daily.temperature_2m_max[i]}°C | ⬇ ${data.daily.temperature_2m_min[i]}°C</span></div>`;
     }
-    const rainDays = time.filter((d,i) => prec[i] > 10);
-    if (rainDays.length > 0) {
-      alertHtml += `<div style="margin:4px 0; padding:8px 10px; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:8px; font-size:11px; color:var(--amber);">
-        🌧️ Precipitații abundente (>10mm) în ${rainDays.length} zi(le)
-      </div>`;
-    }
-    
-    let html = `<div style="font-size:10px;color:var(--muted);text-align:center;font-family:'JetBrains Mono',monospace;margin-bottom:4px;">📍 ${lat}, ${lon}</div>${alertHtml}`;
-    
-    for (let i=0; i<time.length; i++) {
-      const dateObj = new Date(time[i]);
-      let dayName = dateObj.toLocaleDateString('ro-RO',{weekday:'short',day:'numeric',month:'short'});
-      if(i===0) dayName='Astăzi'; if(i===1) dayName='Mâine';
-      const c = codes[i];
-      let icon = '☀️';
-      if(c===1||c===2) icon='⛅'; else if(c===3) icon='☁️';
-      else if(c>=45&&c<=48) icon='🌫️'; else if(c>=51&&c<=67) icon='🌧️';
-      else if(c>=71&&c<=77) icon='🌨️'; else if(c>=80&&c<=82) icon='🌦️';
-      else if(c>=95) icon='⛈️';
-      const frostWarning = minT[i]<2 ? ' style="border-color:rgba(96,165,250,0.4)"' : '';
-      html += `<div class="weather-card"${frostWarning}>
-        <div style="display:flex;flex-direction:column;gap:2px;">
-          <span style="font-weight:600;font-size:12px;color:var(--text);">${dayName}</span>
-          <span style="font-size:10px;">${prec[i]>0?`<span style="color:var(--blue)">💧 ${prec[i]} mm</span>`:'<span style="color:var(--muted)">Fără precip.</span>'}</span>
-          ${wind[i]?`<span style="font-size:10px;color:var(--muted);">💨 ${Math.round(wind[i])} km/h</span>`:''}
-          ${et0&&et0[i]?`<span style="font-size:10px;color:#84cc16;">🌿 ET₀: ${et0[i].toFixed(1)} mm</span>`:''}
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-size:26px;">${icon}</span>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;font-family:'JetBrains Mono',monospace;font-size:12px;">
-            <span style="color:var(--red);font-weight:600;">⬆ ${Math.round(maxT[i])}°C</span>
-            <span style="color:var(--blue);">⬇ ${Math.round(minT[i])}°C</span>
-          </div>
-        </div>
-      </div>`;
-    }
-    container.innerHTML = html;
-    showToast('✓ Prognoză actualizată (14 zile + ETo)');
-  } catch(e) {
-    container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--red);font-size:12px;">Eroare la preluarea datelor. Încearcă din nou.</div>';
-  }
+    c.innerHTML = html;
+  } catch(e) { c.innerHTML = 'Eroare meteo.'; }
 }
 
-// ════════════════════════════════════════════════════════
-//  STATISTICI
-// ════════════════════════════════════════════════════════
-let chartCulturi = null, chartStraturi = null;
-
-function refreshStats() {
-  const vis = allFeatures.filter(f=>isFeatureVisible(f));
-  const totalHa = vis.reduce((s,f)=>s+(parseFloat(f.properties.suprafata)||0),0);
-  const culturi = {};
-  const straturi = {};
-  vis.forEach(f => {
-    const c = f.properties.cultura||'Necunoscut';
-    const s = (f.properties.strat||'').split('/')[0];
-    const ha = parseFloat(f.properties.suprafata)||0;
-    culturi[c] = (culturi[c]||0)+ha;
-    straturi[s] = (straturi[s]||0)+ha;
-  });
-  
-  document.getElementById('statsGrid').innerHTML = `
-    <div class="stat-card"><div class="stat-card-val">${vis.length}</div><div class="stat-card-label">PARCELE ACTIVE</div></div>
-    <div class="stat-card"><div class="stat-card-val">${totalHa.toFixed(1)}</div><div class="stat-card-label">HECTARE TOTAL</div></div>
-    <div class="stat-card"><div class="stat-card-val">${Object.keys(culturi).length}</div><div class="stat-card-label">CULTURI</div></div>
-    <div class="stat-card"><div class="stat-card-val">${journalEntries.length}</div><div class="stat-card-label">LUCRĂRI LOG</div></div>
-  `;
-
-  // Chart culturi
-  const ctxC = document.getElementById('chartCulturi');
-  if (chartCulturi) chartCulturi.destroy();
-  if (Object.keys(culturi).length > 0) {
-    chartCulturi = new Chart(ctxC, {
-      type: 'doughnut',
-      data: {
-        labels: Object.keys(culturi),
-        datasets: [{ data: Object.values(culturi).map(v=>+v.toFixed(2)), backgroundColor: Object.keys(culturi).map(c=>getColor(c)), borderWidth: 1, borderColor: '#142112' }]
-      },
-      options: {
-        responsive: true, plugins: {
-          legend: { labels: { color: '#6b9e6b', font: { family: 'JetBrains Mono', size: 10 }, boxWidth: 12 } },
-          tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.toFixed(1)} ha` } }
-        }
-      }
-    });
-  }
-
-  // Chart straturi
-  const ctxS = document.getElementById('chartStraturi');
-  if (chartStraturi) chartStraturi.destroy();
-  if (Object.keys(straturi).length > 0) {
-    chartStraturi = new Chart(ctxS, {
-      type: 'bar',
-      data: {
-        labels: Object.keys(straturi),
-        datasets: [{ label: 'ha', data: Object.values(straturi).map(v=>+v.toFixed(2)), backgroundColor: 'rgba(74,222,128,0.5)', borderColor: 'rgba(74,222,128,0.9)', borderWidth: 1 }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          x: { ticks: { color: '#6b9e6b', font: { family: 'JetBrains Mono', size: 9 } }, grid: { color: 'rgba(74,222,128,0.05)' } },
-          y: { ticks: { color: '#6b9e6b', font: { family: 'JetBrains Mono', size: 9 } }, grid: { color: 'rgba(74,222,128,0.05)' } }
-        },
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} ha` } } }
-      }
-    });
-  }
+function promptAddLayer() {
+  const n = prompt('Nume strat nou:');
+  if(n) { definedLayers.add(n); groupVisibility[n] = true; updateSidebarTree(); markDirty(); }
 }
 
-function renderCultureStats() {
-  const culturi = {};
-  allFeatures.forEach(f => {
-    const c = f.properties.cultura||'Necunoscut';
-    if (!culturi[c]) culturi[c] = { ha: 0, count: 0, parcele: [] };
-    culturi[c].ha += parseFloat(f.properties.suprafata)||0;
-    culturi[c].count++;
-    culturi[c].parcele.push(f.properties.parcela||'?');
-  });
-  let html = '';
-  Object.entries(culturi).sort((a,b)=>b[1].ha-a[1].ha).forEach(([c, d]) => {
-    const totalHa = allFeatures.reduce((s,f)=>s+(parseFloat(f.properties.suprafata)||0),0);
-    const pct = totalHa > 0 ? (d.ha/totalHa*100).toFixed(1) : 0;
-    html += `<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div style="width:14px;height:14px;background:${getColor(c)};border-radius:3px;"></div>
-          <span style="font-weight:600;font-size:13px;">${c}</span>
-        </div>
-        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green);">${d.ha.toFixed(1)} ha</span>
-      </div>
-      <div style="background:rgba(0,0,0,0.3);border-radius:4px;height:4px;margin-bottom:6px;">
-        <div style="background:${getColor(c)};height:4px;border-radius:4px;width:${pct}%;"></div>
-      </div>
-      <div style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;">${d.count} parcele · ${pct}% din total</div>
-    </div>`;
-  });
-  document.getElementById('culturiStatsContainer').innerHTML = html || '<div class="empty-parcele"><p>Nicio cultură înregistrată.</p></div>';
+function showToast(m, err) {
+  const t = document.getElementById('toast'); t.textContent = m;
+  t.className = 'toast' + (err?' error':''); t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-function renderRotatieStats() {
-  // Analizăm istoricul din jurnal pentru rotație culturi
-  const parcelHistory = {};
-  journalEntries.filter(j=>j.type==='Semănat').forEach(j => {
-    if (!parcelHistory[j.parcelIdx]) parcelHistory[j.parcelIdx] = [];
-    parcelHistory[j.parcelIdx].push({ year: new Date(j.date).getFullYear(), cultura: j.cultura||'Necunoscut' });
-  });
-  
-  let html = `<div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5;">Rotația se calculează pe baza lucrărilor de semănat înregistrate în jurnal.</div>`;
-  
-  let hasWarnings = false;
-  Object.entries(parcelHistory).forEach(([idx, history]) => {
-    if (history.length < 2) return;
-    const feat = allFeatures.find(f=>f.properties._index===parseInt(idx));
-    if (!feat) return;
-    const sorted = history.sort((a,b)=>b.year-a.year);
-    const recent = sorted.slice(0,3);
-    const sameConsecutive = recent.length >= 2 && recent[0].cultura === recent[1].cultura;
-    hasWarnings = hasWarnings || sameConsecutive;
-    html += `<div class="${sameConsecutive?'rotation-warning':'rotation-ok'}">
-      <strong>${feat.properties.parcela}</strong><br>
-      ${recent.map(r=>`${r.year}: ${r.cultura}`).join(' → ')}
-      ${sameConsecutive ? '<br>⚠️ Aceeași cultură 2+ ani consecutivi!' : '<br>✓ Rotație corectă'}
-    </div>`;
-  });
-  
-  if (!hasWarnings && !Object.keys(parcelHistory).length) {
-    html += '<div class="empty-parcele"><p>Adaugă lucrări de Semănat în jurnal pentru a analiza rotația culturilor.</p></div>';
-  }
-  document.getElementById('rotatieContainer').innerHTML = html;
-}
-
-// ════════════════════════════════════════════════════════
-//  JURNAL LUCRĂRI
-// ════════════════════════════════════════════════════════
-function updateJournalParcelFilter() {
-  const sel = document.getElementById('journalFilterParcel');
-  if (!sel) return;
-  const current = sel.value;
-  sel.innerHTML = '<option value="">Toate parcelele</option>';
-  allFeatures.forEach(f => {
-    sel.innerHTML += `<option value="${f.properties._index}" ${current==f.properties._index?'selected':''}>${f.properties.parcela||'Parcela '+f.properties._index}</option>`;
-  });
-}
-
-function renderJournal() {
-  const container = document.getElementById('journalList');
-  const filterParcel = document.getElementById('journalFilterParcel')?.value||'';
-  const filterType = document.getElementById('journalFilterType')?.value||'';
-  
-  let entries = [...journalEntries].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  if (filterParcel) entries = entries.filter(e=>e.parcelIdx===parseInt(filterParcel));
-  if (filterType) entries = entries.filter(e=>e.type===filterType);
-  
-  if (!entries.length) {
-    container.innerHTML = '<div class="empty-parcele"><div class="empty-icon">📋</div><p>Nicio lucrare găsită.</p></div>';
-    return;
-  }
-  
-  const typeClass = { 'Semănat':'jt-semanat','Fertilizat':'jt-fertilizat','Recoltat':'jt-recoltat','Ierbicidat':'jt-ierbicidat','Arat':'jt-arat','Altele':'jt-altele' };
-  const typeIcon = { 'Semănat':'🌱','Fertilizat':'🧪','Recoltat':'🌾','Ierbicidat':'💧','Arat':'🚜','Altele':'📝' };
-  
-  container.innerHTML = entries.map(e => {
-    const feat = allFeatures.find(f=>f.properties._index===e.parcelIdx);
-    const parcelName = feat ? feat.properties.parcela : (e.parcelName||`#${e.parcelIdx}`);
-    const dateStr = new Date(e.date).toLocaleDateString('ro-RO',{day:'2-digit',month:'short',year:'numeric'});
-    return `<div class="journal-entry">
-      <div class="journal-entry-header">
-        <div style="display:flex;flex-direction:column;gap:2px;">
-          <span style="font-size:12px;font-weight:600;color:var(--text);">${parcelName}</span>
-          <span class="journal-date">${dateStr}</span>
-        </div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <span class="journal-type ${typeClass[e.type]||'jt-altele'}">${typeIcon[e.type]||'📝'} ${e.type}</span>
-          <button class="journal-del" onclick="deleteJournalEntry(${e.id})" title="Șterge">🗑️</button>
-        </div>
-      </div>
-      ${e.cultura?`<div style="font-size:10px;color:var(--muted);margin-top:2px;">Cultură: <span style="color:${getColor(e.cultura)}">${e.cultura}</span></div>`:''}
-      ${e.note?`<div class="journal-note">${e.note}</div>`:''}
-    </div>`;
-  }).join('');
-}
-
-function openAddJournalEntry(preselectedIdx) {
-  const modal = document.getElementById('journalModalContent');
-  const today = new Date().toISOString().split('T')[0];
-  let parcelOptions = allFeatures.map(f=>`<option value="${f.properties._index}" ${preselectedIdx===f.properties._index?'selected':''}>${f.properties.parcela||'Parcela '+f.properties._index} (${f.properties.suprafata} ha)</option>`).join('');
-  if (!parcelOptions) parcelOptions = '<option value="">-- Nicio parcelă disponibilă --</option>';
-  
-  let culturiOpts = Object.keys(CULTURA_COLORS).filter(c=>c!=='default').map(c=>`<option value="${c}">${c}</option>`).join('');
-  
-  modal.innerHTML = `
-    <div class="modal-title">📋 Adaugă Lucrare Agricolă</div>
-    <div class="modal-body">
-      <div style="display:flex;flex-direction:column;gap:12px;">
-        <div>
-          <label style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:4px;">PARCELĂ *</label>
-          <select class="crop-input" id="jParcel" style="width:100%;text-align:left;">${parcelOptions}</select>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-          <div>
-            <label style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:4px;">TIP LUCRARE *</label>
-            <select class="crop-input" id="jType" style="width:100%;text-align:left;">
-              <option>Semănat</option><option>Fertilizat</option><option>Recoltat</option>
-              <option>Ierbicidat</option><option>Arat</option><option>Altele</option>
-            </select>
-          </div>
-          <div>
-            <label style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:4px;">DATA *</label>
-            <input type="date" class="crop-input" id="jDate" value="${today}" style="width:100%;text-align:left;">
-          </div>
-        </div>
-        <div>
-          <label style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:4px;">CULTURĂ (opțional)</label>
-          <select class="crop-input" id="jCultura" style="width:100%;text-align:left;"><option value="">-- Necunoscut --</option>${culturiOpts}</select>
-        </div>
-        <div>
-          <label style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:4px;">NOTIȚE</label>
-          <textarea class="crop-input" id="jNote" style="width:100%;height:70px;text-align:left;resize:vertical;" placeholder="Detalii: cantitate produs, starea solului, observații..."></textarea>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="map-btn" onclick="closeJournalModal()">Anulează</button>
-      <button class="map-btn active" onclick="saveJournalEntry()">💾 Salvează Lucrarea</button>
-    </div>
-  `;
-  document.getElementById('journalModal').classList.add('visible');
-}
-
-function quickAddJournal(parcelIdx) {
-  closeInfo();
-  switchTab('tab-jurnal', document.querySelectorAll('.nav-item')[1]);
-  openAddJournalEntry(parcelIdx);
-}
-
-function openJournalForParcel(parcelIdx) {
-  switchTab('tab-jurnal', document.querySelectorAll('.nav-item')[1]);
-  updateJournalParcelFilter();
-  document.getElementById('journalFilterParcel').value = parcelIdx;
-  renderJournal();
-}
-
-function saveJournalEntry() {
-  const parcelIdx = parseInt(document.getElementById('jParcel').value);
-  const type = document.getElementById('jType').value;
-  const date = document.getElementById('jDate').value;
-  const nota = document.getElementById('jNote').value.trim();
-  const cultura = document.getElementById('jCultura').value;
-  
-  if (!parcelIdx || !type || !date) { showToast('❌ Completează câmpurile obligatorii!', true); return; }
-  
-  const feat = allFeatures.find(f=>f.properties._index===parcelIdx);
-  const entry = {
-    id: Date.now(),
-    parcelIdx, parcelName: feat?.properties.parcela||'',
-    type, date, note: nota, cultura,
-    suprafata: feat?.properties.suprafata||'—'
-  };
-  journalEntries.push(entry);
-  closeJournalModal();
-  updateJournalParcelFilter();
-  renderJournal();
-  updateSidebarTree();
-  markDirty();
-  showToast(`✓ Lucrare înregistrată: ${type} pe ${feat?.properties.parcela||'parcelă'}`);
-}
-
-function deleteJournalEntry(id) {
-  journalEntries = journalEntries.filter(e=>e.id!==id);
-  renderJournal(); updateSidebarTree(); markDirty();
-  showToast('✓ Lucrare ștearsă');
-}
-
-function closeJournalModal() { document.getElementById('journalModal').classList.remove('visible'); }
-
-// ════════════════════════════════════════════════════════
-//  MANAGER CULTURI
-// ════════════════════════════════════════════════════════
-function saveTempColors() {
-  Object.keys(CULTURA_COLORS).forEach(c => {
-    if (c==='default') return;
-    const id = btoa(encodeURIComponent(c)).replace(/=/g,'');
-    const el = document.getElementById('color_'+id);
-    if (el) CULTURA_COLORS[c] = el.value;
-  });
-}
-
-function openCropManager() {
-  let html = `<div class="modal-title">🎨 Manager Culturi & Culori</div><div class="modal-body">`;
-  Object.keys(CULTURA_COLORS).forEach(c => {
-    if (c==='default') return;
-    const id = btoa(encodeURIComponent(c)).replace(/=/g,'');
-    const ha = allFeatures.filter(f=>f.properties.cultura===c).reduce((s,f)=>s+(parseFloat(f.properties.suprafata)||0),0);
-    html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;background:rgba(255,255,255,0.04);padding:6px 10px;border-radius:8px;">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <input type="color" id="color_${id}" value="${CULTURA_COLORS[c]}" style="width:22px;height:22px;padding:0;border:none;border-radius:3px;cursor:pointer;background:transparent;">
-        <span style="font-size:13px;font-weight:600;">${c}</span>
-        ${ha>0?`<span style="font-size:10px;color:var(--muted);">${ha.toFixed(1)} ha</span>`:''}
-      </div>
-      <button class="map-btn" style="padding:3px 7px;font-size:11px;color:var(--red);border-color:transparent;background:transparent;" onclick="deleteCrop('${c.replace(/'/g,"\\'")}')" title="Șterge">🗑️</button>
-    </div>`;
-  });
-  html += `
-    <div style="margin-top:14px;padding-top:10px;border-top:1px dashed var(--border);">
-      <p style="font-size:10px;color:var(--muted);margin-bottom:8px;">Adaugă cultură nouă:</p>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <input type="color" id="newCropColor" value="#3b82f6" style="width:26px;height:26px;padding:0;border:none;border-radius:4px;cursor:pointer;background:transparent;">
-        <input type="text" id="newCropName" class="crop-input" placeholder="Ex: Cartofi, Viță de vie..." style="flex:1;text-align:left;width:auto;">
-        <button class="map-btn" style="padding:5px 10px;color:var(--green);border-color:var(--green);" onclick="addNewCrop()">➕</button>
-      </div>
-    </div>
-  </div>
-  <div class="modal-footer">
-    <button class="map-btn" onclick="closeCropManager()">Închide</button>
-    <button class="map-btn active" onclick="saveCropColors()">💾 Salvează</button>
-  </div>`;
-  document.getElementById('cropModalContent').innerHTML = html;
-  document.getElementById('cropModal').classList.add('visible');
-}
-
-function addNewCrop() {
-  const name = document.getElementById('newCropName').value.trim();
-  const color = document.getElementById('newCropColor').value;
-  if (!name) { showToast('Introdu un nume!'); return; }
-  saveTempColors(); CULTURA_COLORS[name] = color; openCropManager();
-}
-function deleteCrop(c) { saveTempColors(); delete CULTURA_COLORS[c]; openCropManager(); }
-function closeCropManager() { document.getElementById('cropModal').classList.remove('visible'); }
-function saveCropColors() {
-  saveTempColors();
-  localStorage.setItem('agro_crop_colors', JSON.stringify(CULTURA_COLORS));
-  closeCropManager(); refreshMapData();
-  showToast('✓ Culori salvate!');
-}
-
-// ════════════════════════════════════════════════════════
-//  MANAGER SEZOANE
-// ════════════════════════════════════════════════════════
-function openSeasonManager() {
-  const modal = document.getElementById('seasonModalContent');
-  const curYear = new Date().getFullYear();
-  let seasonsList = seasons.map(s => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:${s.id===currentSeason?'rgba(74,222,128,0.1)':'rgba(255,255,255,0.03)'};border:1px solid ${s.id===currentSeason?'var(--green)':'var(--border)'};border-radius:8px;margin-bottom:6px;">
-      <div>
-        <span style="font-weight:600;font-size:13px;">${s.name}</span>
-        <span style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-left:8px;">${s.year}</span>
-        ${s.id===currentSeason?'<span style="font-size:10px;color:var(--green);margin-left:6px;">● ACTIV</span>':''}
-      </div>
-      <button class="map-btn" style="padding:3px 8px;font-size:10px;" onclick="setActiveSeason(${s.id})">${s.id===currentSeason?'✓ Activ':'Activează'}</button>
-    </div>`).join('');
-  if (!seasonsList) seasonsList = '<p style="color:var(--muted);font-size:12px;">Niciun sezon creat.</p>';
-  
-  modal.innerHTML = `
-    <div class="modal-title">📅 Manager Sezoane Agricole</div>
-    <div class="modal-body">
-      <div style="margin-bottom:12px;">${seasonsList}</div>
-      <div style="padding:10px;border:1px dashed var(--border);border-radius:8px;">
-        <p style="font-size:10px;color:var(--muted);margin-bottom:8px;">Sezon nou:</p>
-        <div style="display:flex;gap:8px;">
-          <input type="text" id="newSeasonName" class="crop-input" placeholder="Ex: Campanie 2025-2026" style="flex:1;text-align:left;">
-          <input type="number" id="newSeasonYear" class="crop-input" value="${curYear}" style="width:70px;text-align:center;">
-          <button class="map-btn" style="padding:5px 10px;color:var(--green);border-color:var(--green);" onclick="addSeason()">➕</button>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="map-btn" onclick="closeModal('seasonModal')">Închide</button>
-    </div>`;
-  document.getElementById('seasonModal').classList.add('visible');
-}
-
-function addSeason() {
-  const name = document.getElementById('newSeasonName').value.trim();
-  const year = parseInt(document.getElementById('newSeasonYear').value);
-  if (!name) { showToast('Introdu un nume!'); return; }
-  const id = Date.now();
-  seasons.push({ id, name, year });
-  if (!currentSeason) currentSeason = id;
-  markDirty(); openSeasonManager();
-}
-
-function setActiveSeason(id) { currentSeason = id; markDirty(); openSeasonManager(); showToast('✓ Sezon activ schimbat'); }
-
-function closeModal(id) { document.getElementById(id).classList.remove('visible'); }
-
-// ════════════════════════════════════════════════════════
-//  DELETE MANAGER
-// ════════════════════════════════════════════════════════
-function openDeleteModal() {
-  if (!allFeatures.length && definedLayers.size===1 && definedLayers.has('Terenuri Principale')) {
-    showToast('❌ Nu există date de șters!'); return;
-  }
-  const modal = document.getElementById('deleteModalContent');
-  const layers = Array.from(definedLayers).sort();
-  let html = `<div class="modal-title" style="color:var(--red);">🗑️ Șterge Terenuri / Straturi</div>
-    <div class="modal-body">
-      <p style="color:var(--muted);font-size:11px;margin-bottom:10px;">Selectează ce dorești să ștergi.</p>
-      <div style="padding-left:8px;">`;
-  layers.forEach(layer => {
-    const feats = allFeatures.filter(f=>f.properties.strat===layer);
-    const sl = layer.replace(/"/g,'&quot;').replace(/'/g,"\\'");
-    html += `<div style="margin-top:10px;">
-      <label class="checkbox-label" style="color:var(--red);font-weight:bold;">
-        <input type="checkbox" class="del-layer-cb" value="${layer.replace(/"/g,'&quot;')}" onchange="toggleLayerDelete(this,'${sl}')">
-        📂 ${layer.toUpperCase()}
-      </label>
-      <div style="padding-left:20px;margin-top:4px;">`;
-    feats.forEach(f => {
-      html += `<label class="checkbox-label">
-        <input type="checkbox" class="del-cb" data-layer="${layer.replace(/"/g,'&quot;')}" value="${f.properties._index}">
-        ${f.properties.parcela||'Fără Nume'} <span style="color:var(--muted)">(${f.properties.suprafata||'?'} ha)</span>
-      </label>`;
-    });
-    html += '</div></div>';
-  });
-  html += `</div>
-      <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px;">
-        <label class="checkbox-label" style="color:var(--red);">
-          <input type="checkbox" id="confirmDeleteCb">
-          ⚠️ Confirm că vreau să șterg definitiv datele selectate.
-        </label>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="map-btn" onclick="closeModal('deleteModal')">Anulează</button>
-      <button class="map-btn active" style="background:rgba(248,113,113,0.1);color:var(--red);border-color:var(--red);" onclick="executeDelete()">🗑️ Șterge</button>
-    </div>`;
-  modal.innerHTML = html;
-  document.getElementById('deleteModal').classList.add('visible');
-}
-
-function toggleLayerDelete(cb, layerName) {
-  document.querySelectorAll('.del-cb').forEach(c => { if(c.getAttribute('data-layer')===layerName) c.checked=cb.checked; });
-}
-
-function executeDelete() {
-  if (!document.getElementById('confirmDeleteCb').checked) { showToast('❌ Bifează căsuța de confirmare!'); return; }
-  const layersToDel = Array.from(document.querySelectorAll('.del-layer-cb:checked')).map(c=>c.value);
-  const featsToDel = Array.from(document.querySelectorAll('.del-cb:checked')).map(c=>parseInt(c.value));
-  if (!layersToDel.length && !featsToDel.length) { showToast('❌ Nu ai selectat nimic.'); return; }
-  allFeatures = allFeatures.filter(f=>!featsToDel.includes(f.properties._index));
-  layersToDel.forEach(l => { definedLayers.delete(l); delete groupVisibility[l]; delete groupCollapsed[l]; });
-  if (!definedLayers.size) definedLayers.add('Terenuri Principale');
-  closeModal('deleteModal');
-  refreshMapData(); markDirty();
-  showToast('✓ Date șterse definitiv.');
-}
-
-// ════════════════════════════════════════════════════════
-//  EXPORT
-// ════════════════════════════════════════════════════════
-function getVisibleFeatures() { return allFeatures.filter(f=>isFeatureVisible(f)); }
-
-function exportGeoJSON() {
-  const target = getVisibleFeatures();
-  if (!target.length) { showToast('❌ Niciun teren vizibil de exportat'); return; }
-  triggerDownload(JSON.stringify({type:'FeatureCollection',features:target},null,2),'terenuri_ferma.geojson','application/json');
-  showToast(`✓ GeoJSON exportat (${target.length} parcele)`);
-}
-
-function exportKML() {
-  const target = getVisibleFeatures();
-  if (!target.length) { showToast('❌ Niciun teren vizibil de exportat'); return; }
-  let kml = '<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n  <Document>\n    <name>Terenuri Ferma</name>\n';
-  target.forEach(f => {
-    const p = f.properties;
-    kml += `    <Placemark>\n      <name>${p.parcela||'Parcela'}</name>\n      <ExtendedData>\n`;
-    for (let k in p) if (k!=='_index') kml += `        <Data name="${k}"><value>${p[k]}</value></Data>\n`;
-    kml += '      </ExtendedData>\n';
-    const fc = (coords) => coords.map(c=>`${c[0]},${c[1]},0`).join(' ');
-    if (f.geometry.type==='Polygon') {
-      kml += '      <Polygon>\n        <outerBoundaryIs><LinearRing><coordinates>'+fc(f.geometry.coordinates[0])+'</coordinates></LinearRing></outerBoundaryIs>\n';
-      for(let i=1;i<f.geometry.coordinates.length;i++) kml+='        <innerBoundaryIs><LinearRing><coordinates>'+fc(f.geometry.coordinates[i])+'</coordinates></innerBoundaryIs>\n';
-      kml += '      </Polygon>\n';
-    } else if (f.geometry.type==='MultiPolygon') {
-      kml += '      <MultiGeometry>\n';
-      f.geometry.coordinates.forEach(poly => {
-        kml += '        <Polygon>\n          <outerBoundaryIs><LinearRing><coordinates>'+fc(poly[0])+'</coordinates></LinearRing></outerBoundaryIs>\n';
-        for(let i=1;i<poly.length;i++) kml+='          <innerBoundaryIs><LinearRing><coordinates>'+fc(poly[i])+'</coordinates></LinearRing></innerBoundaryIs>\n';
-        kml += '        </Polygon>\n';
-      });
-      kml += '      </MultiGeometry>\n';
-    }
-    kml += '    </Placemark>\n';
-  });
-  kml += '  </Document>\n</kml>';
-  triggerDownload(kml,'terenuri_ferma.kml','application/vnd.google-earth.kml+xml');
-  showToast(`✓ KML exportat (${target.length} parcele)`);
-}
-
-function exportSHP() {
-  const target = getVisibleFeatures();
-  if (!target.length) { showToast('❌ Niciun teren vizibil de exportat'); return; }
-  if (typeof shpwrite==='undefined') { showToast('❌ Modulul SHP se încarcă...'); return; }
-  try {
-    shpwrite.download({type:'FeatureCollection',features:target},{folder:'terenuri_ferma',types:{point:false,polygon:true,line:false}});
-    showToast(`✓ SHP exportat (${target.length} parcele)`);
-  } catch(e) { console.error(e); showToast('❌ Eroare la generarea SHP'); }
-}
-
-function triggerDownload(content, filename, mimeType) {
-  const blob = new Blob([content],{type:mimeType});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename; a.click();
-}
-
-// ════════════════════════════════════════════════════════
-//  SESSION INFO
-// ════════════════════════════════════════════════════════
-function updateSessionInfo() {
-  const totalHa = allFeatures.reduce((s,f)=>s+(parseFloat(f.properties.suprafata)||0),0);
-  const raw = localStorage.getItem('agro_manager_v2_data');
-  let savedAt = '—';
-  if (raw) { try { savedAt = new Date(JSON.parse(raw).savedAt).toLocaleString('ro-RO'); } catch(e){} }
-  document.getElementById('sessionInfo').innerHTML = `
-    Parcele: ${allFeatures.length}<br>
-    Suprafață: ${totalHa.toFixed(2)} ha<br>
-    Lucrări jurnal: ${journalEntries.length}<br>
-    Sezoane: ${seasons.length}<br>
-    Salvat la: ${savedAt}
-  `;
-}
-
-// ════════════════════════════════════════════════════════
-//  DRAG & DROP
-// ════════════════════════════════════════════════════════
-const uploadZone = document.getElementById('uploadZone');
-uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
-uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
-uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
-
-// ════════════════════════════════════════════════════════
-//  TOAST
-// ════════════════════════════════════════════════════════
-let toastTimer;
-function showToast(msg, isError) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast' + (isError?' error':'');
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>t.classList.remove('show'), 3500);
-}
-
-// ════════════════════════════════════════════════════════
-//  AUTO-SAVE
-// ════════════════════════════════════════════════════════
-setInterval(()=>{ if(isDirty) { saveToLocalStorage(); } }, 120000);
-
-// ════════════════════════════════════════════════════════
-//  LOGICA MOCKUP DE BAZA PT BUTONUL DE SWITCH
-// ════════════════════════════════════════════════════════
+// Interfață login switch
 window.isLoginMode = true;
 function toggleAuthMode() {
   window.isLoginMode = !window.isLoginMode;
@@ -2099,14 +1015,6 @@ function toggleAuthMode() {
   document.getElementById('authSubmitBtn').textContent = window.isLoginMode ? 'Conectare' : 'Înregistrare';
   document.getElementById('authSwitchBtn').textContent = window.isLoginMode ? 'Nu ai cont? Creează unul.' : 'Ai deja cont? Conectează-te.';
 }
-
-// ════════════════════════════════════════════════════════
-//  INIT
-// ════════════════════════════════════════════════════════
-loadFromLocalStorage();
-updateLayerPanel();
-updateSidebarTree();
-updateJournalParcelFilter();
 </script>
 </body>
 </html>
