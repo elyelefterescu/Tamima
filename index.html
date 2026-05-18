@@ -12,7 +12,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-omnivore/0.3.4/leaflet-omnivore.min.js"></script>
 <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
-<script src="https://unpkg.com/shp-write@0.3.2/shpwrite.js"></script>
+<script src="https://unpkg.com/@mapbox/shp-write@latest/shpwrite.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 
 <style>
@@ -394,50 +394,69 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 
   window.logoutUser = () => { signOut(auth); };
 
-  // Filtrul suprem anti-eroare Firebase
-  function deepCleanPayload(obj) {
-    if (obj === null || obj === undefined) return null;
-    if (typeof obj !== 'object') { if (typeof obj === 'number' && isNaN(obj)) return 0; return obj; }
-    if (Array.isArray(obj)) return obj.map(deepCleanPayload);
-    const target = {};
-    for (const key in obj) {
-      if (Object.prototype.hasOwnProperty.call(obj, key)) {
-        const value = obj[key];
-        if (value !== undefined && typeof value !== 'function') target[key] = deepCleanPayload(value);
-      }
-    }
-    return target;
-  }
-
+  // AICI ESTE SECRETUL FIREBASE: Împachetăm toată aplicația într-un singur șir de text curat!
   window.saveToFirestore = async () => {
     if (!window.currentUid) return;
     try {
-      const safeFeatures = window.allFeatures.map(f => ({
-        type: "Feature", geometry: { type: String(f.geometry.type), coordinates: JSON.parse(JSON.stringify(f.geometry.coordinates)) },
-        properties: { _index: Number(f.properties._index), parcela: String(f.properties.parcela || 'Parcela'), strat: String(f.properties.strat || 'Terenuri Principale'), cultura: String(f.properties.cultura || 'Necunoscut'), suprafata: String(f.properties.suprafata || '0') }
-      }));
       const rawData = {
-        features: safeFeatures, definedLayers: Array.from(window.definedLayers).map(String), groupVisibility: window.groupVisibility, itemVisibility: window.itemVisibility,
-        journalEntries: window.journalEntries, seasons: window.seasons, currentSeason: window.currentSeason, cropColors: window.CULTURA_COLORS, savedAt: new Date().toISOString()
+        features: window.allFeatures,
+        definedLayers: Array.from(window.definedLayers),
+        groupVisibility: window.groupVisibility,
+        itemVisibility: window.itemVisibility,
+        journalEntries: window.journalEntries,
+        seasons: window.seasons,
+        currentSeason: window.currentSeason,
+        cropColors: window.CULTURA_COLORS
       };
-      await setDoc(doc(db, "utilizatori", window.currentUid), deepCleanPayload(rawData));
-      window.isDirty = false; window.updateSaveIndicator(); window.showToast('✓ Date salvate securizat în Cloud!');
-    } catch (e) { window.showToast('❌ Eroare server: ' + e.message, true); }
+
+      // Acest JSON.stringify "păcălește" limitarea Google legată de structura KML
+      const pachetSalvare = JSON.stringify(rawData);
+
+      await setDoc(doc(db, "utilizatori", window.currentUid), {
+        dateSalvate: pachetSalvare,
+        savedAt: new Date().toISOString()
+      });
+
+      window.isDirty = false; 
+      window.updateSaveIndicator(); 
+      window.showToast('✓ Date salvate securizat în Cloud!');
+    } catch (e) { 
+      window.showToast('❌ Eroare server: ' + e.message, true); 
+    }
   };
 
   window.loadFromFirestore = async (uid) => {
     try {
       const docSnap = await getDoc(doc(db, "utilizatori", uid));
       if (docSnap.exists()) {
-        const data = docSnap.data();
-        window.allFeatures = data.features || []; window.definedLayers = new Set(data.definedLayers || ['Terenuri Principale']);
-        window.groupVisibility = data.groupVisibility || {}; window.itemVisibility = data.itemVisibility || {};
-        window.journalEntries = data.journalEntries || []; window.seasons = data.seasons || []; window.currentSeason = data.currentSeason || null;
-        if (data.cropColors) window.CULTURA_COLORS = data.cropColors;
-        window.refreshMapData(); if (window.allFeatures.length > 0) setTimeout(() => window.fitBounds(), 500);
+        const dbData = docSnap.data();
+        
+        // Verificăm dacă avem date împachetate cu noua metodă
+        if (dbData.dateSalvate) {
+          const data = JSON.parse(dbData.dateSalvate);
+          window.allFeatures = data.features || []; 
+          window.definedLayers = new Set(data.definedLayers || ['Terenuri Principale']);
+          window.groupVisibility = data.groupVisibility || {}; 
+          window.itemVisibility = data.itemVisibility || {};
+          window.journalEntries = data.journalEntries || []; 
+          window.seasons = data.seasons || []; 
+          window.currentSeason = data.currentSeason || null;
+          if (data.cropColors) window.CULTURA_COLORS = data.cropColors;
+        } else if (dbData.features) {
+          // Soluție de rezervă în caz că ai apucat să salvezi ceva cu o versiune veche
+          window.allFeatures = dbData.features || [];
+          window.definedLayers = new Set(dbData.definedLayers || ['Terenuri Principale']);
+        }
+
+        window.refreshMapData(); 
+        if (window.allFeatures.length > 0) setTimeout(() => window.fitBounds(), 500);
         window.showToast(`✓ Date descărcate (${window.allFeatures.length} parcele)`);
-      } else { window.clearMapAndState(); }
-    } catch (e) {}
+      } else { 
+        window.clearMapAndState(); 
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   window.clearAllCloudData = async () => {
@@ -449,7 +468,7 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 </script>
 
 <script>
-// LOGICĂ APLICAȚIE (Toate funcțiile active)
+// LOGICĂ APLICAȚIE
 function getColor(cultura) { return window.CULTURA_COLORS[cultura] || window.CULTURA_COLORS.default; }
 window.showToast = function(m, err) { const t = document.getElementById('toast'); t.textContent = m; t.className = 'toast' + (err?' error':''); t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); };
 window.switchTab = function(tabId, el) {
@@ -477,7 +496,6 @@ const TILE_LAYERS = {
   osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 })
 };
 
-// HARTA ESTE AICI ȘI FUNCȚIONEAZĂ!
 const map = L.map('map', { center: [44.56, 27.36], zoom: 10, layers: [TILE_LAYERS.esri_satellite] });
 let labelGroup = L.layerGroup().addTo(map);
 let geojsonLayers = [];
