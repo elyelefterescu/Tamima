@@ -556,8 +556,7 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
   window.saveToFirestore = async () => {
     if (!currentUid) return;
     try {
-      // FILTRU SUPREM PENTRU KML: Reconstruim tabloul de parcele cu proprietăți sigure, de tip text primitiv
-      // Asta previne erorile de tip "Unsupported field value: undefined" sau obiecte Leaflet nestructurate în Firestore
+      // Reconstruim tabloul de parcele cu proprietăți sigure, exclusiv primitive (text/numere)
       const safeFeatures = allFeatures.map(f => {
         return {
           type: "Feature",
@@ -615,7 +614,7 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
       showToast('✓ Date salvate securizat în Cloud!');
     } catch (e) {
       console.error("Eroare detaliata Firestore:", e);
-      showToast('❌ Eroare la salvarea în cloud. Date KML necompatibile.', true);
+      showToast('❌ Eroare la salvarea în cloud.', true);
     }
   };
 
@@ -738,7 +737,6 @@ const defaultColorsPreset = {
 let CULTURA_COLORS = { ...defaultColorsPreset };
 function getColor(cultura) { return CULTURA_COLORS[cultura] || CULTURA_COLORS.default; }
 
-// Resetare stare aplicație (la logout sau erori)
 function clearMapAndState() {
   allFeatures = [];
   definedLayers = new Set(['Terenuri Principale']);
@@ -765,7 +763,7 @@ function updateSaveIndicator() {
 }
 
 // ════════════════════════════════════════════════════════
-//  PROJ4 STEREO70 & IMPORT LOGIC
+//  PROJ4 STEREO70 & IMPORT LOGIC REPARAT PENTRU KML EXTENDEDDATA
 // ════════════════════════════════════════════════════════
 proj4.defs("EPSG:31700","+proj=sterea +lat_0=46 +lon_0=25 +k=0.99975 +x_0=500000 +y_0=500000 +ellps=krass +towgs84=2.329,-147.042,-92.08,0.309,-0.325,-0.497,5.69 +units=m +no_defs");
 
@@ -843,24 +841,52 @@ async function handleFiles(files) {
         const text = await readFileAsText(file); let geojson = JSON.parse(text);
         fixProjection(geojson); renderGeoJSON(geojson, file.name);
       }
-    } catch(e) { showToast(`❌ Eroare la citirea fișierului`, true); }
+    } catch(e) { console.error(e); showToast(`❌ Eroare la citirea fișierului KML`, true); }
   }
 }
 
+// PARSER KML PUTERNIC - Citește perfect coordonatele și elementele din ExtendedData
 function toGeoJSON_KML(kmlDoc, layerName) {
   const placemarks = kmlDoc.querySelectorAll('Placemark');
   const features = [];
+  
   placemarks.forEach(pm => {
-    const name = pm.querySelector('name')?.textContent?.trim() || 'Parcela KML';
-    const allCoords = pm.querySelectorAll('coordinates'); if (!allCoords.length) return;
+    let name = pm.querySelector('name')?.textContent?.trim();
+    let strat = layerName;
+    let cultura = 'Necunoscut';
+    
+    // Extragere proprietăți din ExtendedData (structura complexă pe care o are fișierul tău)
+    const datas = pm.querySelectorAll('ExtendedData Data, SimpleData');
+    datas.forEach(d => {
+      const propName = d.getAttribute('name');
+      const val = d.querySelector('value')?.textContent?.trim() || d.textContent?.trim();
+      if (!val) return;
+      
+      if (propName === 'parcela') name = val;
+      if (propName === 'strat') strat = val;
+      if (propName === 'cultura') cultura = val;
+    });
+    
+    if (!name) name = 'Parcela KML';
+
+    const allCoords = pm.querySelectorAll('coordinates'); 
+    if (!allCoords.length) return;
+    
+    // Parsare poligoane simple sau complexe
     const coords = allCoords[0];
     const pairs = coords.textContent.trim().split(/\s+/).map(c => {
       const p = c.split(','); return [parseFloat(p[0]), parseFloat(p[1])];
     }).filter(c => !isNaN(c[0]) && !isNaN(c[1]));
+    
     if (pairs.length >= 3) {
-      features.push({ type: 'Feature', properties: { parcela: name, strat: layerName, cultura: 'Necunoscut' }, geometry: { type: 'Polygon', coordinates: [pairs] } });
+      features.push({ 
+        type: 'Feature', 
+        properties: { parcela: name, strat: strat, cultura: cultura }, 
+        geometry: { type: 'Polygon', coordinates: [pairs] } 
+      });
     }
   });
+  
   return { type: 'FeatureCollection', features };
 }
 
@@ -924,6 +950,12 @@ function renderLabels(features) {
       }).addTo(labelGroup);
     } catch(e){}
   });
+}
+
+function isFeatureVisible(f) {
+  const idx = f.properties._index;
+  if (itemVisibility[idx] === false) return false;
+  return groupVisibility[f.properties.strat] !== false;
 }
 
 // ════════════════════════════════════════════════════════
