@@ -564,7 +564,11 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
         cropColors: CULTURA_COLORS,
         savedAt: new Date().toISOString()
       };
-      await setDoc(doc(db, "utilizatori", currentUid), data);
+      
+      // TRUCUL MAGIC: Curățăm datele de absolut orice eroare Leaflet invizibilă (undefined fields)
+      const dataCurata = JSON.parse(JSON.stringify(data));
+      
+      await setDoc(doc(db, "utilizatori", currentUid), dataCurata);
       isDirty = false;
       updateSaveIndicator();
       showToast('✓ Date salvate securizat în Cloud!');
