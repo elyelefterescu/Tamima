@@ -19,13 +19,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
 <script src="https://unpkg.com/@mapbox/shp-write@latest/shpwrite.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600&family=JetBrains+Mono:wght@400;500&subset=latin,latin-ext&display=swap');
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -388,6 +389,11 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 
 /* ═══ JURNAL ═══ */
 .journal-entry { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+.rap-table { width:100%; border-collapse:collapse; font-size:11px; min-width:700px; }
+.rap-table th { position:sticky; top:0; z-index:2; background:var(--sidebar-bg); color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; padding:7px 8px; border-bottom:1px solid var(--border); text-align:left; white-space:nowrap; }
+.rap-table td { padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.04); color:var(--text); vertical-align:top; }
+.rap-table tr:hover td { background:rgba(74,222,128,0.04); }
+.rap-table tr.rap-total td { background:rgba(74,222,128,0.08); color:var(--green); font-weight:700; font-family:'JetBrains Mono',monospace; border-top:1px solid rgba(74,222,128,0.25); }
 .journal-entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
 .journal-date { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); }
 .journal-type { font-size: 10px; padding: 2px 7px; border-radius: 10px; font-family: 'JetBrains Mono', monospace; }
@@ -551,6 +557,7 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
   <div class="sidebar-nav">
     <div class="nav-item active" onclick="switchTab('tab-parcele', this)" title="Hărți & Terenuri">🗺️</div>
     <div class="nav-item" onclick="switchTab('tab-jurnal', this)" title="Jurnal Lucrări">📋</div>
+    <div class="nav-item" onclick="switchTab('tab-rapoarte', this)" title="Rapoarte & Export">📄</div>
     <div class="nav-item" onclick="switchTab('tab-statistici', this)" title="Statistici & Grafice">📊</div>
     <div class="nav-item" onclick="switchTab('tab-vremea', this)" title="Prognoza Meteo">⛅</div>
     <div class="nav-item" onclick="switchTab('tab-import', this)" title="Import Fișiere">📤</div>
@@ -629,6 +636,36 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
           <p>Nicio lucrare înregistrată.<br>Adaugă prima lucrare agricolă!</p>
         </div>
       </div>
+    </div>
+
+    <div id="tab-rapoarte" class="panel-content">
+      <div style="padding:12px 16px 8px; border-bottom:1px solid var(--border); flex-shrink:0;">
+        <div class="section-title" style="margin-bottom:6px;">📄 RAPOARTE LUCRĂRI</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="map-btn" style="flex:1;justify-content:center;background:rgba(74,222,128,0.12);color:var(--green);border-color:rgba(74,222,128,0.35);" onclick="exportRapoarteXLS()">⬇️ Export XLS</button>
+        </div>
+      </div>
+      <div style="padding:8px 16px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;gap:6px;">
+          <select class="sort-select" id="rapFilterParcel" onchange="renderRapoarte()" style="flex:1;padding:5px;">
+            <option value="">Toate parcelele</option>
+          </select>
+          <select class="sort-select" id="rapFilterType" onchange="renderRapoarte()" style="flex:1;padding:5px;">
+            <option value="">Toate tipurile</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center;">
+          <input type="date" class="sort-select" id="rapDateFrom" onchange="renderRapoarte()" style="flex:1;padding:4px;font-size:10px;" title="De la data">
+          <span style="color:var(--muted);font-size:10px;">—</span>
+          <input type="date" class="sort-select" id="rapDateTo" onchange="renderRapoarte()" style="flex:1;padding:4px;font-size:10px;" title="Până la data">
+          <button class="map-btn" onclick="clearRapFilters()" style="padding:3px 8px;font-size:10px;color:var(--muted);white-space:nowrap;">✕ Reset</button>
+        </div>
+        <span id="rapCount" style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;"></span>
+      </div>
+      <div class="scrollable" id="rapTable" style="padding:0;overflow-x:auto;">
+        <div class="empty-parcele"><div class="empty-icon">📄</div><p>Nicio lucrare de afișat.</p></div>
+      </div>
+      <div id="rapTotals" style="padding:8px 16px;border-top:1px solid var(--border);font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;flex-shrink:0;display:none;"></div>
     </div>
 
     <div id="tab-statistici" class="panel-content">
@@ -905,7 +942,7 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
         const dbData = docSnap.data();
         if (dbData.dateSalvate) {
           const data = JSON.parse(dbData.dateSalvate);
-          allFeatures = data.features || [];
+          allFeatures = (data.features || []).map(fixFeatureProps);
           definedLayers = new Set(data.definedLayers || ['Terenuri Principale']);
           groupVisibility = data.groupVisibility || {};
           groupCollapsed = data.groupCollapsed || {};
@@ -964,6 +1001,7 @@ function switchTab(tabId, el) {
     if (c.innerHTML.includes('empty-icon') || c.innerHTML.includes('Apasă butonul')) fetchWeather();
   }
   if (tabId === 'tab-statistici') refreshStats();
+  if (tabId === 'tab-rapoarte') refreshRapoarte();
   if (tabId === 'tab-admin') updateSessionInfo();
   // Pe mobil, deschide drawer-ul automat la click pe tab
   if (window.innerWidth <= 768) {
@@ -1126,11 +1164,7 @@ const PRODUCTS_DEFAULT = [
   { id:'fungicid',     name:'Fungicid',           category:'Pesticide',    unit:'l/ha'  },
   { id:'insecticid',   name:'Insecticid',         category:'Pesticide',    unit:'l/ha'  },
   { id:'fungicid_sd',  name:'Fungicid sămânță',  category:'Pesticide',    unit:'l/t'   },
-  { id:'sam_grau',     name:'Sămânță grâu',       category:'Semințe',      unit:'kg/ha' },
-  { id:'sam_porumb',   name:'Sămânță porumb',     category:'Semințe',      unit:'saci/ha'},
-  { id:'sam_rapita',   name:'Sămânță rapiță',     category:'Semințe',      unit:'kg/ha' },
-  { id:'sam_floarea',  name:'Sămânță fl. soarelui',category:'Semințe',    unit:'saci/ha'},
-  { id:'sam_soia',     name:'Sămânță soia',       category:'Semințe',      unit:'kg/ha' },
+  { id:'samanta',      name:'S\u0103m\u00E2n\u0163\u0103',          category:'Semi\u0163e',      unit:'kg/ha' },
   { id:'apa',          name:'Apă irigații',       category:'Irigații',     unit:'mc/ha' },
 ];
 let customProducts = JSON.parse(localStorage.getItem('agro_custom_products') || '[]');
@@ -1913,6 +1947,24 @@ function calculateAreaInHectares(geometry) {
 // ════════════════════════════════════════════════════════
 //  RENDER GEOJSON
 // ════════════════════════════════════════════════════════
+// ── Corecție mojibake UTF-8 citit ca Latin-1 (SHP-uri românești) ──
+function tryFixEncoding(str) {
+  if (typeof str !== 'string') return str;
+  if (!/[\xC0-\xFF]/.test(str)) return str; // fără octeți înalți → ok
+  try {
+    const bytes = new Uint8Array(str.length);
+    for (let i = 0; i < str.length; i++) bytes[i] = str.charCodeAt(i) & 0xFF;
+    return new TextDecoder('utf-8', {fatal: true}).decode(bytes);
+  } catch(e) { return str; }
+}
+function fixFeatureProps(f) {
+  if (!f || !f.properties) return f;
+  for (const key in f.properties) {
+    if (typeof f.properties[key] === 'string') f.properties[key] = tryFixEncoding(f.properties[key]);
+  }
+  return f;
+}
+
 function renderGeoJSON(geojson, fileName) {
   if (!geojson || !geojson.features) return;
   let maxIdx = allFeatures.length > 0 ? Math.max(...allFeatures.map(f => f.properties._index || 0)) : 0;
@@ -1921,6 +1973,7 @@ function renderGeoJSON(geojson, fileName) {
     if (!f.geometry) return;
     maxIdx++;
     if (!f.properties) f.properties = {};
+    fixFeatureProps(f);
     f.properties._index = maxIdx;
     let strat = (f.properties.strat || 'Terenuri Principale').trim();
     f.properties.strat = strat;
@@ -2716,6 +2769,7 @@ function renderJournal() {
         </div>
         <div style="display:flex;gap:6px;align-items:center;">
           <span class="journal-type ${typeClass[e.type]||'jt-altele'}">${getWorkTypeIcon(e.type)} ${e.type}</span>
+          <button class="journal-del" onclick="openEditJournalEntry(${e.id})" title="Editează" style="background:rgba(96,165,250,0.08);border-color:rgba(96,165,250,0.2);color:var(--blue);">✏️</button>
           <button class="journal-del" onclick="deleteJournalEntry(${e.id})" title="Șterge">🗑️</button>
         </div>
       </div>
@@ -2857,7 +2911,295 @@ function deleteJournalEntry(id) {
   showToast('✓ Lucrare ștearsă');
 }
 
+function openEditJournalEntry(id) {
+  const entry = journalEntries.find(e => e.id === id);
+  if (!entry) return;
+
+  // Deschidem modalul identic cu cel de adăugare
+  openAddJournalEntry(entry.parcelIdx);
+
+  // Așteptăm ca DOM-ul să fie gata, apoi pre-completăm câmpurile
+  setTimeout(() => {
+    // Titlu
+    const titleEl = document.querySelector('#journalModalContent .modal-title');
+    if (titleEl) titleEl.textContent = '✏️ Editează Lucrare';
+
+    // Câmpuri simple
+    const parcelSel = document.getElementById('jParcel');
+    if (parcelSel) { parcelSel.value = entry.parcelIdx; }
+    populateWorkTypeSelect('jType');
+    const typeSel = document.getElementById('jType');
+    if (typeSel) typeSel.value = entry.type;
+    const dateEl = document.getElementById('jDate');
+    if (dateEl) dateEl.value = entry.date || '';
+    const cultEl = document.getElementById('jCultura');
+    if (cultEl) cultEl.value = entry.cultura || '';
+    const costEl = document.getElementById('jCost');
+    if (costEl) costEl.value = entry.cost || '';
+    const utilajEl = document.getElementById('jUtilaj');
+    if (utilajEl) utilajEl.value = entry.utilaj || '';
+    const opEl = document.getElementById('jOperator');
+    if (opEl) opEl.value = entry.operator || '';
+    const noteEl = document.getElementById('jNote');
+    if (noteEl) noteEl.value = entry.note || '';
+
+    // Produse — golim rândul implicit și populăm din intrare
+    _prodRowCounter = 0;
+    document.getElementById('jProductsContainer').innerHTML = '';
+    const prods = (entry.products && entry.products.length)
+      ? entry.products
+      : (entry.productId || entry.cantitate
+          ? [{ productId: entry.productId||'', productName: entry.productName||'', cantitate: entry.cantitate||'', um: entry.um||'' }]
+          : []);
+    if (prods.length) {
+      prods.forEach(p => addProductRow(p.productId||'', p.cantitate||'', p.um||''));
+    } else {
+      addProductRow();
+    }
+
+    // Schimbăm butonul de salvare să apeleze update
+    const saveBtn = document.querySelector('#journalModalContent .modal-footer .map-btn.active');
+    if (saveBtn) {
+      saveBtn.textContent = '💾 Salvează Modificările';
+      saveBtn.onclick = () => updateJournalEntry(id);
+    }
+  }, 50);
+}
+
+function updateJournalEntry(id) {
+  const idx = journalEntries.findIndex(e => e.id === id);
+  if (idx === -1) return;
+
+  const parcelIdx = parseInt(document.getElementById('jParcel').value);
+  const type      = document.getElementById('jType').value;
+  const date      = document.getElementById('jDate').value;
+  const nota      = document.getElementById('jNote').value.trim();
+  const cultura   = document.getElementById('jCultura').value;
+  const products  = getProductRows();
+  const cost      = document.getElementById('jCost').value.trim();
+  const utilaj    = document.getElementById('jUtilaj').value.trim();
+  const operator  = document.getElementById('jOperator').value.trim();
+
+  if (!parcelIdx || !type || !date) { showToast('❌ Completează câmpurile obligatorii!', true); return; }
+
+  const feat = allFeatures.find(f => f.properties._index === parcelIdx);
+  journalEntries[idx] = {
+    ...journalEntries[idx],
+    parcelIdx, parcelName: feat?.properties.parcela || '',
+    type, date, note: nota, cultura, products,
+    cost: cost||'', utilaj: utilaj||'', operator: operator||'',
+    suprafata: feat?.properties.suprafata || journalEntries[idx].suprafata || '—'
+  };
+  closeJournalModal();
+  renderJournal();
+  updateSidebarTree();
+  markDirty();
+  showToast(`✓ Lucrare actualizată: ${type}`);
+}
+
 function closeJournalModal() { document.getElementById('journalModal').classList.remove('visible'); }
+
+// ════════════════════════════════════════════════════════
+//  RAPOARTE LUCRĂRI
+// ════════════════════════════════════════════════════════
+function refreshRapoarte() {
+  // Populează filtrele
+  const parcelSel = document.getElementById('rapFilterParcel');
+  const typeSel   = document.getElementById('rapFilterType');
+  if (!parcelSel || !typeSel) return;
+  const prevParcel = parcelSel.value;
+  const prevType   = typeSel.value;
+
+  const parcels = [...new Set(journalEntries.map(e => e.parcelName || ('Parcela ' + e.parcelIdx)).filter(Boolean))].sort();
+  parcelSel.innerHTML = '<option value="">Toate parcelele</option>' +
+    parcels.map(p => '<option value="' + p + '"' + (prevParcel===p?' selected':'') + '>' + p + '</option>').join('');
+
+  const types = [...new Set(journalEntries.map(e => e.type).filter(Boolean))].sort();
+  typeSel.innerHTML = '<option value="">Toate tipurile</option>' +
+    types.map(t => '<option value="' + t + '"' + (prevType===t?' selected':'') + '>' + t + '</option>').join('');
+
+  renderRapoarte();
+}
+
+function getRapFiltered() {
+  const parcel  = document.getElementById('rapFilterParcel')?.value || '';
+  const type    = document.getElementById('rapFilterType')?.value || '';
+  const dateFrom = document.getElementById('rapDateFrom')?.value || '';
+  const dateTo   = document.getElementById('rapDateTo')?.value || '';
+  return journalEntries.filter(e => {
+    const eName = e.parcelName || ('Parcela ' + e.parcelIdx);
+    if (parcel && eName !== parcel) return false;
+    if (type   && e.type !== type)  return false;
+    if (dateFrom && e.date < dateFrom) return false;
+    if (dateTo   && e.date > dateTo)   return false;
+    return true;
+  }).sort((a,b) => (b.date||'').localeCompare(a.date||''));
+}
+
+function renderRapoarte() {
+  const entries = getRapFiltered();
+  const container = document.getElementById('rapTable');
+  const totalsEl  = document.getElementById('rapTotals');
+  const countEl   = document.getElementById('rapCount');
+  if (!container) return;
+
+  if (countEl) countEl.textContent = entries.length + ' lucrări filtrate din ' + journalEntries.length + ' total';
+
+  if (!entries.length) {
+    container.innerHTML = '<div class="empty-parcele"><div class="empty-icon">📄</div><p>Nicio lucrare corespunde filtrelor.</p></div>';
+    if (totalsEl) totalsEl.style.display = 'none';
+    return;
+  }
+
+  let totalCost = 0;
+  let rows = entries.map(e => {
+    const cost = parseFloat(e.cost) || 0;
+    totalCost += cost;
+    const parcelName = e.parcelName || ('Parcela ' + e.parcelIdx);
+    const suprafata  = e.suprafata && e.suprafata !== '\u2014' ? e.suprafata + ' ha' : '\u2014';
+    const produse    = (e.products || []).filter(p => p.productName||p.productId).map(p => {
+      let s = p.productName || p.productId || '';
+      if (p.cantitate) s += ' ' + p.cantitate + (p.um?' '+p.um:'');
+      return s;
+    }).join('; ') || '\u2014';
+    const dateFormatted = e.date ? e.date.split('-').reverse().join('.') : '\u2014';
+    return '<tr>' +
+      '<td style="white-space:nowrap;color:var(--muted);">' + dateFormatted + '</td>' +
+      '<td style="font-weight:600;">' + parcelName + '</td>' +
+      '<td style="text-align:right;">' + suprafata + '</td>' +
+      '<td><span class="journal-type ' + (({
+        'Ar\u0103tur\u0103':'jt-aratura','Erbicidare':'jt-erbicidare','Fertilizare':'jt-fertilizare',
+        'Irigare':'jt-irigare','Recoltat':'jt-recoltat','S\u0103m\u00E2nat':'jt-semanat',
+        'Tratament':'jt-tratament'
+      })[e.type]||'jt-altele') + '">' + getWorkTypeIcon(e.type) + ' ' + e.type + '</span></td>' +
+      '<td>' + (e.cultura||'\u2014') + '</td>' +
+      '<td style="max-width:160px;word-break:break-word;">' + produse + '</td>' +
+      '<td style="text-align:right;white-space:nowrap;">' + (cost?cost.toLocaleString('ro-RO')+' RON':'\u2014') + '</td>' +
+      '<td>' + (e.utilaj||'\u2014') + '</td>' +
+      '<td>' + (e.operator||'\u2014') + '</td>' +
+      '<td style="max-width:140px;word-break:break-word;color:var(--muted);">' + (e.note||'\u2014') + '</td>' +
+    '</tr>';
+  }).join('');
+
+  const totalRow = '<tr class="rap-total">' +
+    '<td colspan="6" style="text-align:right;">TOTAL</td>' +
+    '<td style="text-align:right;">' + (totalCost?totalCost.toLocaleString('ro-RO')+' RON':'\u2014') + '</td>' +
+    '<td colspan="3"></td></tr>';
+
+  container.innerHTML = '<table class="rap-table">' +
+    '<thead><tr>' +
+    '<th>Data</th><th>Parcel\u0103</th><th>Supr. (ha)</th><th>Tip lucrare</th>' +
+    '<th>Cultur\u0103</th><th>Produse</th><th>Cost (RON)</th>' +
+    '<th>Utilaj</th><th>Operator</th><th>Noti\u0163e</th>' +
+    '</tr></thead>' +
+    '<tbody>' + rows + totalRow + '</tbody></table>';
+
+  if (totalsEl) {
+    totalsEl.style.display = 'block';
+    totalsEl.innerHTML = entries.length + ' lucr\u0103ri &nbsp;|&nbsp; Cost total: ' +
+      (totalCost ? '<strong style="color:var(--green);">' + totalCost.toLocaleString('ro-RO') + ' RON</strong>' : '\u2014');
+  }
+}
+
+function clearRapFilters() {
+  const ids = ['rapFilterParcel','rapFilterType','rapDateFrom','rapDateTo'];
+  ids.forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  renderRapoarte();
+}
+
+function exportRapoarteXLS() {
+  if (!window.XLSX) { showToast('\u274C Biblioteca XLS nu este \u00EEnc\u0103rcat\u0103 \u00EEnc\u0103!', true); return; }
+  const entries = getRapFiltered();
+  if (!entries.length) { showToast('\u274C Nu exist\u0103 lucr\u0103ri de exportat!', true); return; }
+
+  // ── 1. Colectăm toate produsele unice din intrările filtrate ──
+  const allProductNames = [];
+  entries.forEach(e => {
+    (e.products||[]).forEach(p => {
+      const name = (p.productName || p.productId || '').trim();
+      if (name && !allProductNames.includes(name)) allProductNames.push(name);
+    });
+  });
+  allProductNames.sort();
+
+  // ── 2. Header dinamic ──
+  const fixedLeft  = ['Data','Parcela','Suprafata (ha)','Tip Lucrare','Cultura'];
+  const fixedRight = ['Cost (RON)','Utilaj','Operator','Notite'];
+  const header = [...fixedLeft, ...allProductNames, ...fixedRight];
+
+  // ── 3. Rânduri de date ──
+  // Totaluri per produs (cantitate numerică unde e posibil)
+  const prodTotals = {};
+  allProductNames.forEach(n => { prodTotals[n] = 0; });
+
+  const rows = entries.map(e => {
+    const dateStr   = e.date ? e.date.split('-').reverse().join('.') : '';
+    const parcel    = e.parcelName || ('Parcela ' + e.parcelIdx);
+    const suprafata = e.suprafata && e.suprafata !== '\u2014' ? parseFloat(e.suprafata) || '' : '';
+
+    // Map produs → cantitate+UM pentru acest rând
+    const prodMap = {};
+    (e.products||[]).forEach(p => {
+      const name = (p.productName || p.productId || '').trim();
+      if (!name) return;
+      const qty  = parseFloat(p.cantitate) || null;
+      const cell = qty !== null ? (p.um ? qty + ' ' + p.um : qty) : (p.cantitate || '');
+      prodMap[name] = cell;
+      if (qty !== null) prodTotals[name] = (prodTotals[name]||0) + qty;
+    });
+
+    const prodCols = allProductNames.map(n => prodMap[n] !== undefined ? prodMap[n] : '');
+
+    return [
+      dateStr, parcel, suprafata, e.type||'', e.cultura||'',
+      ...prodCols,
+      e.cost ? parseFloat(e.cost)||'' : '',
+      e.utilaj||'', e.operator||'', e.note||''
+    ];
+  });
+
+  // ── 4. Rând total ──
+  const totalCost = entries.reduce((s,e) => s+(parseFloat(e.cost)||0), 0);
+  const totalProdCols = allProductNames.map(n => prodTotals[n] ? prodTotals[n] : '');
+  rows.push([
+    'TOTAL', '', '', '', '',
+    ...totalProdCols,
+    totalCost ? totalCost.toLocaleString('ro-RO') + ' RON' : '',
+    '', '', ''
+  ]);
+
+  // ── 5. Construire sheet ──
+  const wsData = [header, ...rows];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  // Lățimi coloane: fixe stânga + 14 per produs + fixe dreapta
+  const leftWidths  = [10, 22, 10, 18, 14];
+  const prodWidths  = allProductNames.map(n => Math.max(n.length + 4, 12));
+  const rightWidths = [14, 18, 18, 30];
+  ws['!cols'] = [...leftWidths, ...prodWidths, ...rightWidths].map(w => ({wch:w}));
+
+  // Bold header
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let C = range.s.c; C <= range.e.c; C++) {
+    const addr = XLSX.utils.encode_cell({r:0, c:C});
+    if (!ws[addr]) continue;
+    ws[addr].s = { font:{bold:true} };
+  }
+  // Bold + italic rând total
+  const totalRow = rows.length; // index 1-based = entries.length + 1
+  for (let C = range.s.c; C <= range.e.c; C++) {
+    const addr = XLSX.utils.encode_cell({r:totalRow, c:C});
+    if (!ws[addr]) continue;
+    ws[addr].s = { font:{bold:true, italic:true} };
+  }
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Lucrari Agricole');
+
+  const today = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, 'Raport_Lucrari_' + today + '.xlsx');
+  showToast('\u2713 Export XLS generat (' + allProductNames.length + ' produse, ' + entries.length + ' lucr\u0103ri)');
+}
 
 // ════════════════════════════════════════════════════════
 //  MANAGER CULTURI
@@ -3183,7 +3525,7 @@ function openExportModal() {
 
   var layerHtml = '';
   if (allFeatures.length === 0) {
-    layerHtml = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;">Nu exista terenuri de exportat.</div>';
+    layerHtml = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;">Nu exist\u0103 terenuri de exportat.</div>';
   } else {
     Object.keys(stratMap).forEach(function(s) {
       var feats = stratMap[s];
@@ -3228,15 +3570,15 @@ function openExportModal() {
   html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
   html += '<div style="font-size:10px;color:var(--muted);font-family:JetBrains Mono,monospace;letter-spacing:.08em;">PARCELE</div>';
   html += '<div style="display:flex;gap:10px;">';
-  html += '<button onclick="toggleAllExportChecks(true)" style="font-size:10px;color:var(--green);background:none;border:none;cursor:pointer;padding:0;">Selecteaza tot</button>';
-  html += '<button onclick="toggleAllExportChecks(false)" style="font-size:10px;color:var(--muted);background:none;border:none;cursor:pointer;padding:0;">Deselecteaza tot</button>';
+  html += '<button onclick="toggleAllExportChecks(true)" style="font-size:10px;color:var(--green);background:none;border:none;cursor:pointer;padding:0;">Selecteaz\u0103 tot</button>';
+  html += '<button onclick="toggleAllExportChecks(false)" style="font-size:10px;color:var(--muted);background:none;border:none;cursor:pointer;padding:0;">Deselecteaz\u0103 tot</button>';
   html += '</div></div>';
   html += '<div style="max-height:40dvh;overflow-y:auto;padding-right:4px;">' + layerHtml + '</div>';
   html += '</div>';
   html += '<div class="modal-footer">';
-  html += '<button class="map-btn" onclick="document.getElementById(\'exportModal\').classList.remove(\'visible\')">Anuleaza</button>';
-  html += '<button class="map-btn" style="background:rgba(96,165,250,0.1);color:var(--blue);border-color:rgba(96,165,250,.3);" onclick="doExportSelected(\'print\')">&#128424; Printeaza</button>';
-  html += '<button class="map-btn active" onclick="doExportSelected()">&#11014; Exporta</button>';
+  html += '<button class="map-btn" onclick="document.getElementById(\'exportModal\').classList.remove(\'visible\')">Anuleaz\u0103</button>';
+  html += '<button class="map-btn" style="background:rgba(96,165,250,0.1);color:var(--blue);border-color:rgba(96,165,250,.3);" onclick="doExportSelected(\'print\')">&#128424; Printeaz\u0103</button>';
+  html += '<button class="map-btn active" onclick="doExportSelected()">&#11014; Export\u0103</button>';
   html += '</div>';
 
   document.getElementById('exportModalContent').innerHTML = html;
