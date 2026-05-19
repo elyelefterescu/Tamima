@@ -11,6 +11,8 @@
 <script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-omnivore/0.3.4/leaflet-omnivore.min.js"></script>
 <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
+<script src="https://unpkg.com/shapefile@0.6.6/dist/shapefile.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
 <script src="https://unpkg.com/@mapbox/shp-write@latest/shpwrite.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -729,20 +731,35 @@ function updateSaveIndicator() {
 // ════════════════════════════════════════════════════════
 //  PROJ4 STEREO70
 // ════════════════════════════════════════════════════════
-proj4.defs("EPSG:31700","+proj=sterea +lat_0=46 +lon_0=25 +k=0.99975 +x_0=500000 +y_0=500000 +ellps=krass +towgs84=2.329,-147.042,-92.08,0.309,-0.325,-0.497,5.69 +units=m +no_defs");
+// Stereo70 — parametrii oficiali EPSG:31700
+proj4.defs("EPSG:31700","+proj=sterea +lat_0=46 +lon_0=25 +k=0.99975 +x_0=500000 +y_0=500000 +ellps=krass +towgs84=28,-121,-77,0,0,0,0 +units=m +no_defs");
+// Varianta 7-parametri (ANCPI 2006 — Coordinate Frame convention)
+proj4.defs("EPSG:31700_7P","+proj=sterea +lat_0=46 +lon_0=25 +k=0.99975 +x_0=500000 +y_0=500000 +ellps=krass +towgs84=2.329,-147.042,-92.08,-0.309,0.325,0.497,-5.69 +units=m +no_defs");
 
-function isLikelyStereo70(coord) {
-  return Math.abs(coord[0]) > 180 || (coord[0] > 100000 && coord[1] > 100000);
+function detectCrsFromPrj(prjText) {
+  if (!prjText) return 'unknown';
+  const t = prjText.toUpperCase();
+  if (t.includes('GCS_WGS_1984') || t.includes('WGS 1984') || t.includes('ETRS89') || t.includes('EPSG:4326') || t.includes('EPSG:4258')) return 'wgs84';
+  if (t.includes('STEREO_1970') || t.includes('STEREO70') || t.includes('DEALUL_PISCULUI') || t.includes('PULKOVO') || t.includes('31700') || t.includes('KRASSOVSKY') || t.includes('KRASOVSCHI')) return 'stereo70';
+  return 'unknown';
 }
 
-function fixProjection(geojson) {
+function isLikelyStereo70(coord) {
+  const x = coord[0], y = coord[1];
+  return (x > 150000 && x < 900000 && y > 150000 && y < 900000);
+}
+
+function fixProjection(geojson, forceCrs) {
   if (!geojson || !geojson.features) return;
   geojson.features.forEach(f => {
     if (!f.geometry || !f.geometry.coordinates) return;
     const walk = (coords) => {
       if (typeof coords[0] === 'number') {
-        if (isLikelyStereo70(coords)) {
-          let wgs = proj4("EPSG:31700", "EPSG:4326", [coords[0], coords[1]]);
+        const crs = (forceCrs === 'stereo70' || forceCrs === 'wgs84') ? forceCrs : (isLikelyStereo70(coords) ? 'stereo70' : 'wgs84');
+        if (crs === 'stereo70') {
+          let wgs;
+          try { wgs = proj4("EPSG:31700", "EPSG:4326", [coords[0], coords[1]]); }
+          catch(e) { wgs = proj4("EPSG:31700_7P", "EPSG:4326", [coords[0], coords[1]]); }
           coords[0] = wgs[0]; coords[1] = wgs[1];
         }
       } else if (Array.isArray(coords)) { coords.forEach(walk); }
@@ -777,7 +794,7 @@ async function handleFiles(files) {
     }
   });
 
-  // ── SHP: folosim shpjs (mai robust decât shapefile.js)
+  // ── SHP: folosim shapefile.js + shpjs fallback, cu detecție CRS din .prj
   for (let baseName in shpPairs) {
     const pair = shpPairs[baseName];
     if (!pair.shp) continue;
@@ -785,17 +802,21 @@ async function handleFiles(files) {
     try {
       const shpBuf = await readFileAsArrayBuffer(pair.shp);
       const dbfBuf = pair.dbf ? await readFileAsArrayBuffer(pair.dbf) : null;
-      let geojson;
 
-      try {
-        if (typeof shp === 'function') { geojson = await shp(shpBuf); }
-      } catch(e1) {
-        console.warn('shpjs failed, trying manual parse:', e1);
-        geojson = null;
+      // Citim .prj pentru detecția CRS corectă
+      let detectedCrs = 'unknown';
+      if (pair.prj) {
+        try {
+          const prjText = await readFileAsText(pair.prj);
+          detectedCrs = detectCrsFromPrj(prjText);
+        } catch(e) {}
       }
 
-      if (!geojson || !geojson.features || geojson.features.length === 0) {
-        if (window.shapefile) {
+      let geojson;
+
+      // Încearcă mai întâi shapefile.js (mai robust pentru fișiere individuale)
+      if (window.shapefile) {
+        try {
           const source = await window.shapefile.open(shpBuf, dbfBuf);
           const features = [];
           let result = await source.read();
@@ -804,14 +825,19 @@ async function handleFiles(files) {
             result = await source.read();
           }
           geojson = { type: 'FeatureCollection', features };
-        } else {
-          throw new Error('Nu există parser disponibil pentru SHP');
-        }
+        } catch(e1) { geojson = null; }
       }
 
-      if (!geojson || !geojson.features) throw new Error('GeoJSON invalid');
+      // Fallback la shpjs
+      if (!geojson || !geojson.features || !geojson.features.length) {
+        try {
+          if (typeof shp === 'function') geojson = await shp(shpBuf);
+        } catch(e2) { geojson = null; }
+      }
 
-      fixProjection(geojson);
+      if (!geojson || !geojson.features || !geojson.features.length) throw new Error('Nu s-a putut citi fișierul SHP');
+
+      fixProjection(geojson, detectedCrs);
       const displayName = pair.shp.name.replace(/\.shp$/i, '');
       geojson.features.forEach(f => {
         if (!f.properties) f.properties = {};
@@ -876,19 +902,75 @@ async function handleFiles(files) {
       else if (ext === 'zip') {
         showToast('🔄 Se procesează arhiva ZIP SHP...');
         const buf = await readFileAsArrayBuffer(file);
-        const result = await shp(buf);
-        const processG = (g) => {
-          fixProjection(g);
-          g.features.forEach(f => {
-            if (!f.properties) f.properties = {};
-            f.properties.strat = f.properties.strat || baseName;
-            f.properties.parcela = f.properties.parcel_nr || f.properties.NAME || f.properties.name || `Parcela ZIP`;
-            f.properties.cultura = f.properties.CULTURA || f.properties.crop_name || 'Necunoscut';
+        let imported = 0;
+        let shpjsOk = false;
+
+        // Încearcă mai întâi shpjs (rapid pentru ZIP-uri standard)
+        try {
+          const result = await shp(buf);
+          const processG = (g) => {
+            fixProjection(g);
+            g.features.forEach(f => {
+              if (!f.properties) f.properties = {};
+              f.properties.strat = f.properties.strat || baseName;
+              f.properties.parcela = f.properties.parcel_nr || f.properties.NAME || f.properties.name || 'Parcela ZIP';
+              f.properties.cultura = f.properties.CULTURA || f.properties.crop_name || 'Necunoscut';
+            });
+            renderGeoJSON(g, file.name);
+            imported += g.features.length;
+          };
+          if (Array.isArray(result)) result.forEach(processG); else processG(result);
+          if (imported > 0) { shpjsOk = true; showToast(`✓ ZIP importat: ${imported} parcele`); }
+        } catch(e1) { /* continuăm cu JSZip */ }
+
+        // Fallback robust: JSZip + shapefile.js (funcționează cu ZIP-uri ANCPI/cadastru)
+        if (!shpjsOk && window.JSZip && window.shapefile) {
+          const zip = await JSZip.loadAsync(buf);
+          const shpFiles = {}, dbfFiles = {}, prjFiles = {};
+          zip.forEach((relativePath, zipEntry) => {
+            const lower = relativePath.toLowerCase();
+            const base = lower.replace(/.(shp|dbf|prj|shx|cpg|sbn|sbx)$/, '');
+            if (lower.endsWith('.shp')) shpFiles[base] = zipEntry;
+            else if (lower.endsWith('.dbf')) dbfFiles[base] = zipEntry;
+            else if (lower.endsWith('.prj')) prjFiles[base] = zipEntry;
           });
-          renderGeoJSON(g, file.name);
-        };
-        if (Array.isArray(result)) result.forEach(processG); else processG(result);
-        showToast(`✓ ZIP SHP procesat`);
+          const bases = Object.keys(shpFiles);
+          if (!bases.length) throw new Error('Arhiva ZIP nu conține fișiere .shp');
+          for (const base of bases) {
+            try {
+              const shpBuf2 = await shpFiles[base].async('arraybuffer');
+              const dbfBuf2 = dbfFiles[base] ? await dbfFiles[base].async('arraybuffer') : null;
+              let detectedCrs = 'unknown';
+              if (prjFiles[base]) {
+                try {
+                  const prjText = await prjFiles[base].async('string');
+                  detectedCrs = detectCrsFromPrj(prjText);
+                } catch(e) {}
+              }
+              const source = await window.shapefile.open(shpBuf2, dbfBuf2);
+              const features = [];
+              let result2 = await source.read();
+              while (!result2.done) { if (result2.value) features.push(result2.value); result2 = await source.read(); }
+              if (!features.length) continue;
+              const layerName = base.split('/').pop() || baseName;
+              const geojson2 = { type: 'FeatureCollection', features };
+              fixProjection(geojson2, detectedCrs);
+              const crsLabel = detectedCrs === 'stereo70' ? ' (Stereo70→WGS84)' : detectedCrs === 'wgs84' ? ' (WGS84)' : '';
+              geojson2.features.forEach(f => {
+                if (!f.properties) f.properties = {};
+                f.properties.strat = layerName;
+                f.properties.parcela = f.properties.parcel_nr || f.properties.PARCELA || f.properties.NR_CADASTR || f.properties.NUMAR_CAD || f.properties.NAME || f.properties.name || f.properties.ID || 'Parcela ZIP';
+                f.properties.cultura = f.properties.CULTURA || f.properties.cultura || f.properties.CROP || f.properties.crop_name || 'Necunoscut';
+              });
+              renderGeoJSON(geojson2, layerName);
+              imported += features.length;
+            } catch(e2) { console.warn('Eroare la ' + base + ':', e2); }
+          }
+          if (imported > 0) showToast(`✓ ZIP importat${imported ? ' ' + imported + ' parcele' : ''}`);
+          else throw new Error('Nu s-au putut extrage geometrii din ZIP');
+        } else if (!shpjsOk) {
+          throw new Error('JSZip sau shapefile.js nu sunt disponibile');
+        }
       }
       else { showToast(`❌ Format nesuportat: .${ext}`, true); }
     } catch(err) {
