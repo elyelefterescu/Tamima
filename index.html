@@ -2,7 +2,10 @@
 <html lang="ro">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d1a0c">
 <title>AGRO MANAGER v2 — Hărți & Management Terenuri</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
@@ -54,37 +57,55 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
   .header-right { gap: 5px; }
   .header-right .map-btn { padding: 5px 8px !important; font-size: 9px !important; }
 
-  /* ── Layout: harta sus, drawer jos ── */
-  .main { flex-direction: column !important; position: relative; }
-  .map-wrap { order: 1; flex: 1; min-height: 0; width: 100%; }
-
-  /* Sidebar ca drawer glisant de jos */
-  .sidebar-nav {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    width: 100% !important; height: 52px;
-    flex-direction: row; justify-content: space-around; align-items: center;
-    padding: 0 8px; gap: 0;
-    border-right: none; border-top: 1px solid var(--border);
-    background: var(--bg-nav); z-index: 1200;
-    order: 3;
+  /* ── Layout: coloana flex în 100dvh, fără position:fixed ── */
+  .main {
+    flex-direction: column !important;
+    overflow: hidden !important;
   }
-  .nav-item { width: 44px; height: 44px; font-size: 20px; border-radius: 10px; }
 
-  .sidebar {
-    position: fixed; bottom: 52px; left: 0; right: 0;
-    width: 100% !important;
-    height: 0; max-height: 0;
+  /* Harta umple spațiul rămas */
+  .map-wrap {
+    order: 1;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
     overflow: hidden;
-    transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), height 0.35s cubic-bezier(0.4,0,0.2,1);
-    border-right: none; border-top: 1px solid var(--border);
-    z-index: 1100;
+  }
+
+  /* Sidebar = drawer in-flow (nu fixed!) */
+  .sidebar {
+    position: static !important;
     order: 2;
+    width: 100% !important;
+    height: 0;
+    max-height: 0;
+    flex-shrink: 0;
+    overflow: hidden;
+    border-right: none;
+    border-top: 1px solid var(--border);
+    transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1);
+    z-index: auto;
+    display: block !important;
   }
   .sidebar.mob-open {
-    height: 65vh; max-height: 65vh;
+    height: auto;
+    max-height: 55svh;
+    max-height: 55dvh;
+    overflow: hidden;
+    display: flex !important;
+    flex-direction: column;
+  }
+  /* Panoul activ scrollabil */
+  .sidebar.mob-open .panel-content.active {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
   }
 
-  /* drag handle vizibil */
+  /* Drag handle */
   .sidebar::before {
     content: '';
     display: block;
@@ -95,11 +116,40 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
     flex-shrink: 0;
   }
 
-  /* Buton toggle sidebar pe hartă */
+  /* Nav bar = in-flow, la baza ecranului */
+  .sidebar-nav {
+    position: static !important;
+    order: 3;
+    width: 100% !important;
+    height: 52px;
+    flex-shrink: 0;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 8px;
+    gap: 0;
+    border-right: none;
+    border-top: 1px solid var(--border);
+    background: var(--bg-nav);
+    z-index: auto;
+    /* Safe area iOS */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    height: calc(52px + env(safe-area-inset-bottom, 0px));
+  }
+  .nav-item {
+    width: 44px; height: 44px; font-size: 20px; border-radius: 10px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(74,222,128,0.2);
+    cursor: pointer;
+  }
+
+  /* Buton ☰ rămâne fixed dar deasupra nav-ului in-flow */
   .mob-toggle {
     display: flex;
-    position: fixed; bottom: 62px; right: 12px;
-    z-index: 1150;
+    position: fixed;
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+    right: 12px;
+    z-index: 9999;
     background: rgba(13,26,12,0.95);
     border: 1px solid var(--green);
     color: var(--green);
@@ -131,7 +181,7 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 
   /* ── Info panel = bottom sheet ── */
   .map-info {
-    bottom: 62px !important; left: 0 !important; right: 0 !important;
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important; left: 0 !important; right: 0 !important;
     border-radius: 14px 14px 0 0 !important;
     min-width: unset !important; max-width: 100% !important;
     padding: 16px 14px !important;
@@ -380,6 +430,86 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
   .print-legend { display: block !important; }
 }
 .print-legend { display: none; position: absolute; bottom: 20px; right: 20px; background: white; border: 1px solid #ccc; border-radius: 8px; padding: 12px; z-index: 998; max-width: 200px; }
+
+/* ═══ MOBILE OVERRIDES — puse LA FINAL ca să suprascrie regulile desktop ═══ */
+@media screen and (max-width: 768px) {
+  /* Nav bar: rând orizontal, lățime 100%, la baza layoutului */
+  .sidebar-nav {
+    display: flex !important;
+    flex-direction: row !important;
+    width: 100% !important;
+    height: calc(52px + env(safe-area-inset-bottom, 0px)) !important;
+    position: static !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    padding: 0 4px !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+    gap: 0 !important;
+    flex-shrink: 0 !important;
+    border-right: none !important;
+    border-top: 1px solid var(--border) !important;
+    order: 3 !important;
+    overflow: visible !important;
+  }
+  .sidebar-nav .nav-item {
+    width: calc(100% / 6) !important;
+    max-width: 58px !important;
+    height: 44px !important;
+    font-size: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: var(--muted) !important;
+    flex-shrink: 0 !important;
+  }
+  .sidebar-nav .nav-item.active {
+    color: var(--green) !important;
+    background: rgba(74,222,128,0.15) !important;
+    border-color: var(--green) !important;
+  }
+
+  /* Sidebar drawer: in-flow, nu fixed */
+  .sidebar {
+    position: static !important;
+    width: 100% !important;
+    display: block !important;
+    height: 0 !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+    flex-shrink: 0 !important;
+    order: 2 !important;
+    border-right: none !important;
+    border-top: 1px solid var(--border) !important;
+    transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1) !important;
+  }
+  .sidebar.mob-open {
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    max-height: 55dvh !important;
+    overflow: hidden !important;
+  }
+  .sidebar.mob-open .panel-content.active {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* Harta umple restul */
+  .map-wrap {
+    order: 1 !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+  .main {
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -411,6 +541,7 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
     <button class="map-btn" style="padding:5px 10px; font-size:10px; background:rgba(248,113,113,0.1); color:var(--red); border-color:rgba(248,113,113,0.3);" onclick="logoutUser()">Ieși din cont</button>
     <span class="save-indicator" id="saveIndicator">⬤ nesalvat</span>
     <div class="header-badge">📍 WGS84 / Stereo70</div>
+    <button class="map-btn" style="padding:5px 12px; font-size:10px; background:rgba(96,165,250,0.1); color:var(--blue); border-color:rgba(96,165,250,0.3);" onclick="openExportModal()" title="Export terenuri">⬆ Export</button>
     <button class="map-btn" style="padding:5px 12px; font-size:10px;" onclick="saveToFirestore()">💾 Salvează în Cloud</button>
   </div>
 </div>
@@ -460,21 +591,37 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
     <div id="tab-jurnal" class="panel-content">
       <div style="padding:12px 16px 8px; border-bottom:1px solid var(--border); flex-shrink:0;">
         <div class="section-title" style="margin-bottom:6px;">📋 JURNAL LUCRĂRI AGRICOLE</div>
-        <button class="map-btn" style="width:100%; justify-content:center; background:rgba(74,222,128,0.1); color:var(--green);" onclick="openAddJournalEntry()">➕ Adaugă Lucrare</button>
+        <div style="display:flex;gap:6px;">
+          <button class="map-btn" style="flex:1; justify-content:center; background:rgba(74,222,128,0.1); color:var(--green);" onclick="openAddJournalEntry()">➕ Adaugă Lucrare</button>
+          <button class="map-btn" style="justify-content:center; background:rgba(251,191,36,0.1); color:var(--amber); border-color:rgba(251,191,36,0.3); padding:0 12px;" onclick="openProductsManager()" title="Gestionare produse">📦 Produse</button>
+        </div>
       </div>
-      <div style="padding:8px 16px; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; gap:6px; flex-wrap:wrap;">
-        <select class="sort-select" id="journalFilterParcel" onchange="renderJournal()" style="flex:1; padding:5px;">
-          <option value="">Toate parcelele</option>
-        </select>
-        <select class="sort-select" id="journalFilterType" onchange="renderJournal()" style="flex:1; padding:5px;">
-          <option value="">Toate tipurile</option>
-          <option value="Semănat">🌱 Semănat</option>
-          <option value="Fertilizat">🧪 Fertilizat</option>
-          <option value="Recoltat">🌾 Recoltat</option>
-          <option value="Ierbicidat">💧 Ierbicidat</option>
-          <option value="Arat">🚜 Arat</option>
-          <option value="Altele">📝 Altele</option>
-        </select>
+      <div style="padding:8px 16px; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
+        <div style="display:flex; gap:6px;">
+          <input type="text" class="sort-select" id="journalSearch" placeholder="🔍 Caută (parcelă, operator, notițe...)" oninput="renderJournal()" style="flex:1; padding:5px;">
+        </div>
+        <div style="display:flex; gap:6px;">
+          <select class="sort-select" id="journalFilterParcel" onchange="renderJournal()" style="flex:1; padding:5px;">
+            <option value="">Toate parcelele</option>
+          </select>
+          <select class="sort-select" id="journalFilterType" onchange="renderJournal()" style="flex:1; padding:5px;">
+            <option value="">Toate tipurile</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <select class="sort-select" id="journalFilterCultura" onchange="renderJournal()" style="flex:1; padding:5px;">
+            <option value="">Toate culturile</option>
+          </select>
+          <div style="display:flex; gap:4px; align-items:center; flex:1;">
+            <input type="date" class="sort-select" id="journalDateFrom" onchange="renderJournal()" style="flex:1; padding:4px; font-size:10px;" title="De la data">
+            <span style="color:var(--muted);font-size:10px;">—</span>
+            <input type="date" class="sort-select" id="journalDateTo" onchange="renderJournal()" style="flex:1; padding:4px; font-size:10px;" title="Până la data">
+          </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span id="journalCount" style="font-size:10px; color:var(--muted); font-family:'JetBrains Mono',monospace;"></span>
+          <button class="map-btn" onclick="clearJournalFilters()" style="padding:3px 8px; font-size:10px; color:var(--muted);">✕ Resetează filtre</button>
+        </div>
       </div>
       <div class="scrollable" id="journalList" style="padding:10px;">
         <div class="empty-parcele">
@@ -531,7 +678,7 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
       <div class="sidebar-section">
         <div class="section-title">📂 IMPORT DATE</div>
         <div class="upload-zone" id="uploadZone">
-          <input type="file" id="fileInput" accept=".kml,.geojson,.json,.zip,.gpx,.shp,.dbf,.prj" multiple onchange="handleFiles(this.files)"/>
+          <input type="file" id="fileInput" accept=".kml,.geojson,.json,.zip,.gpx,.shp,.dbf,.prj,.dxf" multiple onchange="handleFiles(this.files)"/>
           <div class="upload-icon">🗺️</div>
           <div class="upload-text">Trage sau selectează fișierele</div>
           <div style="font-size:10px; color:var(--muted); margin-top:2px;">WGS84 și Stereo70 suportate</div>
@@ -541,22 +688,25 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
             <span class="badge badge-shp">SHP+DBF</span>
             <span class="badge badge-zip">ZIP(SHP)</span>
             <span class="badge badge-gpx">GPX</span>
+            <span class="badge" style="background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);">DXF</span>
           </div>
         </div>
         <div style="margin-top:12px; padding:10px; background:rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.2); border-radius:8px;">
           <p style="font-size:10px; color:var(--amber); font-family:'JetBrains Mono',monospace; line-height:1.5;">
             💡 <strong>SHP:</strong> Selectează simultan fișierele .shp, .dbf și .prj<br>
-            💡 <strong>ZIP:</strong> Arhivă cu toate fișierele SHP incluse
+            💡 <strong>ZIP:</strong> Arhivă cu toate fișierele SHP incluse<br>
+            💡 <strong>DXF:</strong> Suportă HATCH, LWPOLYLINE (WGS84/Stereo70)
           </p>
-        </div>
-      </div>
-      <div class="sidebar-section">
-        <div class="section-title">📤 EXPORT</div>
-        <div style="display:flex; flex-direction:column; gap:6px;">
-          <button class="map-btn" style="justify-content:center; background:rgba(74,222,128,0.08); color:var(--green);" onclick="exportGeoJSON()">📄 Export GeoJSON</button>
-          <button class="map-btn" style="justify-content:center; background:rgba(96,165,250,0.08); color:var(--blue);" onclick="exportKML()">🗺️ Export KML</button>
-          <button class="map-btn" style="justify-content:center; background:rgba(245,158,11,0.08); color:var(--amber);" onclick="exportSHP()">📦 Export SHP (ZIP)</button>
-          <button class="map-btn" style="justify-content:center; background:rgba(192,132,252,0.08); color:var(--purple);" onclick="printMap()">🖨️ Printează Harta</button>
+          <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
+            <span style="font-size:10px; color:var(--amber); font-family:'JetBrains Mono',monospace; white-space:nowrap;">📐 Datum DXF:</span>
+            <select id="dxfDatum" style="flex:1; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:6px; font-size:10px; padding:3px 6px; font-family:'JetBrains Mono',monospace;">
+              <option value="auto">Auto (WGS84)</option>
+              <option value="pulkovo">Pulkovo 1942 / S-42 (+~25m)</option>
+            </select>
+          </div>
+          <p style="font-size:10px; color:var(--muted); font-family:'JetBrains Mono',monospace; line-height:1.5; margin-top:4px;">
+            ℹ️ Dacă parcelele sunt decalate ~15-35m, alege Pulkovo 1942
+          </p>
         </div>
       </div>
     </div>
@@ -588,14 +738,7 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
     <div class="map-controls">
       <button class="map-btn" onclick="fitBounds()">⊞ Centrează tot</button>
       <button class="map-btn active" onclick="toggleLabels()" id="btnLabels">🏷 Etichete</button>
-      <div class="export-widget">
-        <div class="export-title">EXPORT RAPID</div>
-        <div class="export-row">
-          <button class="map-btn btn-export" onclick="exportGeoJSON()" style="background:rgba(74,222,128,0.1); color:var(--green);">JSON</button>
-          <button class="map-btn btn-export" onclick="exportKML()" style="background:rgba(96,165,250,0.1); color:var(--blue);">KML</button>
-          <button class="map-btn btn-export" onclick="exportSHP()" style="background:rgba(245,158,11,0.1); color:var(--amber);">SHP</button>
-        </div>
-      </div>
+      <button class="map-btn" id="btnPinMode" onclick="togglePinMode()" title="Semnalează o problemă pe hartă" style="background:rgba(248,113,113,0.08); color:var(--red); border-color:rgba(248,113,113,0.3);">📍 Problemă</button>
     </div>
     <div class="map-info" id="mapInfo">
       <button class="info-close" onclick="closeInfo()">×</button>
@@ -619,6 +762,15 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 </div>
 <div id="genericModal" class="modal-overlay">
   <div class="modal" id="genericModalContent"></div>
+</div>
+<div id="productsModal" class="modal-overlay">
+  <div class="modal" id="productsModalContent" style="max-width:460px;"></div>
+</div>
+<div id="exportModal" class="modal-overlay">
+  <div class="modal" id="exportModalContent" style="max-width:500px;"></div>
+</div>
+<div id="pinModal" class="modal-overlay">
+  <div class="modal" id="pinModalContent" style="max-width:400px;"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -664,20 +816,44 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
       return;
     }
 
+    // Verifică că Firebase auth s-a încărcat
+    if (!auth || typeof auth.signInWithEmailAndPassword !== 'function') {
+      showToast('❌ Firebase nu s-a încărcat. Reîncarcă pagina!', true);
+      return;
+    }
+
     const btn = document.getElementById('authSubmitBtn');
     const originalText = btn.textContent;
+    const reset = (errMsg) => {
+      btn.textContent = originalText;
+      btn.style.opacity = '1';
+      btn.disabled = false;
+      if (errMsg) showToast(errMsg, true);
+    };
+
     btn.textContent = 'Se verifică...';
     btn.style.opacity = '0.8';
+    btn.disabled = true;
 
-    if (isLoginMode) {
-      auth.signInWithEmailAndPassword(email, pass)
-        .then(() => { btn.textContent = originalText; btn.style.opacity = '1'; })
-        .catch((e) => { btn.textContent = originalText; btn.style.opacity = '1'; showToast('❌ Eroare: ' + e.message, true); });
-    } else {
-      auth.createUserWithEmailAndPassword(email, pass)
-        .then(() => { btn.textContent = originalText; btn.style.opacity = '1'; })
-        .catch((e) => { btn.textContent = originalText; btn.style.opacity = '1'; showToast('❌ Eroare: ' + e.message, true); });
-    }
+    // Timeout de 12 secunde — dacă Firebase nu răspunde, deblocăm butonul
+    const timeoutId = setTimeout(() => {
+      reset('❌ Timeout: Firebase nu răspunde. Verifică conexiunea la internet și reîncearcă.');
+    }, 12000);
+
+    const promise = isLoginMode
+      ? auth.signInWithEmailAndPassword(email, pass)
+      : auth.createUserWithEmailAndPassword(email, pass);
+
+    promise
+      .then(() => { clearTimeout(timeoutId); reset(); })
+      .catch((e) => {
+        clearTimeout(timeoutId);
+        let msg = e.message;
+        if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') msg = 'Email sau parolă incorectă.';
+        if (e.code === 'auth/too-many-requests') msg = 'Prea multe încercări. Încearcă mai târziu.';
+        if (e.code === 'auth/network-request-failed') msg = 'Eroare de rețea. Verifică conexiunea la internet.';
+        reset('❌ ' + msg);
+      });
   }
 
   function toggleAuthMode() {
@@ -702,7 +878,8 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
         definedLayers: Array.from(definedLayers),
         groupVisibility, groupCollapsed, itemVisibility,
         journalEntries, seasons, currentSeason,
-        cropColors: CULTURA_COLORS
+        cropColors: CULTURA_COLORS,
+        mapPins
       };
       
       // Magia împachetării pentru a ocoli limitările de KML ale Google
@@ -737,6 +914,7 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
           seasons = data.seasons || [];
           currentSeason = data.currentSeason || null;
           if (data.cropColors) CULTURA_COLORS = data.cropColors;
+          mapPins = data.mapPins || [];
         } else if (dbData.features) {
           // Fallback pentru date salvate vechi
           allFeatures = dbData.features || [];
@@ -744,6 +922,7 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
         }
         
         refreshMapData();
+        renderAllPins();
         if (allFeatures.length > 0) {
           setTimeout(() => fitBounds(), 500);
         }
@@ -763,7 +942,7 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
         allFeatures = [];
         definedLayers = new Set(['Terenuri Principale']);
         groupVisibility = {}; groupCollapsed = {}; itemVisibility = {};
-        journalEntries = []; seasons = []; currentSeason = null;
+        journalEntries = []; seasons = []; currentSeason = null; mapPins = [];
         isDirty = false;
         refreshMapData();
         showToast('⚠️ Date șterse definitiv din Cloud!');
@@ -791,6 +970,7 @@ function switchTab(tabId, el) {
     const sidebar = document.querySelector('.sidebar');
     sidebar.classList.add('mob-open');
     updateMobToggleIcon(true);
+    if (window.map) setTimeout(() => window.map.invalidateSize(), 370);
   }
 }
 
@@ -802,6 +982,8 @@ function toggleMobileSidebar() {
   const sidebar = document.querySelector('.sidebar');
   const open = sidebar.classList.toggle('mob-open');
   updateMobToggleIcon(open);
+  // Harta trebuie să recalculeze dimensiunile după animație
+  if (window.map) setTimeout(() => window.map.invalidateSize(), 370);
 }
 
 function updateMobToggleIcon(open) {
@@ -821,6 +1003,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
 
 function switchInnerTab(panelId, el) {
   const parent = el.closest('.panel-content');
@@ -842,6 +1025,7 @@ const TILE_LAYERS = {
 };
 
 const map = L.map('map', { center: [44.56, 27.36], zoom: 10, zoomControl: true, layers: [TILE_LAYERS.esri_satellite] });
+window.map = map;
 let labelGroup = L.layerGroup().addTo(map);
 
 // ════════════════════════════════════════════════════════
@@ -863,6 +1047,296 @@ let isDirty = false;
 
 // Jurnal lucrări agricole: [{id, parcelIdx, parcelName, date, type, note, cultura, suprafata}]
 let journalEntries = [];
+
+// Pin-uri problemă pe hartă: [{id, lat, lng, type, note, priority, date}]
+let mapPins = [];
+let pinMarkers = []; // referințe Leaflet markers
+let pinModeActive = false;
+
+// ── Tipuri de lucrări ──
+const WORK_TYPES_DEFAULT = [
+  {v:'Semănat',    i:'🌱'}, {v:'Fertilizat',  i:'🧪'}, {v:'Recoltat',   i:'🌾'},
+  {v:'Ierbicidat', i:'💧'}, {v:'Arat',         i:'🚜'}, {v:'Discuit',    i:'🔄'},
+  {v:'Prășit',     i:'🌿'}, {v:'Irigat',       i:'💦'}, {v:'Tratament',  i:'🧴'},
+  {v:'Altele',     i:'📝'}
+];
+let customWorkTypes = JSON.parse(localStorage.getItem('agro_work_types') || '[]');
+
+function getWorkTypeIcon(type) {
+  const found = WORK_TYPES_DEFAULT.find(t => t.v === type);
+  return found ? found.i : '⚙️';
+}
+
+function populateWorkTypeSelect(selId, withAll = false) {
+  const sel = document.getElementById(selId);
+  if (!sel) return;
+  const cur = sel.value;
+  let html = withAll ? '<option value="">Toate tipurile</option>' : '';
+  WORK_TYPES_DEFAULT.forEach(t => { html += `<option value="${t.v}">${t.i} ${t.v}</option>`; });
+  customWorkTypes.forEach(v => { html += `<option value="${v}">⚙️ ${v}</option>`; });
+  sel.innerHTML = html;
+  if (cur && [...sel.options].some(o => o.value === cur)) sel.value = cur;
+}
+
+function showInlineAddWorkType() {
+  const row = document.getElementById('jTypeAddRow');
+  if (!row) return;
+  row.style.display = 'flex';
+  document.getElementById('jTypeNewName').focus();
+}
+
+function confirmAddWorkType() {
+  const input = document.getElementById('jTypeNewName');
+  const name = input?.value?.trim();
+  if (!name) { showToast('❌ Introdu o denumire!', true); return; }
+  const all = [...WORK_TYPES_DEFAULT.map(t => t.v.toLowerCase()), ...customWorkTypes.map(v => v.toLowerCase())];
+  if (all.includes(name.toLowerCase())) { showToast('❌ Tipul există deja!', true); return; }
+  customWorkTypes.push(name);
+  localStorage.setItem('agro_work_types', JSON.stringify(customWorkTypes));
+  populateWorkTypeSelect('jType');
+  const jType = document.getElementById('jType');
+  if (jType) jType.value = name;
+  populateWorkTypeSelect('journalFilterType', true);
+  const row = document.getElementById('jTypeAddRow');
+  if (row) row.style.display = 'none';
+  if (input) input.value = '';
+  showToast(`✓ "${name}" adăugat la tipurile de lucrări`);
+}
+
+function removeCustomWorkType(name) {
+  customWorkTypes = customWorkTypes.filter(v => v !== name);
+  localStorage.setItem('agro_work_types', JSON.stringify(customWorkTypes));
+  populateWorkTypeSelect('journalFilterType', true);
+  showToast(`✓ Tip "${name}" eliminat`);
+}
+
+// ════════════════════════════════════════════════════════
+//  PRODUSE AGRICOLE
+// ════════════════════════════════════════════════════════
+const PRODUCTS_DEFAULT = [
+  { id:'motorina',     name:'Motorină',          category:'Combustibil',  unit:'litri' },
+  { id:'benzina',      name:'Benzină',            category:'Combustibil',  unit:'litri' },
+  { id:'npk',          name:'NPK',                category:'Îngrășăminte', unit:'kg/ha' },
+  { id:'uree',         name:'Uree',               category:'Îngrășăminte', unit:'kg/ha' },
+  { id:'map_fert',     name:'MAP',                category:'Îngrășăminte', unit:'kg/ha' },
+  { id:'azotat',       name:'Azotat de amoniu',   category:'Îngrășăminte', unit:'kg/ha' },
+  { id:'sulfat_am',    name:'Sulfat de amoniu',   category:'Îngrășăminte', unit:'kg/ha' },
+  { id:'calcar',       name:'Calcar agricol',     category:'Amendamente',  unit:'t/ha'  },
+  { id:'erbicid',      name:'Erbicid',            category:'Pesticide',    unit:'l/ha'  },
+  { id:'fungicid',     name:'Fungicid',           category:'Pesticide',    unit:'l/ha'  },
+  { id:'insecticid',   name:'Insecticid',         category:'Pesticide',    unit:'l/ha'  },
+  { id:'fungicid_sd',  name:'Fungicid sămânță',  category:'Pesticide',    unit:'l/t'   },
+  { id:'sam_grau',     name:'Sămânță grâu',       category:'Semințe',      unit:'kg/ha' },
+  { id:'sam_porumb',   name:'Sămânță porumb',     category:'Semințe',      unit:'saci/ha'},
+  { id:'sam_rapita',   name:'Sămânță rapiță',     category:'Semințe',      unit:'kg/ha' },
+  { id:'sam_floarea',  name:'Sămânță fl. soarelui',category:'Semințe',    unit:'saci/ha'},
+  { id:'sam_soia',     name:'Sămânță soia',       category:'Semințe',      unit:'kg/ha' },
+  { id:'apa',          name:'Apă irigații',       category:'Irigații',     unit:'mc/ha' },
+];
+let customProducts = JSON.parse(localStorage.getItem('agro_custom_products') || '[]');
+// customProducts: [{id, name, category, unit}]
+
+function getAllProducts() {
+  return [...PRODUCTS_DEFAULT, ...customProducts];
+}
+
+function getProductById(id) {
+  return getAllProducts().find(p => p.id === id);
+}
+
+function getProductByName(name) {
+  return getAllProducts().find(p => p.name === name);
+}
+
+function openProductsManager() {
+  const all = getAllProducts();
+  const categories = [...new Set(all.map(p => p.category))];
+  const catIcon = { 'Combustibil':'⛽','Îngrășăminte':'🧪','Amendamente':'🪨','Pesticide':'💊','Semințe':'🌱','Irigații':'💧' };
+
+  let listHtml = categories.map(cat => {
+    const prods = all.filter(p => p.category === cat);
+    return `
+      <div style="margin-bottom:10px;">
+        <div style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:.08em;margin-bottom:5px;">
+          ${catIcon[cat]||'📦'} ${cat.toUpperCase()}
+        </div>
+        ${prods.map(p => {
+          const isCustom = customProducts.some(cp => cp.id === p.id);
+          return `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:7px;margin-bottom:4px;">
+            <div style="flex:1;">
+              <span style="font-size:12px;font-weight:600;color:var(--text);">${p.name}</span>
+              <span style="font-size:10px;color:var(--muted);margin-left:6px;">${p.unit}</span>
+            </div>
+            ${isCustom ? `<button onclick="deleteCustomProduct('${p.id}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 4px;" title="Șterge">🗑️</button>` : ''}
+          </div>`;
+        }).join('')}
+      </div>`;
+  }).join('');
+
+  const customCats = [...new Set(customProducts.map(p=>p.category))].filter(c=>!Object.keys(catIcon).includes(c));
+
+  document.getElementById('productsModalContent').innerHTML = `
+    <div class="modal-title">📦 Produse Agricole</div>
+    <div class="modal-body" style="max-height:60dvh;overflow-y:auto;">
+      ${listHtml}
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid var(--border);">
+      <div style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:.08em;margin-bottom:8px;">➕ ADAUGĂ PRODUS NOU</div>
+      <div style="display:flex;flex-direction:column;gap:7px;">
+        <input type="text" id="pNewName" class="crop-input" placeholder="Nume produs (ex: Glyphosat 480)" style="width:100%;text-align:left;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+          <div>
+            <select id="pNewCat" class="crop-input" style="width:100%;text-align:left;">
+              <option value="Combustibil">⛽ Combustibil</option>
+              <option value="Îngrășăminte">🧪 Îngrășăminte</option>
+              <option value="Amendamente">🪨 Amendamente</option>
+              <option value="Pesticide" selected>💊 Pesticide</option>
+              <option value="Semințe">🌱 Semințe</option>
+              <option value="Irigații">💧 Irigații</option>
+              <option value="Altele">📦 Altele</option>
+            </select>
+          </div>
+          <div>
+            <select id="pNewUnit" class="crop-input" style="width:100%;text-align:left;">
+              <option>l/ha</option><option>kg/ha</option><option>t/ha</option>
+              <option>litri</option><option>kg</option><option>tone</option>
+              <option>saci/ha</option><option>mc/ha</option><option>buc</option><option>l/t</option>
+            </select>
+          </div>
+        </div>
+        <button class="map-btn active" style="width:100%;justify-content:center;" onclick="saveNewProduct()">💾 Salvează Produs</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="map-btn" onclick="document.getElementById('productsModal').classList.remove('visible')">Închide</button>
+    </div>
+  `;
+  document.getElementById('productsModal').classList.add('visible');
+}
+
+function saveNewProduct() {
+  const name = document.getElementById('pNewName')?.value?.trim();
+  const cat  = document.getElementById('pNewCat')?.value;
+  const unit = document.getElementById('pNewUnit')?.value;
+  if (!name) { showToast('❌ Introdu un nume pentru produs!', true); return; }
+  if (getAllProducts().some(p => p.name.toLowerCase() === name.toLowerCase())) {
+    showToast('❌ Produsul există deja!', true); return;
+  }
+  const id = 'custom_' + Date.now();
+  customProducts.push({ id, name, category: cat, unit });
+  localStorage.setItem('agro_custom_products', JSON.stringify(customProducts));
+  showToast(`✓ "${name}" adăugat în produse`);
+  openProductsManager(); // reîncarcă modalul
+}
+
+function deleteCustomProduct(id) {
+  const p = customProducts.find(cp => cp.id === id);
+  customProducts = customProducts.filter(cp => cp.id !== id);
+  localStorage.setItem('agro_custom_products', JSON.stringify(customProducts));
+  showToast(`✓ "${p?.name}" eliminat`);
+  openProductsManager();
+}
+
+let _prodRowCounter = 0;
+
+function _umOptions(selected) {
+  const units = ['—','kg/ha','l/ha','t/ha','kg','litri','tone','saci/ha','mc/ha','buc','l/t'];
+  return units.map(u => `<option value="${u==='—'?'':u}" ${selected===u||(u==='—'&&!selected)?'selected':''}>${u}</option>`).join('');
+}
+
+function addProductRow(productId='', cantitate='', um='') {
+  const container = document.getElementById('jProductsContainer');
+  if (!container) return;
+  const rowId = _prodRowCounter++;
+  const div = document.createElement('div');
+  div.id = `prow_${rowId}`;
+  div.style.cssText = 'display:grid;grid-template-columns:1fr 68px 74px 28px;gap:4px;margin-bottom:5px;align-items:center;';
+  div.innerHTML = `
+    <select class="crop-input" id="jprod_${rowId}" style="text-align:left;font-size:11px;" onchange="onProductRowChange(${rowId})">${buildProductOptions()}</select>
+    <input  type="number" class="crop-input" id="jqty_${rowId}" min="0" step="0.01" style="text-align:left;" placeholder="Cant." value="${cantitate}">
+    <select class="crop-input" id="jum_${rowId}"  style="text-align:left;font-size:11px;">${_umOptions(um)}</select>
+    <button onclick="removeProductRow(${rowId})" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;font-size:12px;width:28px;height:32px;display:flex;align-items:center;justify-content:center;">✕</button>
+  `;
+  container.appendChild(div);
+  if (productId) {
+    const sel = document.getElementById(`jprod_${rowId}`);
+    if (sel) { sel.value = productId; onProductRowChange(rowId); }
+  }
+  if (um) { const s = document.getElementById(`jum_${rowId}`); if (s) s.value = um; }
+}
+
+function removeProductRow(rowId) {
+  const row = document.getElementById(`prow_${rowId}`);
+  if (row) row.remove();
+}
+
+function onProductRowChange(rowId) {
+  const sel   = document.getElementById(`jprod_${rowId}`);
+  const umSel = document.getElementById(`jum_${rowId}`);
+  if (!sel || !umSel) return;
+  const prod = getProductById(sel.value);
+  if (prod) {
+    if (![...umSel.options].some(o => o.value === prod.unit)) {
+      const opt = document.createElement('option');
+      opt.value = prod.unit; opt.textContent = prod.unit;
+      umSel.appendChild(opt);
+    }
+    umSel.value = prod.unit;
+  }
+}
+
+function getProductRows() {
+  const container = document.getElementById('jProductsContainer');
+  if (!container) return [];
+  const rows = [];
+  container.querySelectorAll('[id^="prow_"]').forEach(row => {
+    const rowId = row.id.replace('prow_', '');
+    const prodSel = document.getElementById(`jprod_${rowId}`);
+    const qtySel  = document.getElementById(`jqty_${rowId}`);
+    const umSel   = document.getElementById(`jum_${rowId}`);
+    if (!prodSel) return;
+    const prod = getProductById(prodSel.value);
+    const r = { productId: prodSel.value||'', productName: prod?.name||'', cantitate: qtySel?.value?.trim()||'', um: umSel?.value||'' };
+    if (r.productId || r.cantitate) rows.push(r);
+  });
+  return rows;
+}
+
+function buildProductOptions() {
+  const all = getAllProducts();
+  const cats = [...new Set(all.map(p => p.category))];
+  const catIcon = { 'Combustibil':'⛽','Îngrășăminte':'🧪','Amendamente':'🪨','Pesticide':'💊','Semințe':'🌱','Irigații':'💧','Altele':'📦' };
+  let html = '<option value="">-- Fără produs --</option>';
+  cats.forEach(cat => {
+    html += `<optgroup label="${catIcon[cat]||'📦'} ${cat}">`;
+    all.filter(p => p.category === cat).forEach(p => {
+      html += `<option value="${p.id}">${p.name} (${p.unit})</option>`;
+    });
+    html += '</optgroup>';
+  });
+  return html;
+}
+
+function autoFillCulturaFromParcel() {
+  const parcelSel  = document.getElementById('jParcel');
+  const culturaSel = document.getElementById('jCultura');
+  if (!parcelSel || !culturaSel) return;
+  const idx   = parseInt(parcelSel.value);
+  const feat  = allFeatures.find(f => f.properties._index === idx);
+  const cult  = feat?.properties?.cultura;
+  const valid = cult && cult !== 'Necunoscut' && cult !== 'Necultivat' && cult.trim() !== '';
+  if (valid) {
+    // Adaugă opțiunea dacă nu există deja în select
+    if (![...culturaSel.options].some(o => o.value === cult)) {
+      const opt = document.createElement('option');
+      opt.value = cult; opt.textContent = cult;
+      culturaSel.appendChild(opt);
+    }
+    culturaSel.value = cult;
+  } else {
+    culturaSel.value = ''; // Necultivat
+  }
+}
 // Sezoane: [{id, name, year, active}]
 let seasons = [];
 let currentSeason = null;
@@ -903,6 +1377,8 @@ function updateSaveIndicator() {
 proj4.defs("EPSG:31700","+proj=sterea +lat_0=46 +lon_0=25 +k=0.99975 +x_0=500000 +y_0=500000 +ellps=krass +towgs84=28,-121,-77,0,0,0,0 +units=m +no_defs");
 // Varianta 7-parametri (ANCPI 2006 — Coordinate Frame convention)
 proj4.defs("EPSG:31700_7P","+proj=sterea +lat_0=46 +lon_0=25 +k=0.99975 +x_0=500000 +y_0=500000 +ellps=krass +towgs84=2.329,-147.042,-92.08,-0.309,0.325,0.497,-5.69 +units=m +no_defs");
+// Pulkovo 1942 (S-42) geographic — parametrii pentru România
+proj4.defs("EPSG:4284_RO","+proj=longlat +ellps=krass +towgs84=28,-121,-77,0,0,0,0 +no_defs");
 
 function detectCrsFromPrj(prjText) {
   if (!prjText) return 'unknown';
@@ -937,6 +1413,179 @@ function fixProjection(geojson, forceCrs) {
 }
 
 // ════════════════════════════════════════════════════════
+//  PARSER DXF (HATCH + LWPOLYLINE + POLYLINE/VERTEX)
+// ════════════════════════════════════════════════════════
+function parseDXF(text) {
+  // Tokenizăm DXF în perechi (cod, valoare)
+  const lines = text.split(/\r?\n/);
+  const pairs = [];
+  for (let i = 0; i + 1 < lines.length; i += 2) {
+    pairs.push([parseInt(lines[i].trim(), 10), lines[i + 1].trim()]);
+  }
+
+  const features = [];
+
+  // Găsim secțiunea ENTITIES
+  let i = 0;
+  while (i < pairs.length) {
+    if (pairs[i][0] === 2 && pairs[i][1] === 'ENTITIES') { i++; break; }
+    i++;
+  }
+
+  // Colectăm POLYLINE cu VERTEX (format vechi DXF)
+  const polylineStack = {}; // handle -> { layer, vertices }
+
+  while (i < pairs.length) {
+    const [code, val] = pairs[i];
+    if (code === 0 && val === 'ENDSEC') break;
+
+    // ── HATCH ──────────────────────────────────────────────
+    if (code === 0 && val === 'HATCH') {
+      i++;
+      let layer = '0';
+      const rings = [];
+      let collecting = false;
+      let vertCount = 0;
+      let ring = [];
+      let pendingX = null;
+
+      while (i < pairs.length && pairs[i][0] !== 0) {
+        const [c, v] = pairs[i];
+        if (c === 8) layer = v;
+        if (c === 93) {              // număr vertices în boundary path
+          // Salvează ring-ul anterior dacă există
+          if (ring.length >= 3) rings.push(ring);
+          vertCount = parseInt(v, 10);
+          ring = [];
+          pendingX = null;
+          collecting = true;
+        }
+        if (collecting) {
+          if (c === 10) { pendingX = parseFloat(v); }
+          else if (c === 20 && pendingX !== null) {
+            ring.push([pendingX, parseFloat(v)]);
+            pendingX = null;
+            if (ring.length >= vertCount) collecting = false;
+          }
+        }
+        i++;
+      }
+      if (ring.length >= 3) rings.push(ring);
+
+      if (rings.length > 0) {
+        // Asigurăm că inelele sunt închise
+        const coords = rings.map(r => {
+          const closed = [...r];
+          if (closed[0][0] !== closed[closed.length-1][0] || closed[0][1] !== closed[closed.length-1][1]) {
+            closed.push([...closed[0]]);
+          }
+          return closed;
+        });
+        features.push({
+          type: 'Feature',
+          properties: { layer, parcela: layer !== '0' ? layer : '' },
+          geometry: { type: 'Polygon', coordinates: coords }
+        });
+      }
+      continue; // nu incrementa i — deja avansat
+    }
+
+    // ── LWPOLYLINE ─────────────────────────────────────────
+    if (code === 0 && val === 'LWPOLYLINE') {
+      i++;
+      let layer = '0';
+      const verts = [];
+      let closed = false;
+      let pendingX = null;
+
+      while (i < pairs.length && pairs[i][0] !== 0) {
+        const [c, v] = pairs[i];
+        if (c === 8) layer = v;
+        if (c === 70) closed = (parseInt(v, 10) & 1) === 1;
+        if (c === 10) { pendingX = parseFloat(v); }
+        else if (c === 20 && pendingX !== null) {
+          verts.push([pendingX, parseFloat(v)]);
+          pendingX = null;
+        }
+        i++;
+      }
+
+      if (verts.length >= 3) {
+        const ring = [...verts];
+        if (ring[0][0] !== ring[ring.length-1][0] || ring[0][1] !== ring[ring.length-1][1]) {
+          ring.push([...ring[0]]);
+        }
+        features.push({
+          type: 'Feature',
+          properties: { layer, parcela: layer !== '0' ? layer : '' },
+          geometry: { type: 'Polygon', coordinates: [ring] }
+        });
+      }
+      continue;
+    }
+
+    // ── POLYLINE (format vechi) ────────────────────────────
+    if (code === 0 && val === 'POLYLINE') {
+      i++;
+      let layer = '0';
+      let handle = `poly_${i}`;
+      let closed = false;
+      while (i < pairs.length && pairs[i][0] !== 0) {
+        const [c, v] = pairs[i];
+        if (c === 5) handle = v;
+        if (c === 8) layer = v;
+        if (c === 70) closed = (parseInt(v, 10) & 1) === 1;
+        i++;
+      }
+      polylineStack[handle] = { layer, closed, verts: [] };
+      continue;
+    }
+
+    // ── VERTEX (aparține unui POLYLINE) ────────────────────
+    if (code === 0 && val === 'VERTEX') {
+      i++;
+      let x = null, y = null, handle = null, owner = null;
+      while (i < pairs.length && pairs[i][0] !== 0) {
+        const [c, v] = pairs[i];
+        if (c === 5) handle = v;
+        if (c === 330) owner = v;
+        if (c === 10) x = parseFloat(v);
+        if (c === 20) y = parseFloat(v);
+        i++;
+      }
+      if (owner && polylineStack[owner] && x !== null && y !== null) {
+        polylineStack[owner].verts.push([x, y]);
+      }
+      continue;
+    }
+
+    // ── SEQEND — finalizează POLYLINE ──────────────────────
+    if (code === 0 && val === 'SEQEND') {
+      // Verificăm ultimul polyline deschis
+      for (const h in polylineStack) {
+        const pl = polylineStack[h];
+        if (pl.verts.length >= 3) {
+          const ring = [...pl.verts];
+          if (ring[0][0] !== ring[ring.length-1][0] || ring[0][1] !== ring[ring.length-1][1]) {
+            ring.push([...ring[0]]);
+          }
+          features.push({
+            type: 'Feature',
+            properties: { layer: pl.layer, parcela: pl.layer !== '0' ? pl.layer : '' },
+            geometry: { type: 'Polygon', coordinates: [ring] }
+          });
+          delete polylineStack[h];
+        }
+      }
+    }
+
+    i++;
+  }
+
+  return { type: 'FeatureCollection', features };
+}
+
+// ════════════════════════════════════════════════════════
 //  IMPORT FIȘIERE (fix SHP complet)
 // ════════════════════════════════════════════════════════
 function readFileAsArrayBuffer(file) {
@@ -944,6 +1593,9 @@ function readFileAsArrayBuffer(file) {
 }
 function readFileAsText(file) {
   return new Promise((res, rej) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.onerror = rej; r.readAsText(file, 'UTF-8'); });
+}
+function readFileAsTextLatin1(file) {
+  return new Promise((res, rej) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.onerror = rej; r.readAsText(file, 'windows-1252'); });
 }
 
 async function handleFiles(files) {
@@ -1066,6 +1718,39 @@ async function handleFiles(files) {
         });
         renderGeoJSON(geojson, file.name);
         showToast(`✓ GPX importat: ${geojson.features.length} parcele`);
+      }
+      else if (ext === 'dxf') {
+        const text = await readFileAsTextLatin1(file);
+        const geojson = parseDXF(text);
+        if (!geojson.features.length) { showToast('❌ DXF: nicio geometrie poligon găsită'); continue; }
+        const dxfDatum = (document.getElementById('dxfDatum')?.value) || 'auto';
+        if (dxfDatum === 'pulkovo') {
+          // Converție Pulkovo 1942 (S-42) geographic → WGS84
+          geojson.features.forEach(f => {
+            if (!f.geometry || !f.geometry.coordinates) return;
+            const walk = (coords) => {
+              if (typeof coords[0] === 'number') {
+                try {
+                  const wgs = proj4("EPSG:4284_RO", "EPSG:4326", [coords[0], coords[1]]);
+                  coords[0] = wgs[0]; coords[1] = wgs[1];
+                } catch(e) {}
+              } else if (Array.isArray(coords)) { coords.forEach(walk); }
+            };
+            walk(f.geometry.coordinates);
+          });
+        } else {
+          fixProjection(geojson); // detecție auto Stereo70/WGS84 pentru cazuri proiectate
+        }
+        geojson.features.forEach((f, i) => {
+          if (!f.properties) f.properties = {};
+          f.properties.strat = f.properties.strat || baseName;
+          if (!f.properties.parcela || f.properties.parcela === '0') {
+            f.properties.parcela = `${baseName} ${i + 1}`;
+          }
+        });
+        renderGeoJSON(geojson, file.name);
+        const datumLabel = dxfDatum === 'pulkovo' ? ' (corecție S-42)' : '';
+        showToast(`✓ DXF importat: ${geojson.features.length} parcele${datumLabel}`);
       }
       else if (ext === 'zip') {
         showToast('🔄 Se procesează arhiva ZIP SHP...');
@@ -1292,8 +1977,8 @@ function refreshMapData() {
         if (currentlyEditingIdx !== null && currentlyEditingIdx !== feature.properties._index) saveEdit(currentlyEditingIdx);
         showInfo(feature.properties);
       });
-      lyr.on('mouseover', e => e.target.setStyle({ weight: 3, fillOpacity: 0.75 }));
-      lyr.on('mouseout', e => e.target.setStyle({ weight: 2, fillOpacity: 0.35 }));
+      lyr.on('mouseover', e => { if (e.target.setStyle) e.target.setStyle({ weight: 3, fillOpacity: 0.75 }); });
+      lyr.on('mouseout',  e => { if (e.target.setStyle) e.target.setStyle({ weight: 2, fillOpacity: 0.35 }); });
       lyr.on('pm:edit', e => {
         const idx = feature.properties._index;
         const feat = allFeatures.find(f => f.properties._index === idx);
@@ -1321,7 +2006,7 @@ function renderLabels(features) {
           className: '',
           iconSize: null,
           html: `<div style="background:rgba(13,26,12,0.88);border:1px solid rgba(74,222,128,0.45);border-radius:5px;padding:3px 8px;font-size:10px;color:#e8f5e0;font-family:'JetBrains Mono',monospace;white-space:nowrap;pointer-events:none;box-shadow:0 2px 4px rgba(0,0,0,0.5);transform:translate(-50%,-50%);display:inline-block;width:max-content;">
-            <strong style="color:${getColor(p.cultura||'')}">${p.parcela||p.name||'Parcela'}</strong>${p.cultura && p.cultura!=='Necunoscut' ? ' · '+p.cultura : ''}</div>`
+            <strong style="color:${getColor(p.cultura||'')}">${p.parcela||p.name||'Parcela'}</strong>${p.cultura && p.cultura!=='Necunoscut' ? ' · '+p.cultura : ''}${p.suprafata ? '<span style="color:#94a3b8;font-size:9px;"> · '+p.suprafata+' ha</span>' : ''}</div>`
         })
       });
       label._index = p._index;
@@ -1524,7 +2209,7 @@ function toggleBaseLayer(name) {
 //  GEOMAN DRAW
 // ════════════════════════════════════════════════════════
 map.pm.setGlobalOptions({ snappable: false, allowSelfIntersection: true });
-map.pm.addControls({ position:'topleft', drawMarker:false, drawCircleMarker:false, drawPolyline:false, drawRectangle:false, drawPolygon:true, drawCircle:true, editMode:false, dragMode:false, cutPolygon:false, removalMode:false });
+map.pm.addControls({ position:'topleft', drawMarker:false, drawCircleMarker:false, drawPolyline:false, drawRectangle:false, drawPolygon:true, drawCircle:true, editMode:false, dragMode:false, cutPolygon:false, removalMode:false, rotateMode:false, drawText:false });
 map.pm.setLang('ro', { tooltips: { firstVertex:'Primul punct', continueLine:'Continuă', finishPoly:'ENTER / Dublu-click pt a finaliza' } });
 
 document.addEventListener('keydown', e => {
@@ -1951,42 +2636,91 @@ function updateJournalParcelFilter() {
   allFeatures.forEach(f => {
     sel.innerHTML += `<option value="${f.properties._index}" ${current==f.properties._index?'selected':''}>${f.properties.parcela||'Parcela '+f.properties._index}</option>`;
   });
+  // Actualizează filtrul de culturi
+  const cSel = document.getElementById('journalFilterCultura');
+  if (cSel) {
+    const curC = cSel.value;
+    const culturi = [...new Set(journalEntries.map(e=>e.cultura).filter(Boolean))].sort();
+    cSel.innerHTML = '<option value="">Toate culturile</option>' + culturi.map(c=>`<option value="${c}" ${curC===c?'selected':''}>${c}</option>`).join('');
+  }
+  // Actualizează filtrul de tipuri de lucrări (include tipuri custom)
+  populateWorkTypeSelect('journalFilterType', true);
+}
+
+function clearJournalFilters() {
+  const ids = ['journalSearch','journalFilterParcel','journalFilterType','journalFilterCultura','journalDateFrom','journalDateTo'];
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  renderJournal();
 }
 
 function renderJournal() {
   const container = document.getElementById('journalList');
   const filterParcel = document.getElementById('journalFilterParcel')?.value||'';
-  const filterType = document.getElementById('journalFilterType')?.value||'';
-  
+  const filterType   = document.getElementById('journalFilterType')?.value||'';
+  const filterCultura= document.getElementById('journalFilterCultura')?.value||'';
+  const search       = (document.getElementById('journalSearch')?.value||'').toLowerCase().trim();
+  const dateFrom     = document.getElementById('journalDateFrom')?.value||'';
+  const dateTo       = document.getElementById('journalDateTo')?.value||'';
+
   let entries = [...journalEntries].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  if (filterParcel) entries = entries.filter(e=>e.parcelIdx===parseInt(filterParcel));
-  if (filterType) entries = entries.filter(e=>e.type===filterType);
-  
+  if (filterParcel)  entries = entries.filter(e=>String(e.parcelIdx)===filterParcel);
+  if (filterType)    entries = entries.filter(e=>e.type===filterType);
+  if (filterCultura) entries = entries.filter(e=>e.cultura===filterCultura);
+  if (dateFrom)      entries = entries.filter(e=>e.date>=dateFrom);
+  if (dateTo)        entries = entries.filter(e=>e.date<=dateTo);
+  if (search) entries = entries.filter(e=>{
+    const feat = allFeatures.find(f=>f.properties._index===e.parcelIdx);
+    const name = (feat?feat.properties.parcela:e.parcelName||'').toLowerCase();
+    return name.includes(search)
+      || (e.type||'').toLowerCase().includes(search)
+      || (e.cultura||'').toLowerCase().includes(search)
+      || (e.note||'').toLowerCase().includes(search)
+      || (e.operator||'').toLowerCase().includes(search)
+      || (e.utilaj||'').toLowerCase().includes(search);
+  });
+
+  const countEl = document.getElementById('journalCount');
+  if (countEl) countEl.textContent = entries.length ? `${entries.length} lucrare${entries.length!==1?'i':''} găsite` : '';
+
   if (!entries.length) {
     container.innerHTML = '<div class="empty-parcele"><div class="empty-icon">📋</div><p>Nicio lucrare găsită.</p></div>';
     return;
   }
-  
-  const typeClass = { 'Semănat':'jt-semanat','Fertilizat':'jt-fertilizat','Recoltat':'jt-recoltat','Ierbicidat':'jt-ierbicidat','Arat':'jt-arat','Altele':'jt-altele' };
-  const typeIcon = { 'Semănat':'🌱','Fertilizat':'🧪','Recoltat':'🌾','Ierbicidat':'💧','Arat':'🚜','Altele':'📝' };
-  
+
+  const typeClass = { 'Semănat':'jt-semanat','Fertilizat':'jt-fertilizat','Recoltat':'jt-recoltat','Ierbicidat':'jt-ierbicidat','Arat':'jt-arat','Discuit':'jt-arat','Prășit':'jt-semanat','Irigat':'jt-fertilizat','Tratament':'jt-ierbicidat','Altele':'jt-altele' };
+
   container.innerHTML = entries.map(e => {
     const feat = allFeatures.find(f=>f.properties._index===e.parcelIdx);
     const parcelName = feat ? feat.properties.parcela : (e.parcelName||`#${e.parcelIdx}`);
     const dateStr = new Date(e.date).toLocaleDateString('ro-RO',{day:'2-digit',month:'short',year:'numeric'});
+    const extras = [];
+    if (e.cultura) extras.push(`<span>🌾 <span style="color:${getColor(e.cultura)}">${e.cultura}</span></span>`);
+    // Produse — suport atât structura nouă (array) cât și cea veche (câmp unic)
+    const prods = (e.products && e.products.length)
+      ? e.products
+      : (e.productId || e.cantitate ? [{ productId: e.productId||'', productName: e.productName||'', cantitate: e.cantitate||'', um: e.um||'' }] : []);
+    prods.forEach(p => {
+      const label = p.productName || (p.productId ? getProductById(p.productId)?.name : '');
+      if (label && p.cantitate) extras.push(`<span>📦 ${label}: ${p.cantitate}${p.um?' '+p.um:''}</span>`);
+      else if (label)           extras.push(`<span>📦 ${label}</span>`);
+      else if (p.cantitate)     extras.push(`<span>📦 ${p.cantitate}${p.um?' '+p.um:''}</span>`);
+    });
+    if (e.cost)     extras.push(`<span>💰 ${parseFloat(e.cost).toLocaleString('ro-RO')} RON</span>`);
+    if (e.utilaj)   extras.push(`<span>🚜 ${e.utilaj}</span>`);
+    if (e.operator) extras.push(`<span>👤 ${e.operator}</span>`);
     return `<div class="journal-entry">
       <div class="journal-entry-header">
         <div style="display:flex;flex-direction:column;gap:2px;">
           <span style="font-size:12px;font-weight:600;color:var(--text);">${parcelName}</span>
-          <span class="journal-date">${dateStr}</span>
+          <span class="journal-date">${dateStr}${e.suprafata&&e.suprafata!=='—'?' · '+e.suprafata+' ha':''}</span>
         </div>
         <div style="display:flex;gap:6px;align-items:center;">
-          <span class="journal-type ${typeClass[e.type]||'jt-altele'}">${typeIcon[e.type]||'📝'} ${e.type}</span>
+          <span class="journal-type ${typeClass[e.type]||'jt-altele'}">${getWorkTypeIcon(e.type)} ${e.type}</span>
           <button class="journal-del" onclick="deleteJournalEntry(${e.id})" title="Șterge">🗑️</button>
         </div>
       </div>
-      ${e.cultura?`<div style="font-size:10px;color:var(--muted);margin-top:2px;">Cultură: <span style="color:${getColor(e.cultura)}">${e.cultura}</span></div>`:''}
-      ${e.note?`<div class="journal-note">${e.note}</div>`:''}
+      ${extras.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:5px;">${extras.map(x=>`<span style="font-size:10px;color:var(--muted);background:rgba(255,255,255,0.05);padding:2px 7px;border-radius:10px;">${x}</span>`).join('')}</div>`:'' }
+      ${e.note?`<div class="journal-note" style="margin-top:5px;">${e.note}</div>`:''}
     </div>`;
   }).join('');
 }
@@ -1999,34 +2733,65 @@ function openAddJournalEntry(preselectedIdx) {
   
   let culturiOpts = Object.keys(CULTURA_COLORS).filter(c=>c!=='default').map(c=>`<option value="${c}">${c}</option>`).join('');
   
+  const lbl = (txt) => `<label style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:3px;letter-spacing:.05em;">${txt}</label>`;
   modal.innerHTML = `
     <div class="modal-title">📋 Adaugă Lucrare Agricolă</div>
     <div class="modal-body">
-      <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;flex-direction:column;gap:10px;">
         <div>
-          <label style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:4px;">PARCELĂ *</label>
-          <select class="crop-input" id="jParcel" style="width:100%;text-align:left;">${parcelOptions}</select>
+          ${lbl('PARCELĂ *')}
+          <select class="crop-input" id="jParcel" style="width:100%;text-align:left;" onchange="autoFillCulturaFromParcel()">${parcelOptions}</select>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           <div>
-            <label style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:4px;">TIP LUCRARE *</label>
-            <select class="crop-input" id="jType" style="width:100%;text-align:left;">
-              <option>Semănat</option><option>Fertilizat</option><option>Recoltat</option>
-              <option>Ierbicidat</option><option>Arat</option><option>Altele</option>
-            </select>
+            ${lbl('TIP LUCRARE *')}
+            <div style="display:flex;gap:4px;align-items:center;">
+              <select class="crop-input" id="jType" style="flex:1;text-align:left;"></select>
+              <button onclick="showInlineAddWorkType()" title="Adaugă tip nou de lucrare" style="flex-shrink:0;width:32px;height:32px;background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.3);border-radius:6px;color:var(--green);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">＋</button>
+            </div>
+            <div id="jTypeAddRow" style="display:none;margin-top:5px;gap:5px;align-items:center;">
+              <input type="text" id="jTypeNewName" class="crop-input" placeholder="Denumire lucrare nouă..." style="flex:1;text-align:left;" onkeydown="if(event.key==='Enter')confirmAddWorkType()">
+              <button onclick="confirmAddWorkType()" style="flex-shrink:0;padding:4px 8px;background:rgba(74,222,128,0.15);border:1px solid rgba(74,222,128,0.3);border-radius:6px;color:var(--green);cursor:pointer;font-size:12px;">✓</button>
+              <button onclick="document.getElementById('jTypeAddRow').style.display='none'" style="flex-shrink:0;padding:4px 8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;font-size:12px;">✕</button>
+            </div>
           </div>
           <div>
-            <label style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:4px;">DATA *</label>
+            ${lbl('DATA *')}
             <input type="date" class="crop-input" id="jDate" value="${today}" style="width:100%;text-align:left;">
           </div>
         </div>
         <div>
-          <label style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:4px;">CULTURĂ (opțional)</label>
-          <select class="crop-input" id="jCultura" style="width:100%;text-align:left;"><option value="">-- Necunoscut --</option>${culturiOpts}</select>
+          ${lbl('CULTURĂ (opțional)')}
+          <select class="crop-input" id="jCultura" style="width:100%;text-align:left;"><option value="">-- Necultivat --</option>${culturiOpts}</select>
         </div>
         <div>
-          <label style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:4px;">NOTIȚE</label>
-          <textarea class="crop-input" id="jNote" style="width:100%;height:70px;text-align:left;resize:vertical;" placeholder="Detalii: cantitate produs, starea solului, observații..."></textarea>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            ${lbl('PRODUSE UTILIZATE')}
+            <button onclick="openProductsManager()" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:6px;color:var(--amber);font-size:10px;padding:2px 7px;cursor:pointer;">📦 Manager</button>
+          </div>
+          <div style="font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace;display:grid;grid-template-columns:1fr 68px 74px 28px;gap:4px;margin-bottom:3px;padding:0 2px;">
+            <span>Produs</span><span>Cantitate</span><span>U.M.</span><span></span>
+          </div>
+          <div id="jProductsContainer"></div>
+          <button onclick="addProductRow()" style="width:100%;margin-top:3px;padding:5px;background:rgba(255,255,255,0.04);border:1px dashed var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;">➕ Adaugă produs</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div>
+            ${lbl('COST (RON)')}
+            <input type="number" class="crop-input" id="jCost" min="0" step="0.01" style="width:100%;text-align:left;" placeholder="ex: 1500">
+          </div>
+          <div>
+            ${lbl('UTILAJ')}
+            <input type="text" class="crop-input" id="jUtilaj" style="width:100%;text-align:left;" placeholder="ex: John Deere 6R">
+          </div>
+        </div>
+        <div>
+          ${lbl('OPERATOR / EXECUTANT')}
+          <input type="text" class="crop-input" id="jOperator" style="width:100%;text-align:left;" placeholder="ex: Ion Popescu">
+        </div>
+        <div>
+          ${lbl('NOTIȚE / OBSERVAȚII')}
+          <textarea class="crop-input" id="jNote" style="width:100%;height:60px;text-align:left;resize:vertical;" placeholder="Starea solului, condiții meteo, observații..."></textarea>
         </div>
       </div>
     </div>
@@ -2036,6 +2801,10 @@ function openAddJournalEntry(preselectedIdx) {
     </div>
   `;
   document.getElementById('journalModal').classList.add('visible');
+  populateWorkTypeSelect('jType');
+  autoFillCulturaFromParcel();
+  _prodRowCounter = 0;
+  addProductRow(); // primul rând gol implicit
 }
 
 function quickAddJournal(parcelIdx) {
@@ -2053,18 +2822,24 @@ function openJournalForParcel(parcelIdx) {
 
 function saveJournalEntry() {
   const parcelIdx = parseInt(document.getElementById('jParcel').value);
-  const type = document.getElementById('jType').value;
-  const date = document.getElementById('jDate').value;
-  const nota = document.getElementById('jNote').value.trim();
-  const cultura = document.getElementById('jCultura').value;
-  
+  const type      = document.getElementById('jType').value;
+  const date      = document.getElementById('jDate').value;
+  const nota      = document.getElementById('jNote').value.trim();
+  const cultura   = document.getElementById('jCultura').value;
+  const products  = getProductRows();
+  const cost      = document.getElementById('jCost').value.trim();
+  const utilaj    = document.getElementById('jUtilaj').value.trim();
+  const operator  = document.getElementById('jOperator').value.trim();
+
   if (!parcelIdx || !type || !date) { showToast('❌ Completează câmpurile obligatorii!', true); return; }
-  
+
   const feat = allFeatures.find(f=>f.properties._index===parcelIdx);
   const entry = {
     id: Date.now(),
     parcelIdx, parcelName: feat?.properties.parcela||'',
     type, date, note: nota, cultura,
+    products,
+    cost: cost||'', utilaj: utilaj||'', operator: operator||'',
     suprafata: feat?.properties.suprafata||'—'
   };
   journalEntries.push(entry);
@@ -2262,15 +3037,245 @@ function executeDelete() {
 // ════════════════════════════════════════════════════════
 function getVisibleFeatures() { return allFeatures.filter(f=>isFeatureVisible(f)); }
 
-function exportGeoJSON() {
-  const target = getVisibleFeatures();
-  if (!target.length) { showToast('❌ Niciun teren vizibil de exportat'); return; }
+// ════════════════════════════════════════════════════════
+//  PIN-URI PROBLEMĂ
+// ════════════════════════════════════════════════════════
+const PIN_TYPES = [
+  {v:'Dăunători',        i:'🐛', c:'#f87171'},
+  {v:'Inundație',        i:'💧', c:'#60a5fa'},
+  {v:'Eroziune',         i:'🌍', c:'#a78bfa'},
+  {v:'Utilaj defect',    i:'🔧', c:'#fb923c'},
+  {v:'Cultură afectată', i:'🌾', c:'#facc15'},
+  {v:'Altele',           i:'⚠️', c:'#94a3b8'}
+];
+const PIN_PRIORITY = [
+  {v:'urgentă', i:'🔴', c:'#ef4444'},
+  {v:'medie',   i:'🟠', c:'#f97316'},
+  {v:'mică',    i:'🟡', c:'#eab308'}
+];
+
+function togglePinMode() {
+  pinModeActive = !pinModeActive;
+  var btn = document.getElementById('btnPinMode');
+  if (pinModeActive) {
+    btn.classList.add('active');
+    btn.textContent = '📍 Click pe hartă...';
+    map.getContainer().style.cursor = 'crosshair';
+    showToast('📍 Dă click pe hartă pentru a semnala o problemă', false);
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '📍 Problemă';
+    map.getContainer().style.cursor = '';
+  }
+}
+
+map.on('click', function(e) {
+  if (!pinModeActive) return;
+  pinModeActive = false;
+  var btn = document.getElementById('btnPinMode');
+  if (btn) { btn.classList.remove('active'); btn.textContent = '📍 Problemă'; }
+  map.getContainer().style.cursor = '';
+  openPinModal(e.latlng.lat, e.latlng.lng);
+});
+
+function openPinModal(lat, lng) {
+  var typeOpts = PIN_TYPES.map(function(t) {
+    return '<option value="' + t.v + '">' + t.i + ' ' + t.v + '</option>';
+  }).join('');
+  var prioOpts = PIN_PRIORITY.map(function(p) {
+    return '<option value="' + p.v + '">' + p.i + ' ' + p.v.charAt(0).toUpperCase() + p.v.slice(1) + '</option>';
+  }).join('');
+
+  document.getElementById('pinModalContent').innerHTML =
+    '<div class="modal-title">📍 Semnalează Problemă</div>' +
+    '<div class="modal-body">' +
+    '<div class="form-row">' +
+    '<label class="form-label">Tip problemă</label>' +
+    '<select id="pinType" class="form-input">' + typeOpts + '</select>' +
+    '</div>' +
+    '<div class="form-row">' +
+    '<label class="form-label">Prioritate</label>' +
+    '<select id="pinPriority" class="form-input">' + prioOpts + '</select>' +
+    '</div>' +
+    '<div class="form-row">' +
+    '<label class="form-label">Descriere</label>' +
+    '<textarea id="pinNote" class="form-input" rows="3" placeholder="Descriere detaliată a problemei..." style="resize:vertical;min-height:70px;"></textarea>' +
+    '</div>' +
+    '<div style="font-size:10px;color:var(--muted);margin-top:4px;">📌 Coordonate: ' + lat.toFixed(5) + ', ' + lng.toFixed(5) + '</div>' +
+    '</div>' +
+    '<div class="modal-footer">' +
+    '<button class="map-btn" onclick="document.getElementById(\'pinModal\').classList.remove(\'visible\')">Anulează</button>' +
+    '<button class="map-btn active" onclick="savePinEntry(' + lat + ',' + lng + ')">📍 Adaugă Pin</button>' +
+    '</div>';
+  document.getElementById('pinModal').classList.add('visible');
+  setTimeout(function() { document.getElementById('pinNote').focus(); }, 100);
+}
+
+function savePinEntry(lat, lng) {
+  var type     = document.getElementById('pinType').value;
+  var priority = document.getElementById('pinPriority').value;
+  var note     = document.getElementById('pinNote').value.trim();
+  var pin = { id: Date.now(), lat: lat, lng: lng, type: type, note: note, priority: priority, date: new Date().toISOString().slice(0,10) };
+  mapPins.push(pin);
+  document.getElementById('pinModal').classList.remove('visible');
+  renderPinMarker(pin);
+  markDirty();
+  showToast('📍 Pin adăugat: ' + type);
+}
+
+function getPinColor(priority) {
+  var p = PIN_PRIORITY.find(function(x) { return x.v === priority; });
+  return p ? p.c : '#94a3b8';
+}
+
+function getPinIcon(type) {
+  var t = PIN_TYPES.find(function(x) { return x.v === type; });
+  return t ? t.i : '⚠️';
+}
+
+function renderPinMarker(pin) {
+  var color = getPinColor(pin.priority);
+  var icon  = getPinIcon(pin.type);
+  var divIcon = L.divIcon({
+    className: '',
+    html: '<div style="width:32px;height:32px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:' + color + ';border:2px solid rgba(0,0,0,0.4);box-shadow:0 2px 6px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;">' +
+          '<span style="transform:rotate(45deg);font-size:13px;line-height:1;">' + icon + '</span></div>',
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -34]
+  });
+  var marker = L.marker([pin.lat, pin.lng], {icon: divIcon}).addTo(map);
+  var dateStr = new Date(pin.date).toLocaleDateString('ro-RO', {day:'2-digit', month:'short', year:'numeric'});
+  var prioInfo = PIN_PRIORITY.find(function(x) { return x.v === pin.priority; });
+  var popup = '<div style="font-family:JetBrains Mono,monospace;min-width:180px;">' +
+    '<div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:6px;">' + icon + ' ' + pin.type + '</div>' +
+    '<div style="font-size:11px;color:' + color + ';margin-bottom:4px;">' + (prioInfo ? prioInfo.i : '') + ' Prioritate ' + pin.priority + '</div>' +
+    (pin.note ? '<div style="font-size:11px;color:#d1d5db;margin-bottom:6px;line-height:1.4;">' + pin.note + '</div>' : '') +
+    '<div style="font-size:10px;color:#6b7280;margin-bottom:8px;">' + dateStr + '</div>' +
+    '<button onclick="deletePinEntry(' + pin.id + ')" style="background:rgba(248,113,113,0.15);border:1px solid rgba(248,113,113,0.4);color:#f87171;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:10px;font-family:JetBrains Mono,monospace;">🗑 Șterge pin</button>' +
+    '</div>';
+  marker.bindPopup(popup, {className:'agro-popup', maxWidth:240});
+  marker._pinId = pin.id;
+  pinMarkers.push(marker);
+}
+
+function deletePinEntry(id) {
+  mapPins = mapPins.filter(function(p) { return p.id !== id; });
+  var idx = pinMarkers.findIndex(function(m) { return m._pinId === id; });
+  if (idx !== -1) { map.removeLayer(pinMarkers[idx]); pinMarkers.splice(idx, 1); }
+  markDirty();
+  showToast('🗑 Pin șters');
+}
+
+function renderAllPins() {
+  pinMarkers.forEach(function(m) { map.removeLayer(m); });
+  pinMarkers = [];
+  mapPins.forEach(function(pin) { renderPinMarker(pin); });
+}
+
+function openExportModal() {
+  var stratMap = {};
+  allFeatures.forEach(function(f) {
+    var s = (f.properties.strat || 'Terenuri Principale').trim();
+    if (!stratMap[s]) stratMap[s] = [];
+    stratMap[s].push(f);
+  });
+
+  var layerHtml = '';
+  if (allFeatures.length === 0) {
+    layerHtml = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;">Nu exista terenuri de exportat.</div>';
+  } else {
+    Object.keys(stratMap).forEach(function(s) {
+      var feats = stratMap[s];
+      var safeS = s.replace(/"/g, '&quot;').replace(/'/g, "\\'");
+      layerHtml += '<div style="margin-bottom:10px;">';
+      layerHtml += '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:10px;color:var(--muted);font-family:JetBrains Mono,monospace;letter-spacing:.05em;margin-bottom:4px;padding:4px 6px;background:rgba(255,255,255,0.03);border-radius:6px;">';
+      layerHtml += '<input type="checkbox" class="lyr-check" data-strat="' + safeS + '" onchange="toggleLayerExportCheck(this)" checked>';
+      layerHtml += s.toUpperCase();
+      layerHtml += '<span style="color:var(--muted);font-size:9px;margin-left:auto;">' + feats.length + ' parcele</span>';
+      layerHtml += '</label>';
+      feats.forEach(function(f) {
+        var name = f.properties.parcela || ('Parcela ' + f.properties._index);
+        var sup  = f.properties.suprafata || '-';
+        layerHtml += '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 8px 4px 20px;margin-bottom:2px;border-radius:6px;">';
+        layerHtml += '<input type="checkbox" class="prc-check" data-idx="' + f.properties._index + '" data-strat="' + safeS + '" checked>';
+        layerHtml += '<span style="font-size:11px;color:var(--text);flex:1;">' + name + '</span>';
+        layerHtml += '<span style="font-size:10px;color:var(--muted);">' + sup + ' ha</span>';
+        layerHtml += '</label>';
+      });
+      layerHtml += '</div>';
+    });
+  }
+
+  var fmtHtml = '';
+  var fmts = [
+    {id:'geojson', icon:'&#128196;', label:'GeoJSON', color:'var(--green)'},
+    {id:'kml',     icon:'&#128506;', label:'KML',     color:'var(--blue)'},
+    {id:'shp',     icon:'&#128230;', label:'SHP (ZIP)', color:'var(--amber)'},
+    {id:'dxf',     icon:'&#128208;', label:'DXF',     color:'#fbbf24'}
+  ];
+  fmts.forEach(function(fm, i) {
+    fmtHtml += '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:9px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;">';
+    fmtHtml += '<input type="radio" name="expFmt" value="' + fm.id + '"' + (i===0?' checked':'') + '>';
+    fmtHtml += '<span style="font-size:12px;color:' + fm.color + ';">' + fm.icon + ' ' + fm.label + '</span>';
+    fmtHtml += '</label>';
+  });
+
+  var html = '<div class="modal-title">&#11014; Export Terenuri</div>';
+  html += '<div style="padding:0 20px 6px;">';
+  html += '<div style="font-size:10px;color:var(--muted);font-family:JetBrains Mono,monospace;letter-spacing:.08em;margin-bottom:8px;">FORMAT EXPORT</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;">' + fmtHtml + '</div>';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
+  html += '<div style="font-size:10px;color:var(--muted);font-family:JetBrains Mono,monospace;letter-spacing:.08em;">PARCELE</div>';
+  html += '<div style="display:flex;gap:10px;">';
+  html += '<button onclick="toggleAllExportChecks(true)" style="font-size:10px;color:var(--green);background:none;border:none;cursor:pointer;padding:0;">Selecteaza tot</button>';
+  html += '<button onclick="toggleAllExportChecks(false)" style="font-size:10px;color:var(--muted);background:none;border:none;cursor:pointer;padding:0;">Deselecteaza tot</button>';
+  html += '</div></div>';
+  html += '<div style="max-height:40dvh;overflow-y:auto;padding-right:4px;">' + layerHtml + '</div>';
+  html += '</div>';
+  html += '<div class="modal-footer">';
+  html += '<button class="map-btn" onclick="document.getElementById(\'exportModal\').classList.remove(\'visible\')">Anuleaza</button>';
+  html += '<button class="map-btn" style="background:rgba(96,165,250,0.1);color:var(--blue);border-color:rgba(96,165,250,.3);" onclick="doExportSelected(\'print\')">&#128424; Printeaza</button>';
+  html += '<button class="map-btn active" onclick="doExportSelected()">&#11014; Exporta</button>';
+  html += '</div>';
+
+  document.getElementById('exportModalContent').innerHTML = html;
+  document.getElementById('exportModal').classList.add('visible');
+}
+
+function toggleLayerExportCheck(el) {
+  var strat = el.dataset.strat;
+  document.querySelectorAll('.prc-check[data-strat="' + strat + '"]').forEach(function(cb) { cb.checked = el.checked; });
+}
+
+function toggleAllExportChecks(val) {
+  document.querySelectorAll('.prc-check,.lyr-check').forEach(cb => cb.checked = val);
+}
+
+function doExportSelected(action) {
+  const fmt = action === 'print'
+    ? 'print'
+    : (document.querySelector('input[name="expFmt"]:checked')?.value || 'geojson');
+  const idxs = new Set([...document.querySelectorAll('.prc-check:checked')].map(cb => parseInt(cb.dataset.idx)));
+  const target = allFeatures.filter(f => idxs.has(f.properties._index));
+  if (!target.length && fmt !== 'print') { showToast('❌ Selectează cel puțin o parcelă!', true); return; }
+  document.getElementById('exportModal').classList.remove('visible');
+  if      (fmt === 'geojson') exportGeoJSON(target);
+  else if (fmt === 'kml')     exportKML(target);
+  else if (fmt === 'shp')     exportSHP(target);
+  else if (fmt === 'dxf')     exportDXF(target);
+  else if (fmt === 'print')   printMap();
+}
+
+function exportGeoJSON(target) {
+  target = target || getVisibleFeatures();
+  if (!target.length) { showToast('❌ Niciun teren de exportat'); return; }
   triggerDownload(JSON.stringify({type:'FeatureCollection',features:target},null,2),'terenuri_ferma.geojson','application/json');
   showToast(`✓ GeoJSON exportat (${target.length} parcele)`);
 }
 
-function exportKML() {
-  const target = getVisibleFeatures();
+function exportKML(target) {
+  target = target || getVisibleFeatures();
   if (!target.length) { showToast('❌ Niciun teren vizibil de exportat'); return; }
   let kml = '<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n  <Document>\n    <name>Terenuri Ferma</name>\n';
   target.forEach(f => {
@@ -2299,14 +3304,51 @@ function exportKML() {
   showToast(`✓ KML exportat (${target.length} parcele)`);
 }
 
-function exportSHP() {
-  const target = getVisibleFeatures();
-  if (!target.length) { showToast('❌ Niciun teren vizibil de exportat'); return; }
+function exportSHP(target) {
+  target = target || getVisibleFeatures();
+  if (!target.length) { showToast('❌ Niciun teren de exportat'); return; }
   if (typeof shpwrite==='undefined') { showToast('❌ Modulul SHP se încarcă...'); return; }
   try {
     shpwrite.download({type:'FeatureCollection',features:target},{folder:'terenuri_ferma',types:{point:false,polygon:true,line:false}});
     showToast(`✓ SHP exportat (${target.length} parcele)`);
   } catch(e) { console.error(e); showToast('❌ Eroare la generarea SHP'); }
+}
+
+function exportDXF(target) {
+  target = target || getVisibleFeatures();
+  if (!target.length) { showToast('❌ Niciun teren de exportat'); return; }
+
+  // Header minimal DXF AC1009 (compatibil cu toate softurile CAD/GIS)
+  let dxf = '  0\nSECTION\n  2\nHEADER\n  9\n$ACADVER\n  1\nAC1009\n  0\nENDSEC\n';
+  dxf += '  0\nSECTION\n  2\nENTITIES\n';
+
+  const fmt = n => n.toFixed(10);
+
+  const writeRing = (ring, layer) => {
+    // Eliminăm ultimul punct dacă este identic cu primul (LWPOLYLINE închisă)
+    const pts = (ring.length > 1 &&
+      ring[0][0] === ring[ring.length-1][0] &&
+      ring[0][1] === ring[ring.length-1][1])
+        ? ring.slice(0, -1) : ring;
+    if (pts.length < 3) return;
+    dxf += `  0\nLWPOLYLINE\n100\nAcDbEntity\n  8\n${layer}\n100\nAcDbPolyline\n 90\n     ${pts.length}\n 70\n     1\n 43\n0.0\n`;
+    pts.forEach(c => { dxf += ` 10\n${fmt(c[0])}\n 20\n${fmt(c[1])}\n`; });
+  };
+
+  target.forEach(f => {
+    const raw = f.properties.parcela || f.properties.name || 'Parcela';
+    const layer = raw.replace(/[<>\/\\:?*|"]/g, '_').substring(0, 255);
+    if (!f.geometry) return;
+    if (f.geometry.type === 'Polygon') {
+      f.geometry.coordinates.forEach(ring => writeRing(ring, layer));
+    } else if (f.geometry.type === 'MultiPolygon') {
+      f.geometry.coordinates.forEach(poly => poly.forEach(ring => writeRing(ring, layer)));
+    }
+  });
+
+  dxf += '  0\nENDSEC\n  0\nEOF\n';
+  triggerDownload(dxf, 'terenuri_ferma.dxf', 'application/dxf');
+  showToast(`✓ DXF exportat (${target.length} parcele)`);
 }
 
 function triggerDownload(content, filename, mimeType) {
@@ -2333,10 +3375,31 @@ function updateSessionInfo() {
 // ════════════════════════════════════════════════════════
 //  DRAG & DROP
 // ════════════════════════════════════════════════════════
+
+// Previne browser-ul să navigheze la fișierul drăguit dacă
+// e eliberat în afara uploadZone (altfel pagina se "resetează")
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => {
+  e.preventDefault();
+  // Dacă nu a aterizat în uploadZone, procesăm oricum fișierele
+  const files = e.dataTransfer?.files;
+  if (files && files.length > 0) {
+    const target = e.target;
+    const inUploadZone = target.closest('#uploadZone');
+    if (!inUploadZone) {
+      handleFiles(files);
+    }
+  }
+});
+
 const uploadZone = document.getElementById('uploadZone');
-uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
-uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
-uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', e => { if (!uploadZone.contains(e.relatedTarget)) uploadZone.classList.remove('dragover'); });
+uploadZone.addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); uploadZone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
+
+// Harta acceptă și ea drop de fișiere (comoditate pe mobil)
+document.getElementById('map')?.addEventListener('dragover', e => e.preventDefault());
+document.getElementById('map')?.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer?.files?.length) handleFiles(e.dataTransfer.files); });
 
 // ════════════════════════════════════════════════════════
 //  TOAST
