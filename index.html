@@ -364,6 +364,14 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 .layer-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; cursor: pointer; font-size: 11px; border-radius: 6px; transition: background .15s; }
 .layer-item:hover { background: rgba(74,222,128,0.06); }
 .layer-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+/* ── NDVI Legend ── */
+#ndviLegend { position:absolute; bottom:60px; left:12px; z-index:1000; background:rgba(13,26,12,0.95); border:1px solid var(--border); border-radius:10px; padding:8px 10px; min-width:140px; backdrop-filter:blur(10px); display:none; }
+#ndviLegend .leg-title { font-size:9px; color:var(--muted); letter-spacing:2px; font-family:'JetBrains Mono',monospace; margin-bottom:5px; }
+#ndviLegend .leg-bar { height:10px; border-radius:4px; background:linear-gradient(to right,#d73027,#f46d43,#fdae61,#fee08b,#ffffbf,#d9ef8b,#a6d96a,#66bd63,#1a9850); margin-bottom:3px; }
+#ndviLegend .leg-labels { display:flex; justify-content:space-between; font-size:9px; color:var(--muted); }
+#ndviLegend .leg-date { margin-top:6px; display:flex; align-items:center; gap:4px; }
+#ndviLegend .leg-date label { font-size:9px; color:var(--muted); font-family:'JetBrains Mono',monospace; white-space:nowrap; }
+#ndviLegend .leg-date input { background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:5px; color:var(--text); font-size:9px; padding:2px 4px; width:100px; color-scheme:dark; }
 /* Geoman toolbar la stânga-jos */
 .leaflet-bottom.leaflet-left { margin-bottom: 8px; margin-left: 8px; }
 .leaflet-pm-toolbar .button-container { margin: 0 !important; }
@@ -786,12 +794,23 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
     <div id="map"></div>
     <button id="btnLayerToggle" class="map-btn map-icon-btn" onclick="toggleLayerPanel()" data-tip="Straturi hartă" style="position:absolute;top:16px;left:12px;z-index:1000;">🗂</button>
     <div class="layer-panel" id="layerPanel" style="display:none;"></div>
+    <div id="ndviLegend">
+      <div class="leg-title" id="ndviLegendTitle">NDVI</div>
+      <div class="leg-bar" id="ndviLegendBar"></div>
+      <div class="leg-labels"><span>-1</span><span>0</span><span>+1</span></div>
+      <div class="leg-date">
+        <label>DATA:</label>
+        <input type="date" id="ndviDateInput" onchange="setOverlayDate(this.value)">
+      </div>
+    </div>
     <div class="map-controls">
       <button class="map-btn map-icon-btn" onclick="fitBounds()" data-tip="Centrează tot">⊞</button>
       <button class="map-btn map-icon-btn active" onclick="toggleLabels()" id="btnLabels" data-tip="Etichete">🏷</button>
-      <button class="map-btn map-icon-btn" id="btnPinMode" onclick="togglePinMode()" data-tip="Marchează problemă" style="background:rgba(248,113,113,0.08);color:var(--red);border-color:rgba(248,113,113,0.3);">📍</button>
-      <button class="map-btn map-icon-btn" id="btnGPS" onclick="goToMyLocation()" data-tip="Locația mea" style="background:rgba(96,165,250,0.08);color:var(--blue);border-color:rgba(96,165,250,0.3);">🎯</button>
-      <button class="map-btn map-icon-btn" id="btnGpsDraw" onclick="openGpsDrawPanel()" data-tip="Desenează teren GPS" style="background:rgba(251,191,36,0.08);color:var(--amber);border-color:rgba(251,191,36,0.3);">📐</button>
+      <button class="map-btn map-icon-btn" id="btnDrawPoly" onclick="toggleDraw('Polygon')" data-tip="Desenează poligon">🔷</button>
+      <button class="map-btn map-icon-btn" id="btnDrawCircle" onclick="toggleDraw('Circle')" data-tip="Desenează cerc">⭕</button>
+      <button class="map-btn map-icon-btn" id="btnPinMode" onclick="togglePinMode()" data-tip="Marchează problemă">📍</button>
+      <button class="map-btn map-icon-btn" id="btnGPS" onclick="goToMyLocation()" data-tip="Locația mea">🎯</button>
+      <button class="map-btn map-icon-btn" id="btnGpsDraw" onclick="openGpsDrawPanel()" data-tip="Desenează teren GPS">📐</button>
     </div>
 
     <!-- Panou desenare GPS -->
@@ -1123,6 +1142,9 @@ let itemVisibility = {};
 let currentlyEditingIdx = null;
 let targetObstacleIdx = null;
 let isDirty = false;
+let activeOverlay = null; // null | 'ndvi' | 'ndwi'
+let overlayDate = (function(){ const d=new Date(); d.setDate(d.getDate()-8); return d.toISOString().slice(0,10); })();
+let activeOverlayLayer = null;
 
 // Jurnal lucrări agricole: [{id, parcelIdx, parcelName, date, type, note, cultura, suprafata}]
 let journalEntries = [];
@@ -2268,25 +2290,50 @@ function updateStats() {
 
 function updateLayerPanel() {
   const panel = document.getElementById('layerPanel');
-  let html = `<div class="layer-title" style="margin-top:0;">HĂRȚI BAZĂ</div>`;
+  let html = '<div class="layer-title" style="margin-top:0;">H\u0102R\u021CI BAZ\u0102</div>';
   [
     {id:'esri_satellite', name:'ESRI Satelit', color:'#4ade80'},
     {id:'osm', name:'OpenStreetMap', color:'#fbbf24'},
     {id:'terrain', name:'Teren Topo', color:'#f87171'}
-  ].forEach(b => {
+  ].forEach(function(b) {
     const act = currentBaseLayer===b.id;
-    html += `<div class="layer-item" onclick="toggleBaseLayer('${b.id}')"><div class="layer-dot" style="background:${b.color};"></div><span>${b.name}</span><span style="display:${act?'inline':'none'}; color:var(--green); margin-left:auto;">✓</span></div>`;
+    html += '<div class="layer-item" onclick="toggleBaseLayer(\''+b.id+'\')">'
+      + '<div class="layer-dot" style="background:'+b.color+';"></div>'
+      + '<span>'+b.name+'</span>'
+      + '<span style="display:'+(act?'inline':'none')+'; color:var(--green); margin-left:auto;">\u2713</span>'
+      + '</div>';
   });
+
+  // ── INDICI VEGETA\u021AIE ──
+  html += '<div class="layer-title">INDICI VEGETA\u021AIE</div>';
+  [
+    {id:'ndvi', name:'NDVI', sub:'Vegeta\u021bie', color:'#4ade80',
+     bar:'linear-gradient(to right,#d73027,#fdae61,#ffffbf,#a6d96a,#1a9850)'},
+    {id:'ndwi', name:'NDWI', sub:'Umiditate', color:'#38bdf8',
+     bar:'linear-gradient(to right,#8c510a,#f6e8c3,#c7eae5,#01665e)'}
+  ].forEach(function(ov) {
+    const act = activeOverlay === ov.id;
+    html += '<div class="layer-item" onclick="toggleOverlay(\''+ov.id+'\')" style="align-items:flex-start; padding:6px 2px;">'
+      + '<div style="margin-top:2px; width:10px; height:10px; border-radius:50%; flex-shrink:0; background:'+(act?ov.color:'transparent')+'; border:1px solid '+ov.color+';"></div>'
+      + '<div style="flex:1;">'
+      + '<div style="font-size:11px; color:'+(act?'var(--text)':'var(--muted)')+'">'+ov.name+'</div>'
+      + '<div style="height:5px; border-radius:3px; margin:3px 0 1px; background:'+ov.bar+'; opacity:0.85;"></div>'
+      + '<div style="font-size:9px; color:var(--muted); font-family:\'JetBrains Mono\',monospace;">'+ov.sub+' \u2022 MODIS/NASA</div>'
+      + '</div>'
+      + '<span style="font-size:10px; color:var(--green); margin-left:4px; display:'+(act?'inline':'none')+'">\u2713</span>'
+      + '</div>';
+  });
+
   if (definedLayers.size>0) {
-    html += `<div class="layer-title">STRATURI</div>`;
+    html += '<div class="layer-title">STRATURI</div>';
     let roots = new Set();
-    Array.from(definedLayers).forEach(l=>roots.add(l.split('/')[0].trim()));
-    Array.from(roots).sort().forEach(n => {
+    Array.from(definedLayers).forEach(function(l){ roots.add(l.split('/')[0].trim()); });
+    Array.from(roots).sort().forEach(function(n) {
       const vis = groupVisibility[n]!==false;
-      html += `<div class="layer-item" onclick="toggleGroupVisibility('${esc(n)}',${!vis})">
-        <div class="layer-dot" style="background:${vis?'var(--green)':'transparent'}; border:1px solid var(--green);"></div>
-        <span style="color:${vis?'var(--text)':'var(--muted)'}">${n}</span>
-      </div>`;
+      html += '<div class="layer-item" onclick="toggleGroupVisibility(\''+esc(n)+'\','+(!vis)+')">'
+        + '<div class="layer-dot" style="background:'+(vis?'var(--green)':'transparent')+'; border:1px solid var(--green);"></div>'
+        + '<span style="color:'+(vis?'var(--text)':'var(--muted)')+'">'+n+'</span>'
+        + '</div>';
     });
   }
   panel.innerHTML = html;
@@ -2308,11 +2355,62 @@ function toggleBaseLayer(name) {
   updateLayerPanel();
 }
 
+// ── NDVI / NDWI overlay ──────────────────────────────────
+function buildOverlayLayer(type, date) {
+  var gibsBase = 'https://gibs.earthdata.nasa.gov/wms/epsg3857/best/wms.cgi';
+  var layerName = type === 'ndvi' ? 'MODIS_Terra_L3_NDVI_16Day' : 'MODIS_Aqua_L3_EVI_16Day';
+  return L.tileLayer.wms(gibsBase, {
+    layers: layerName,
+    format: 'image/png',
+    transparent: true,
+    opacity: 0.82,
+    attribution: 'NASA GIBS / MODIS',
+    time: date,
+    version: '1.3.0'
+  });
+}
+
+function toggleOverlay(type) {
+  if (activeOverlay === type) {
+    // dezactivăm
+    if (activeOverlayLayer) { try { map.removeLayer(activeOverlayLayer); } catch(e){} activeOverlayLayer = null; }
+    activeOverlay = null;
+    document.getElementById('ndviLegend').style.display = 'none';
+  } else {
+    // schimbăm / activăm
+    if (activeOverlayLayer) { try { map.removeLayer(activeOverlayLayer); } catch(e){} activeOverlayLayer = null; }
+    activeOverlay = type;
+    activeOverlayLayer = buildOverlayLayer(type, overlayDate);
+    activeOverlayLayer.addTo(map);
+    var legend = document.getElementById('ndviLegend');
+    legend.style.display = 'block';
+    document.getElementById('ndviLegendTitle').textContent = type.toUpperCase() + ' \u2014 MODIS / NASA';
+    var inp = document.getElementById('ndviDateInput');
+    if (inp) inp.value = overlayDate;
+    if (type === 'ndwi') {
+      document.getElementById('ndviLegendBar').style.background = 'linear-gradient(to right,#8c510a,#d8b365,#f6e8c3,#c7eae5,#5ab4ac,#01665e)';
+    } else {
+      document.getElementById('ndviLegendBar').style.background = 'linear-gradient(to right,#d73027,#f46d43,#fdae61,#fee08b,#ffffbf,#d9ef8b,#a6d96a,#66bd63,#1a9850)';
+    }
+  }
+  updateLayerPanel();
+}
+
+function setOverlayDate(val) {
+  if (!val) return;
+  overlayDate = val;
+  if (activeOverlay && activeOverlayLayer) {
+    try { map.removeLayer(activeOverlayLayer); } catch(e){}
+    activeOverlayLayer = buildOverlayLayer(activeOverlay, overlayDate);
+    activeOverlayLayer.addTo(map);
+  }
+}
+
 // ════════════════════════════════════════════════════════
 //  GEOMAN DRAW
 // ════════════════════════════════════════════════════════
 map.pm.setGlobalOptions({ snappable: false, allowSelfIntersection: true });
-map.pm.addControls({ position:'bottomleft', drawMarker:false, drawCircleMarker:false, drawPolyline:false, drawRectangle:false, drawPolygon:true, drawCircle:true, editMode:false, dragMode:false, cutPolygon:false, removalMode:false, rotateMode:false, drawText:false });
+map.pm.addControls({ drawMarker:false, drawCircleMarker:false, drawPolyline:false, drawRectangle:false, drawPolygon:false, drawCircle:false, editMode:false, dragMode:false, cutPolygon:false, removalMode:false, rotateMode:false, drawText:false });
 map.zoomControl.remove();
 L.control.zoom({ position:'bottomright' }).addTo(map);
 map.pm.setLang('ro', { tooltips: { firstVertex:'Primul punct', continueLine:'Continuă', finishPoly:'ENTER / Dublu-click pt a finaliza' } });
@@ -2402,6 +2500,25 @@ function showInfo(p) {
       <button class="map-btn" style="flex:1; justify-content:center; background:rgba(245,158,11,0.1); color:var(--amber);" onclick="startObstacle(${p._index},'Polygon')">✂️ Obstacol</button>
       <button class="map-btn" style="flex:1; justify-content:center; background:rgba(74,222,128,0.1); color:var(--green);" onclick="quickAddJournal(${p._index})">📋 Lucrare</button>
     </div>
+    <div style="margin-top:6px; border-top:1px solid var(--border); padding-top:8px;">
+      <div style="font-size:9px; color:var(--muted); letter-spacing:2px; font-family:'JetBrains Mono',monospace; margin-bottom:5px;">SATELIT PARCELA</div>
+      <div style="display:flex; gap:6px; margin-bottom:6px;">
+        <button id="btnNdviParcel" class="map-btn" style="flex:1; justify-content:center; background:rgba(74,222,128,0.08); color:var(--green); font-size:11px;" onclick="showParcelOverlay(${p._index},'ndvi')">🌿 NDVI</button>
+        <button id="btnNdwiParcel" class="map-btn" style="flex:1; justify-content:center; background:rgba(56,189,248,0.08); color:#38bdf8; font-size:11px;" onclick="showParcelOverlay(${p._index},'ndwi')">💧 NDWI</button>
+        <button id="btnCloseOverlay" class="map-btn" style="flex:1; justify-content:center; background:rgba(248,113,113,0.08); color:var(--red); font-size:11px; display:none;" onclick="clearParcelOverlay()">✕ Închide</button>
+      </div>
+      <div id="parcelOverlayDateRow" style="display:none; align-items:center; gap:6px;">
+        <span style="font-size:9px; color:var(--muted); font-family:'JetBrains Mono',monospace; white-space:nowrap;">DATA:</span>
+        <input type="date" id="parcelOverlayDate" style="flex:1; background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:5px; color:var(--text); font-size:9px; padding:3px 5px; color-scheme:dark;" onchange="refreshParcelOverlay()">
+      </div>
+      <div id="parcelOverlayLegend" style="display:none; margin-top:6px;">
+        <div id="parcelOverlayBar" style="height:8px; border-radius:4px; margin-bottom:2px;"></div>
+        <div style="display:flex; justify-content:space-between; font-size:9px; color:var(--muted);">
+          <span>-1</span><span>0</span><span>+1</span>
+        </div>
+        <div id="parcelOverlayNote" style="font-size:9px; color:var(--muted); font-family:'JetBrains Mono',monospace; margin-top:3px; text-align:center;"></div>
+      </div>
+    </div>
   `;
   document.getElementById('infoRows').innerHTML = rows.map(([k,v])=>`<div class="info-row"><span class="info-key">${k}</span>${v}</div>`).join('')+actionBtns;
   panel.classList.add('visible');
@@ -2409,6 +2526,190 @@ function showInfo(p) {
     document.getElementById('btnEditShape').style.display='none';
     document.getElementById('btnSaveShape').style.display='flex';
   }
+}
+
+// ── NDVI / NDWI per parcelă ──────────────────────────────
+var parcelOverlayLayer = null;
+var parcelOverlayIdx   = null;
+var parcelOverlayType  = null;
+
+// Canvas layer custom — clippează imaginea WMS la forma exactă a parcelei
+var ParcelNdviLayer = L.Layer.extend({
+  initialize: function(feature, wmsUrl, options) {
+    this._feature = feature;
+    this._wmsUrl  = wmsUrl;
+    this._img     = null;
+    this._loaded  = false;
+    L.setOptions(this, options);
+  },
+  onAdd: function(m) {
+    this._map = m;
+    // Canvas în containerul hărții (nu în overlayPane) → nu se translatează la pan
+    this._canvas = document.createElement('canvas');
+    this._canvas.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;z-index:500;';
+    m.getContainer().appendChild(this._canvas);
+    // Redesenăm la orice mișcare (move = pan continuu)
+    m.on('move zoomend resize viewreset', this._redraw, this);
+    this._resize();
+    this._loadImage();
+  },
+  onRemove: function(m) {
+    m.off('move zoomend resize viewreset', this._redraw, this);
+    if (this._canvas && this._canvas.parentNode) this._canvas.parentNode.removeChild(this._canvas);
+    this._canvas = null;
+  },
+  _resize: function() {
+    if (!this._map || !this._canvas) return;
+    var size = this._map.getSize();
+    this._canvas.width  = size.x;
+    this._canvas.height = size.y;
+  },
+  _loadImage: function() {
+    var self = this;
+    var gbounds = L.geoJSON(this._feature).getBounds();
+    var s = gbounds.getSouth(), w = gbounds.getWest(), n = gbounds.getNorth(), e = gbounds.getEast();
+    var W = 512, H = Math.max(64, Math.min(512, Math.round(512 * (n - s) / Math.max(e - w, 0.0001))));
+    var R  = 6378137;
+    var x1 = w * Math.PI / 180 * R, x2 = e * Math.PI / 180 * R;
+    var y1 = Math.log(Math.tan(Math.PI / 4 + s * Math.PI / 360)) * R;
+    var y2 = Math.log(Math.tan(Math.PI / 4 + n * Math.PI / 360)) * R;
+    var url = this._wmsUrl
+      + '&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap'
+      + '&LAYERS=' + encodeURIComponent(this.options.layers)
+      + '&STYLES=&CRS=EPSG:3857'
+      + '&BBOX=' + [x1, y1, x2, y2].join(',')
+      + '&WIDTH=' + W + '&HEIGHT=' + H
+      + '&FORMAT=image%2Fpng&TRANSPARENT=TRUE';
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload  = function() { self._img = img; self._loaded = true; self._redraw(); };
+    img.onerror = function() { console.warn('NDVI WMS error:', url); };
+    img.src = url;
+  },
+  _redraw: function() {
+    if (!this._map || !this._canvas) return;
+    var size = this._map.getSize();
+    // Resize dacă e necesar
+    if (this._canvas.width !== size.x || this._canvas.height !== size.y) {
+      this._canvas.width = size.x;
+      this._canvas.height = size.y;
+    }
+    var ctx = this._canvas.getContext('2d');
+    ctx.clearRect(0, 0, size.x, size.y);
+    if (!this._loaded || !this._img) return;
+    var map  = this._map;
+    var geom = this._feature.geometry;
+    // Suport Polygon și MultiPolygon
+    var rings = geom.type === 'MultiPolygon' ? geom.coordinates[0] : geom.coordinates;
+    var outer = rings[0];
+    if (!outer || outer.length < 3) return;
+    ctx.save();
+    ctx.globalAlpha = this.options.opacity || 0.85;
+    // Clip la forma poligonului
+    ctx.beginPath();
+    outer.forEach(function(c, i) {
+      var pt = map.latLngToContainerPoint(L.latLng(c[1], c[0]));
+      if (i === 0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y);
+    });
+    ctx.closePath();
+    ctx.clip();
+    // Desenăm imaginea WMS pe bbox-ul parcelei
+    var gb = L.geoJSON(this._feature).getBounds();
+    var ne = map.latLngToContainerPoint(gb.getNorthEast());
+    var sw = map.latLngToContainerPoint(gb.getSouthWest());
+    ctx.drawImage(this._img, ne.x, ne.y, sw.x - ne.x, sw.y - ne.y);
+    ctx.restore();
+  }
+});
+
+function showParcelOverlay(idx, type) {
+  var f = allFeatures.find(function(f){ return f.properties._index === idx; });
+  if (!f || !f.geometry) { showToast('\u26a0\ufe0f Geometrie lips\u0103'); return; }
+
+  // bbox parcelă
+  var bounds;
+  try { bounds = L.geoJSON(f).getBounds(); } catch(e) { showToast('\u26a0\ufe0f Eroare bounds'); return; }
+  var s = bounds.getSouth(), w = bounds.getWest(), n = bounds.getNorth(), e2 = bounds.getEast();
+
+  // Eliminăm overlay existent
+  if (parcelOverlayLayer) { try { map.removeLayer(parcelOverlayLayer); } catch(err){} parcelOverlayLayer = null; }
+
+  parcelOverlayIdx  = idx;
+  parcelOverlayType = type;
+
+  // Data implicită sau cea deja selectată
+  var dateEl = document.getElementById('parcelOverlayDate');
+  if (!dateEl || !dateEl.value) {
+    var def = new Date(); def.setDate(def.getDate()-8);
+    if (dateEl) dateEl.value = def.toISOString().slice(0,10);
+  }
+  var dateVal = (dateEl && dateEl.value) ? dateEl.value : new Date(Date.now()-8*86400000).toISOString().slice(0,10);
+
+  _buildParcelOverlay(s, w, n, e2, type, dateVal, bounds);
+}
+
+function _buildParcelOverlay(s, w, n, e2, type, dateVal, bounds) {
+  var layerName = type === 'ndvi' ? 'MODIS_Terra_L3_NDVI_16Day' : 'MODIS_Aqua_L3_EVI_16Day';
+  var f = allFeatures.find(function(f){ return f.properties._index === parcelOverlayIdx; });
+  if (!f) return;
+
+  // Canvas layer custom — clippat la forma exactă a parcelei
+  var wmsBase = 'https://gibs.earthdata.nasa.gov/wms/epsg3857/best/wms.cgi?TIME=' + encodeURIComponent(dateVal);
+  parcelOverlayLayer = new ParcelNdviLayer(f, wmsBase, { layers: layerName, opacity: 0.85 });
+  parcelOverlayLayer.addTo(map);
+
+  // Zoom pe parcelă
+  map.fitBounds(bounds, { padding: [60, 60], maxZoom: 15 });
+
+  // UI — selectorul de dată și legenda
+  var dateRow = document.getElementById('parcelOverlayDateRow');
+  var legend  = document.getElementById('parcelOverlayLegend');
+  var bar     = document.getElementById('parcelOverlayBar');
+  var note    = document.getElementById('parcelOverlayNote');
+  var closeBtn = document.getElementById('btnCloseOverlay');
+  var ndviBtnEl = document.getElementById('btnNdviParcel');
+  var ndwiBtnEl = document.getElementById('btnNdwiParcel');
+
+  if (dateRow) { dateRow.style.display = 'flex'; }
+  if (legend)  { legend.style.display  = 'block'; }
+  if (closeBtn){ closeBtn.style.display = 'flex'; }
+
+  if (bar) {
+    bar.style.background = type === 'ndwi'
+      ? 'linear-gradient(to right,#8c510a,#d8b365,#f6e8c3,#c7eae5,#5ab4ac,#01665e)'
+      : 'linear-gradient(to right,#d73027,#f46d43,#fdae61,#fee08b,#ffffbf,#d9ef8b,#a6d96a,#66bd63,#1a9850)';
+  }
+  if (note) { note.textContent = type.toUpperCase() + ' \u2022 ' + dateVal + ' \u2022 MODIS/NASA'; }
+
+  if (ndviBtnEl) ndviBtnEl.style.opacity = type==='ndvi' ? '1' : '0.45';
+  if (ndwiBtnEl) ndwiBtnEl.style.opacity = type==='ndwi' ? '1' : '0.45';
+}
+
+function refreshParcelOverlay() {
+  if (!parcelOverlayIdx && parcelOverlayIdx !== 0) return;
+  var f = allFeatures.find(function(f){ return f.properties._index === parcelOverlayIdx; });
+  if (!f || !f.geometry) return;
+  var bounds; try { bounds = L.geoJSON(f).getBounds(); } catch(e){ return; }
+  var s = bounds.getSouth(), w = bounds.getWest(), n = bounds.getNorth(), e2 = bounds.getEast();
+  if (parcelOverlayLayer) { try { map.removeLayer(parcelOverlayLayer); } catch(err){} parcelOverlayLayer = null; }
+  var dateEl = document.getElementById('parcelOverlayDate');
+  var dateVal = (dateEl && dateEl.value) ? dateEl.value : new Date(Date.now()-8*86400000).toISOString().slice(0,10);
+  _buildParcelOverlay(s, w, n, e2, parcelOverlayType, dateVal, bounds);
+}
+
+function clearParcelOverlay() {
+  if (parcelOverlayLayer) { try { map.removeLayer(parcelOverlayLayer); } catch(e){} parcelOverlayLayer = null; }
+  parcelOverlayIdx = null; parcelOverlayType = null;
+  var dateRow = document.getElementById('parcelOverlayDateRow');
+  var legend  = document.getElementById('parcelOverlayLegend');
+  var closeBtn = document.getElementById('btnCloseOverlay');
+  var ndviBtnEl = document.getElementById('btnNdviParcel');
+  var ndwiBtnEl = document.getElementById('btnNdwiParcel');
+  if (dateRow)  dateRow.style.display  = 'none';
+  if (legend)   legend.style.display   = 'none';
+  if (closeBtn) closeBtn.style.display = 'none';
+  if (ndviBtnEl) ndviBtnEl.style.opacity = '1';
+  if (ndwiBtnEl) ndwiBtnEl.style.opacity = '1';
 }
 
 function updateFeatureProp(idx, prop, val) {
@@ -2473,6 +2774,7 @@ function startObstacle(idx, mode) {
 function closeInfo() {
   if (currentlyEditingIdx!==null) saveEdit(currentlyEditingIdx);
   document.getElementById('mapInfo').classList.remove('visible');
+  clearParcelOverlay();
 }
 
 // ════════════════════════════════════════════════════════
@@ -2719,50 +3021,69 @@ function _haversineM(lat1, lng1, lat2, lng2) {
 // ── Locație GPS ──
 let _gpsMarker = null;
 let _gpsCircle = null;
+let _gpsWatchId = null;
+let _gpsCentered = false;
+
+function _stopGpsWatch() {
+  if (_gpsWatchId !== null) { navigator.geolocation.clearWatch(_gpsWatchId); _gpsWatchId = null; }
+  if (_gpsMarker) { map.removeLayer(_gpsMarker); _gpsMarker = null; }
+  if (_gpsCircle) { map.removeLayer(_gpsCircle); _gpsCircle = null; }
+  _gpsCentered = false;
+  var btn = document.getElementById('btnGPS');
+  if (btn) { btn.classList.remove('active'); btn.textContent = '\uD83C\uDFAF'; }
+}
+
 function goToMyLocation() {
-  const btn = document.getElementById('btnGPS');
+  var btn = document.getElementById('btnGPS');
   if (!navigator.geolocation) {
-    showToast('\u274C Browserul nu suport\u0103 geoloca\u0163ia.', true); return;
+    showToast('\u274C Browserul nu suport\u0103 geoloca\u021Bia.', true); return;
   }
-  if (btn) { btn.textContent = '\u23F3 Se caut\u0103...'; btn.disabled = true; }
-  navigator.geolocation.getCurrentPosition(
+  // Al doilea click — oprim urmărirea
+  if (_gpsWatchId !== null) {
+    _stopGpsWatch();
+    showToast('\uD83D\uDCCD Urm\u0103rire GPS oprit\u0103.');
+    return;
+  }
+  // Primul click — pornim watchPosition
+  if (btn) { btn.textContent = '\u23F3'; btn.classList.add('active'); }
+  _gpsCentered = false;
+  _gpsWatchId = navigator.geolocation.watchPosition(
     function(pos) {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      const acc = pos.coords.accuracy; // metri
-
-      // Elimină marker-ul anterior dacă există
-      if (_gpsMarker) { map.removeLayer(_gpsMarker); _gpsMarker = null; }
-      if (_gpsCircle) { map.removeLayer(_gpsCircle); _gpsCircle = null; }
-
-      // Cerc de precizie
-      _gpsCircle = L.circle([lat, lng], {
-        radius: acc,
-        color: '#60a5fa', fillColor: '#60a5fa', fillOpacity: 0.12,
-        weight: 1.5, dashArray: '5,4'
-      }).addTo(map);
-
-      // Marker punct
-      _gpsMarker = L.circleMarker([lat, lng], {
-        radius: 9, color: '#fff', fillColor: '#3b82f6',
-        fillOpacity: 1, weight: 2.5
-      }).addTo(map)
-        .bindPopup('\uD83D\uDCCD <b>Pozi\u0163ia ta</b><br><small>\u00B1' + Math.round(acc) + ' m precizie</small>')
-        .openPopup();
-
-      map.flyTo([lat, lng], Math.max(map.getZoom(), 15), {duration: 1.2});
-
-      if (btn) { btn.textContent = '\uD83C\uDFAF Loca\u0163ia mea'; btn.disabled = false; }
-      showToast('\u2713 Pozi\u0163ie g\u0103sit\u0103 (\u00B1' + Math.round(acc) + ' m)');
+      var lat = pos.coords.latitude;
+      var lng = pos.coords.longitude;
+      var acc = pos.coords.accuracy;
+      // Actualizăm cercul de precizie
+      if (_gpsCircle) { _gpsCircle.setLatLng([lat, lng]); _gpsCircle.setRadius(acc); }
+      else {
+        _gpsCircle = L.circle([lat, lng], {
+          radius: acc, color: '#60a5fa', fillColor: '#60a5fa',
+          fillOpacity: 0.12, weight: 1.5, dashArray: '5,4'
+        }).addTo(map);
+      }
+      // Actualizăm markerul
+      if (_gpsMarker) { _gpsMarker.setLatLng([lat, lng]); }
+      else {
+        _gpsMarker = L.circleMarker([lat, lng], {
+          radius: 9, color: '#fff', fillColor: '#3b82f6', fillOpacity: 1, weight: 2.5
+        }).addTo(map)
+          .bindPopup('\uD83D\uDCCD <b>Pozi\u021Bia ta</b><br><small>\u00B1' + Math.round(acc) + ' m precizie</small>');
+      }
+      // Centrare automată doar la primul fix
+      if (!_gpsCentered) {
+        map.flyTo([lat, lng], Math.max(map.getZoom(), 15), {duration: 1.2});
+        _gpsCentered = true;
+        if (btn) { btn.textContent = '\uD83C\uDFAF'; }
+        showToast('\u2713 GPS activ \u2014 urm\u0103rire pornit\u0103 (\u00B1' + Math.round(acc) + ' m)');
+      }
     },
     function(err) {
-      if (btn) { btn.textContent = '\uD83C\uDFAF Loca\u0163ia mea'; btn.disabled = false; }
-      const msgs = {1:'Accesul la loca\u0163ie refuzat. Permite\u0163i permisiunea \u00EEn browser.',
-                    2:'Pozi\u0163ia nu a putut fi determinat\u0103.',
-                    3:'Timeout \u2014 \u00EEncerca\u0163i din nou.'};
-      showToast('\u274C ' + (msgs[err.code] || 'Eroare geoloca\u0163ie.'), true);
+      _stopGpsWatch();
+      var msgs = {1:'Accesul la loca\u021Bie refuzat. Permite\u021Bi permisiunea \u00EEn browser.',
+                  2:'Pozi\u021Bia nu a putut fi determinat\u0103.',
+                  3:'Timeout \u2014 \u00EEncerca\u021Bi din nou.'};
+      showToast('\u274C ' + (msgs[err.code] || 'Eroare geoloca\u021Bie.'), true);
     },
-    { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 3000 }
   );
 }
 
@@ -3722,17 +4043,46 @@ const PIN_PRIORITY = [
   {v:'mică',    i:'🟡', c:'#eab308'}
 ];
 
+var _activeDrawMode = null;
+
+function toggleDraw(mode) {
+  // Dacă e activ același mod → dezactivăm
+  if (_activeDrawMode === mode) {
+    map.pm.disableDraw();
+    _activeDrawMode = null;
+    document.getElementById('btnDrawPoly').classList.remove('active');
+    document.getElementById('btnDrawCircle').classList.remove('active');
+    map.getContainer().style.cursor = '';
+    return;
+  }
+  // Activăm modul nou
+  map.pm.disableDraw();
+  map.pm.enableDraw(mode, { snappable: false, allowSelfIntersection: true });
+  _activeDrawMode = mode;
+  document.getElementById('btnDrawPoly').classList.toggle('active', mode === 'Polygon');
+  document.getElementById('btnDrawCircle').classList.toggle('active', mode === 'Circle');
+  map.getContainer().style.cursor = 'crosshair';
+  showToast(mode === 'Polygon'
+    ? '\uD83D\uDD37 Click pentru puncte. ENTER sau dublu-click s\u0103 finalizezi.'
+    : '\u2B55 Trage pentru a desena cercul.', false);
+}
+
+map.on('pm:drawend', function() {
+  _activeDrawMode = null;
+  document.getElementById('btnDrawPoly').classList.remove('active');
+  document.getElementById('btnDrawCircle').classList.remove('active');
+  map.getContainer().style.cursor = '';
+});
+
 function togglePinMode() {
   pinModeActive = !pinModeActive;
   var btn = document.getElementById('btnPinMode');
   if (pinModeActive) {
     btn.classList.add('active');
-    btn.textContent = '📍 Click pe hartă...';
     map.getContainer().style.cursor = 'crosshair';
-    showToast('📍 Dă click pe hartă pentru a semnala o problemă', false);
+    showToast('\uD83D\uDCCD D\u0103 click pe hart\u0103 pentru a semnala o problem\u0103', false);
   } else {
     btn.classList.remove('active');
-    btn.textContent = '📍 Problemă';
     map.getContainer().style.cursor = '';
   }
 }
