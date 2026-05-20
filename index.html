@@ -166,19 +166,20 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 
   /* ── Butoane touch (min 44px) ── */
   .map-btn { min-height: 40px; padding: 8px 12px !important; font-size: 11px !important; }
+  .map-icon-btn { width: 42px !important; height: 42px !important; min-width: 42px !important; min-height: 42px !important; padding: 0 !important; font-size: 20px !important; }
+  .map-icon-btn::after { display: none !important; }
   .crop-input, .search-input, .sort-select { font-size: 16px !important; min-height: 40px; }
   .auth-input { font-size: 16px !important; padding: 16px !important; }
 
   /* ── Controale hartă ── */
   .map-controls { top: 8px !important; right: 8px !important; gap: 5px !important; }
   .export-widget { display: none !important; }
+  /* Zoom sus față de butonul ≡ mobil */
+  .leaflet-bottom.leaflet-right { margin-bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 12px) !important; margin-right: 8px !important; }
 
-  /* ── Layer panel ── */
-  .layer-panel {
-    top: 8px !important; left: 8px !important;
-    right: auto !important; max-width: calc(100vw - 16px);
-    padding: 10px !important;
-  }
+  /* ── Layer panel & toggle ── */
+  #btnLayerToggle { top: 10px !important; left: 10px !important; }
+  .layer-panel { top: 62px !important; left: 10px !important; max-width: calc(100vw - 70px); }
 
   /* ── Info panel = bottom sheet ── */
   .map-info {
@@ -325,9 +326,12 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 /* MAP */
 .map-wrap { flex: 1; position: relative; overflow: hidden; }
 #map { width: 100%; height: 100%; background: #0d1a0c; }
-.map-controls { position: absolute; top: 16px; right: 16px; z-index: 999; display: flex; flex-direction: column; gap: 7px; }
+.map-controls { position: absolute; top: 16px; right: 12px; z-index: 999; display: flex; flex-direction: column; gap: 6px; }
 .map-btn { background: rgba(13,26,12,0.9); border: 1px solid var(--border); color: var(--text); padding: 9px 14px; border-radius: 10px; cursor: pointer; font-size: 11px; font-family: 'JetBrains Mono', monospace; transition: all 0.2s; backdrop-filter: blur(10px); display: flex; align-items: center; gap: 5px; justify-content: center; }
 .map-btn:hover { background: rgba(74,222,128,0.15); border-color: var(--green); color: var(--green); }
+.map-icon-btn { width: 38px; height: 38px; min-width: 38px; padding: 0 !important; border-radius: 10px; font-size: 18px; line-height: 1; position: relative; }
+.map-icon-btn::after { content: attr(data-tip); position: absolute; right: calc(100% + 8px); top: 50%; transform: translateY(-50%); background: rgba(13,26,12,0.95); border: 1px solid var(--border); color: var(--text); font-size: 10px; font-family: 'JetBrains Mono', monospace; white-space: nowrap; padding: 4px 8px; border-radius: 6px; pointer-events: none; opacity: 0; transition: opacity .15s; }
+.map-icon-btn:hover::after { opacity: 1; }
 .map-btn.active { background: rgba(74,222,128,0.2); border-color: var(--green); color: var(--green); }
 
 /* EXPORT WIDGET */
@@ -355,10 +359,19 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 .toast.error { border-color: var(--red); color: var(--red); }
 
 /* LAYER TOGGLE */
-.layer-panel { position: absolute; top: 16px; left: 60px; z-index: 999; background: rgba(13,26,12,0.95); border: 1px solid var(--border); border-radius: 12px; padding: 12px; min-width: 165px; backdrop-filter: blur(10px); }
-.layer-title { font-size: 9px; color: var(--muted); letter-spacing: 3px; margin-bottom: 8px; margin-top: 8px; }
-.layer-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; font-size: 11px; }
+.layer-panel { position: absolute; top: 64px; left: 12px; z-index: 999; background: rgba(13,26,12,0.97); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; min-width: 170px; backdrop-filter: blur(12px); box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+.layer-title { font-size: 9px; color: var(--muted); letter-spacing: 3px; margin-bottom: 6px; margin-top: 8px; font-family:'JetBrains Mono',monospace; }
+.layer-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; cursor: pointer; font-size: 11px; border-radius: 6px; transition: background .15s; }
+.layer-item:hover { background: rgba(74,222,128,0.06); }
 .layer-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+/* Geoman toolbar la stânga-jos */
+.leaflet-bottom.leaflet-left { margin-bottom: 8px; margin-left: 8px; }
+.leaflet-pm-toolbar .button-container { margin: 0 !important; }
+.leaflet-pm-toolbar .button-container a { width: 38px !important; height: 38px !important; border-radius: 10px !important; display: flex !important; align-items: center !important; justify-content: center !important; margin-bottom: 6px !important; }
+/* Zoom dreapta-jos */
+.leaflet-bottom.leaflet-right { margin-bottom: 8px; margin-right: 8px; }
+.leaflet-control-zoom { border-radius: 10px !important; overflow: hidden; border: 1px solid var(--border) !important; }
+.leaflet-control-zoom a { width: 34px !important; height: 34px !important; line-height: 34px !important; }
 
 /* MODALS */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 10000; padding: 16px; }
@@ -771,11 +784,39 @@ body { font-family: 'Crimson Pro', Georgia, serif; background: var(--bg); color:
 
   <div class="map-wrap">
     <div id="map"></div>
-    <div class="layer-panel" id="layerPanel"></div>
+    <button id="btnLayerToggle" class="map-btn map-icon-btn" onclick="toggleLayerPanel()" data-tip="Straturi hartă" style="position:absolute;top:16px;left:12px;z-index:1000;">🗂</button>
+    <div class="layer-panel" id="layerPanel" style="display:none;"></div>
     <div class="map-controls">
-      <button class="map-btn" onclick="fitBounds()">⊞ Centrează tot</button>
-      <button class="map-btn active" onclick="toggleLabels()" id="btnLabels">🏷 Etichete</button>
-      <button class="map-btn" id="btnPinMode" onclick="togglePinMode()" title="Semnalează o problemă pe hartă" style="background:rgba(248,113,113,0.08); color:var(--red); border-color:rgba(248,113,113,0.3);">📍 Problemă</button>
+      <button class="map-btn map-icon-btn" onclick="fitBounds()" data-tip="Centrează tot">⊞</button>
+      <button class="map-btn map-icon-btn active" onclick="toggleLabels()" id="btnLabels" data-tip="Etichete">🏷</button>
+      <button class="map-btn map-icon-btn" id="btnPinMode" onclick="togglePinMode()" data-tip="Marchează problemă" style="background:rgba(248,113,113,0.08);color:var(--red);border-color:rgba(248,113,113,0.3);">📍</button>
+      <button class="map-btn map-icon-btn" id="btnGPS" onclick="goToMyLocation()" data-tip="Locația mea" style="background:rgba(96,165,250,0.08);color:var(--blue);border-color:rgba(96,165,250,0.3);">🎯</button>
+      <button class="map-btn map-icon-btn" id="btnGpsDraw" onclick="openGpsDrawPanel()" data-tip="Desenează teren GPS" style="background:rgba(251,191,36,0.08);color:var(--amber);border-color:rgba(251,191,36,0.3);">📐</button>
+    </div>
+
+    <!-- Panou desenare GPS -->
+    <div id="gpsDrawPanel" style="display:none; position:absolute; bottom:16px; left:50%; transform:translateX(-50%); z-index:1002; background:var(--sidebar-bg); border:1px solid rgba(251,191,36,0.4); border-radius:14px; padding:12px 16px; min-width:320px; max-width:90vw; box-shadow:0 4px 24px rgba(0,0,0,0.5);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <span style="font-size:12px; font-weight:700; color:var(--amber); font-family:'JetBrains Mono',monospace; letter-spacing:.05em;">📐 DESENARE GPS</span>
+        <button onclick="closeGpsDrawPanel()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:0 2px;">×</button>
+      </div>
+      <!-- Selector mod -->
+      <div style="display:flex; gap:6px; margin-bottom:10px;">
+        <button id="gpsModeManual" onclick="setGpsMode('manual')" class="map-btn active" style="flex:1; justify-content:center; font-size:11px;">👆 Puncte manuale</button>
+        <button id="gpsModeTrack"  onclick="setGpsMode('track')"  class="map-btn"        style="flex:1; justify-content:center; font-size:11px;">🚶 Urmărire traseu</button>
+      </div>
+      <!-- Status -->
+      <div id="gpsDrawStatus" style="font-size:11px; color:var(--muted); font-family:'JetBrains Mono',monospace; margin-bottom:10px; min-height:32px; line-height:1.5;">
+        Apasă <strong style="color:var(--amber);">Start</strong> pentru a începe înregistrarea.
+      </div>
+      <!-- Butoane acțiune -->
+      <div style="display:flex; gap:6px; flex-wrap:wrap;">
+        <button id="gpsDrawStart"    onclick="gpsDrawStart()"     class="map-btn" style="background:rgba(74,222,128,0.12);color:var(--green);border-color:rgba(74,222,128,0.35);flex:1;justify-content:center;font-size:11px;">▶ Start</button>
+        <button id="gpsDrawAddPt"    onclick="gpsDrawAddPoint()"  class="map-btn" style="flex:1;justify-content:center;font-size:11px;display:none;">📍 Adaugă punct</button>
+        <button id="gpsDrawStopTrk"  onclick="gpsDrawStopTrack()  " class="map-btn" style="background:rgba(248,113,113,0.1);color:var(--red);border-color:rgba(248,113,113,0.3);flex:1;justify-content:center;font-size:11px;display:none;">⏹ Stop</button>
+        <button id="gpsDrawUndo"     onclick="gpsDrawUndo()"      class="map-btn" style="flex:1;justify-content:center;font-size:11px;display:none;">↩ Anulează ultimul</button>
+        <button id="gpsDrawFinalize" onclick="gpsDrawFinalize()"  class="map-btn" style="background:rgba(96,165,250,0.12);color:var(--blue);border-color:rgba(96,165,250,0.3);width:100%;justify-content:center;font-size:11px;display:none;">✅ Finalizează parcela</button>
+      </div>
     </div>
     <div class="map-info" id="mapInfo">
       <button class="info-close" onclick="closeInfo()">×</button>
@@ -2251,6 +2292,15 @@ function updateLayerPanel() {
   panel.innerHTML = html;
 }
 
+function toggleLayerPanel() {
+  const panel = document.getElementById('layerPanel');
+  const btn   = document.getElementById('btnLayerToggle');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  if (btn) btn.classList.toggle('active', !isOpen);
+  if (!isOpen) updateLayerPanel();
+}
+
 function toggleBaseLayer(name) {
   Object.values(TILE_LAYERS).forEach(l => { try { map.removeLayer(l); } catch(e){} });
   map.addLayer(TILE_LAYERS[name]);
@@ -2262,7 +2312,9 @@ function toggleBaseLayer(name) {
 //  GEOMAN DRAW
 // ════════════════════════════════════════════════════════
 map.pm.setGlobalOptions({ snappable: false, allowSelfIntersection: true });
-map.pm.addControls({ position:'topleft', drawMarker:false, drawCircleMarker:false, drawPolyline:false, drawRectangle:false, drawPolygon:true, drawCircle:true, editMode:false, dragMode:false, cutPolygon:false, removalMode:false, rotateMode:false, drawText:false });
+map.pm.addControls({ position:'bottomleft', drawMarker:false, drawCircleMarker:false, drawPolyline:false, drawRectangle:false, drawPolygon:true, drawCircle:true, editMode:false, dragMode:false, cutPolygon:false, removalMode:false, rotateMode:false, drawText:false });
+map.zoomControl.remove();
+L.control.zoom({ position:'bottomright' }).addTo(map);
 map.pm.setLang('ro', { tooltips: { firstVertex:'Primul punct', continueLine:'Continuă', finishPoly:'ENTER / Dublu-click pt a finaliza' } });
 
 document.addEventListener('keydown', e => {
@@ -2438,6 +2490,280 @@ function toggleLabels() {
   const btn = document.getElementById('btnLabels');
   if (showLabels) { renderLabels(allFeatures.filter(f=>isFeatureVisible(f))); btn.classList.add('active'); }
   else { labelGroup.clearLayers(); btn.classList.remove('active'); }
+}
+
+// ════════════════════════════════════════════════════════
+//  DESENARE GPS TEREN
+// ════════════════════════════════════════════════════════
+const gpsDraw = {
+  mode: 'manual',      // 'manual' | 'track'
+  active: false,
+  points: [],          // [[lng,lat], ...]
+  watchId: null,
+  previewLine: null,   // L.polyline
+  previewPoly: null,   // L.polygon (preview fill)
+  dotMarkers: [],      // L.circleMarker[]
+  lastPos: null,       // {lat,lng,acc}
+  trackMinDist: 3      // metri minim între puncte auto (track mode)
+};
+
+function openGpsDrawPanel() {
+  if (!navigator.geolocation) { showToast('\u274C Browserul nu suport\u0103 geoloca\u021Bia.', true); return; }
+  document.getElementById('gpsDrawPanel').style.display = 'block';
+  setGpsMode('manual');
+  gpsDrawReset(false);
+}
+
+function closeGpsDrawPanel() {
+  gpsDrawReset(true);
+  document.getElementById('gpsDrawPanel').style.display = 'none';
+}
+
+function setGpsMode(mode) {
+  gpsDraw.mode = mode;
+  document.getElementById('gpsModeManual').classList.toggle('active', mode === 'manual');
+  document.getElementById('gpsModeTrack').classList.toggle('active',  mode === 'track');
+  gpsDrawReset(false);
+  gpsDrawSetStatus(mode === 'manual'
+    ? 'Apas\u0103 <strong style="color:var(--amber);">Start</strong>, pozi\u021Bioneaz\u0103-te la primul col\u021B \u015Fi adaug\u0103 puncte pe r\u00E2nd.'
+    : 'Apas\u0103 <strong style="color:var(--amber);">Start</strong> \u015Fi mergi pe conturul terenului. GPS-ul \u00EEnregistreaz\u0103 automat.');
+}
+
+function gpsDrawReset(stopWatch) {
+  if (stopWatch && gpsDraw.watchId !== null) {
+    navigator.geolocation.clearWatch(gpsDraw.watchId);
+    gpsDraw.watchId = null;
+  }
+  gpsDraw.active = false;
+  gpsDraw.points = [];
+  gpsDraw.lastPos = null;
+  if (gpsDraw.previewLine) { map.removeLayer(gpsDraw.previewLine); gpsDraw.previewLine = null; }
+  if (gpsDraw.previewPoly) { map.removeLayer(gpsDraw.previewPoly); gpsDraw.previewPoly = null; }
+  gpsDraw.dotMarkers.forEach(m => map.removeLayer(m));
+  gpsDraw.dotMarkers = [];
+  // Resetează butoane
+  _gpsDrawShowButtons({ start:true, addPt:false, stopTrk:false, undo:false, finalize:false });
+  if (!stopWatch) gpsDrawSetStatus(gpsDraw.mode === 'manual'
+    ? 'Apas\u0103 <strong style="color:var(--amber);">Start</strong> pentru a \u00EEncepe.'
+    : 'Apas\u0103 <strong style="color:var(--amber);">Start</strong> \u015Fi mergi pe conturul terenului.');
+}
+
+function _gpsDrawShowButtons(state) {
+  const map_btn = (id, show) => { const el = document.getElementById(id); if(el) el.style.display = show ? '' : 'none'; };
+  map_btn('gpsDrawStart',    state.start);
+  map_btn('gpsDrawAddPt',    state.addPt);
+  map_btn('gpsDrawStopTrk',  state.stopTrk);
+  map_btn('gpsDrawUndo',     state.undo);
+  map_btn('gpsDrawFinalize', state.finalize);
+}
+
+function gpsDrawSetStatus(html) {
+  const el = document.getElementById('gpsDrawStatus');
+  if (el) el.innerHTML = html;
+}
+
+function _gpsDrawAddCoord(lat, lng, acc) {
+  const lngLat = [lng, lat];
+  gpsDraw.points.push(lngLat);
+  gpsDraw.lastPos = {lat, lng, acc};
+
+  // Dot pe hartă
+  const dot = L.circleMarker([lat,lng], {
+    radius: 5, color: '#fbbf24', fillColor: '#fbbf24', fillOpacity: 1, weight: 2
+  }).addTo(map)
+    .bindTooltip('P' + gpsDraw.points.length, {permanent: false, direction:'top', offset:[0,-6]});
+  gpsDraw.dotMarkers.push(dot);
+
+  _gpsDrawRefreshPreview();
+  const n = gpsDraw.points.length;
+  const area = n >= 3 ? ' &bull; ~' + _gpsDrawPreviewArea() + ' ha' : '';
+  gpsDrawSetStatus(n + ' puncte' + area + '<br><small style="opacity:.7;">\u00B1' + Math.round(acc) + ' m precizie &mdash; ' + lat.toFixed(6) + ', ' + lng.toFixed(6) + '</small>');
+  _gpsDrawShowButtons({ start:false, addPt: gpsDraw.mode==='manual', stopTrk: gpsDraw.mode==='track', undo:n>0, finalize:n>=3 });
+}
+
+function _gpsDrawRefreshPreview() {
+  const pts = gpsDraw.points.map(p => [p[1], p[0]]); // [lat,lng] pentru Leaflet
+  if (gpsDraw.previewLine) { map.removeLayer(gpsDraw.previewLine); gpsDraw.previewLine = null; }
+  if (gpsDraw.previewPoly) { map.removeLayer(gpsDraw.previewPoly); gpsDraw.previewPoly = null; }
+  if (pts.length < 2) return;
+  gpsDraw.previewLine = L.polyline([...pts, pts[0]], {
+    color:'#fbbf24', weight:2.5, dashArray:'6,4', opacity:.9
+  }).addTo(map);
+  if (pts.length >= 3) {
+    gpsDraw.previewPoly = L.polygon(pts, {
+      color:'#fbbf24', fillColor:'#fbbf24', fillOpacity:.12, weight:0
+    }).addTo(map);
+  }
+}
+
+function _gpsDrawPreviewArea() {
+  if (gpsDraw.points.length < 3) return '—';
+  const ring = [...gpsDraw.points, gpsDraw.points[0]];
+  const geo  = { type:'Polygon', coordinates:[ring] };
+  return calculateAreaInHectares(geo);
+}
+
+// ── MOD MANUAL ─────────────────────────────────────────
+function gpsDrawStart() {
+  gpsDraw.active = true;
+  gpsDrawSetStatus('\u23F3 Se determin\u0103 pozi\u021Bia GPS...');
+  _gpsDrawShowButtons({ start:false, addPt: gpsDraw.mode==='manual', stopTrk: gpsDraw.mode==='track', undo:false, finalize:false });
+  if (gpsDraw.mode === 'manual') {
+    // Preluăm imediat prima poziție pentru a le arăta că GPS-ul e activ
+    navigator.geolocation.getCurrentPosition(pos => {
+      gpsDraw.lastPos = { lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy };
+      map.flyTo([pos.coords.latitude, pos.coords.longitude], Math.max(map.getZoom(), 16), {duration:1});
+      gpsDrawSetStatus('GPS activ \u2022 \u00B1' + Math.round(pos.coords.accuracy) + ' m<br><small style="opacity:.7;">Apas\u0103 📍 <strong>Adaug\u0103 punct</strong> la fiecare col\u021B.</small>');
+    }, err => { _gpsDrawError(err); }, { enableHighAccuracy:true, timeout:12000, maximumAge:0 });
+  } else {
+    // TRACK MODE — watchPosition
+    gpsDraw.watchId = navigator.geolocation.watchPosition(
+      pos => {
+        const { latitude:lat, longitude:lng, accuracy:acc } = pos.coords;
+        if (gpsDraw.points.length === 0) {
+          map.flyTo([lat,lng], Math.max(map.getZoom(),16), {duration:1});
+        }
+        // Adaugă punct doar dacă e la suficientă distanță față de ultimul
+        if (gpsDraw.points.length > 0) {
+          const prev = gpsDraw.points[gpsDraw.points.length-1];
+          const dist = _haversineM(prev[1], prev[0], lat, lng);
+          if (dist < gpsDraw.trackMinDist) return;
+        }
+        _gpsDrawAddCoord(lat, lng, acc);
+      },
+      err => { _gpsDrawError(err); },
+      { enableHighAccuracy:true, timeout:20000, maximumAge:1000 }
+    );
+  }
+}
+
+function gpsDrawAddPoint() {
+  // Mod manual — adaugă punct la poziția curentă
+  gpsDrawSetStatus('\u23F3 Se preia pozi\u021Bia...');
+  navigator.geolocation.getCurrentPosition(pos => {
+    _gpsDrawAddCoord(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+    map.panTo([pos.coords.latitude, pos.coords.longitude]);
+  }, err => { _gpsDrawError(err); }, { enableHighAccuracy:true, timeout:12000, maximumAge:0 });
+}
+
+function gpsDrawStopTrack() {
+  if (gpsDraw.watchId !== null) {
+    navigator.geolocation.clearWatch(gpsDraw.watchId);
+    gpsDraw.watchId = null;
+  }
+  const n = gpsDraw.points.length;
+  gpsDrawSetStatus(n + ' puncte \u00EEnregistrate' + (n >= 3 ? ' &bull; ~' + _gpsDrawPreviewArea() + ' ha' : '') + '<br><small style="opacity:.7;">Apas\u0103 ✅ <strong>Finalizeaz\u0103</strong> pentru a salva parcela.</small>');
+  _gpsDrawShowButtons({ start:false, addPt:false, stopTrk:false, undo:n>0, finalize:n>=3 });
+}
+
+function gpsDrawUndo() {
+  if (!gpsDraw.points.length) return;
+  gpsDraw.points.pop();
+  const dot = gpsDraw.dotMarkers.pop();
+  if (dot) map.removeLayer(dot);
+  _gpsDrawRefreshPreview();
+  const n = gpsDraw.points.length;
+  if (n === 0) { gpsDrawReset(false); return; }
+  gpsDrawSetStatus(n + ' puncte' + (n>=3?' &bull; ~'+_gpsDrawPreviewArea()+' ha':''));
+  _gpsDrawShowButtons({ start:false, addPt: gpsDraw.mode==='manual', stopTrk: gpsDraw.watchId!==null, undo:n>0, finalize:n>=3 });
+}
+
+function gpsDrawFinalize() {
+  if (gpsDraw.points.length < 3) { showToast('\u274C Ai nevoie de cel pu\u021Bin 3 puncte!', true); return; }
+  // Oprim watchPosition dacă rulează
+  if (gpsDraw.watchId !== null) { navigator.geolocation.clearWatch(gpsDraw.watchId); gpsDraw.watchId = null; }
+  // Construim GeoJSON polygon (închidem inelul)
+  const ring = [...gpsDraw.points, gpsDraw.points[0]];
+  const newIdx = allFeatures.length > 0 ? Math.max(...allFeatures.map(f => f.properties._index)) + 1 : 1;
+  if (!definedLayers.has('Terenuri Noi')) definedLayers.add('Terenuri Noi');
+  const newGeo = {
+    type: 'Feature',
+    geometry: { type: 'Polygon', coordinates: [ring] },
+    properties: {
+      _index: newIdx,
+      parcela: 'Parcela ' + newIdx,
+      strat: 'Terenuri Noi',
+      cultura: 'Necunoscut',
+      status: 'bun',
+      proprietar: 'Arend\u0103/Local'
+    }
+  };
+  itemVisibility[newIdx] = true;
+  groupVisibility['Terenuri Noi'] = true;
+  allFeatures.push(newGeo);
+  newGeo.properties.suprafata = calculateAreaInHectares(newGeo.geometry);
+  // Curăță preview și închide panoul
+  gpsDrawReset(true);
+  document.getElementById('gpsDrawPanel').style.display = 'none';
+  refreshMapData(); markDirty();
+  try {
+    const lb = L.geoJSON(newGeo);
+    if (lb.getBounds().isValid()) map.fitBounds(lb.getBounds(), { padding:[40,40], maxZoom:16 });
+  } catch(e){}
+  showToast('\u2713 Parcel\u0103 GPS salvat\u0103: ' + newGeo.properties.suprafata + ' ha');
+}
+
+function _gpsDrawError(err) {
+  const msgs = {1:'Accesul la loca\u021Bie refuzat.',2:'Pozi\u021Bia nu a putut fi determinat\u0103.',3:'Timeout GPS.'};
+  showToast('\u274C ' + (msgs[err.code]||'Eroare GPS.'), true);
+  gpsDrawSetStatus('\u274C ' + (msgs[err.code]||'Eroare GPS.') + ' \u00CEncearc\u0103 din nou.');
+  _gpsDrawShowButtons({ start:true, addPt:false, stopTrk:false, undo:gpsDraw.points.length>0, finalize:gpsDraw.points.length>=3 });
+}
+
+function _haversineM(lat1, lng1, lat2, lng2) {
+  const R = 6378137, dLat = (lat2-lat1)*Math.PI/180, dLng = (lng2-lng1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// ── Locație GPS ──
+let _gpsMarker = null;
+let _gpsCircle = null;
+function goToMyLocation() {
+  const btn = document.getElementById('btnGPS');
+  if (!navigator.geolocation) {
+    showToast('\u274C Browserul nu suport\u0103 geoloca\u0163ia.', true); return;
+  }
+  if (btn) { btn.textContent = '\u23F3 Se caut\u0103...'; btn.disabled = true; }
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const acc = pos.coords.accuracy; // metri
+
+      // Elimină marker-ul anterior dacă există
+      if (_gpsMarker) { map.removeLayer(_gpsMarker); _gpsMarker = null; }
+      if (_gpsCircle) { map.removeLayer(_gpsCircle); _gpsCircle = null; }
+
+      // Cerc de precizie
+      _gpsCircle = L.circle([lat, lng], {
+        radius: acc,
+        color: '#60a5fa', fillColor: '#60a5fa', fillOpacity: 0.12,
+        weight: 1.5, dashArray: '5,4'
+      }).addTo(map);
+
+      // Marker punct
+      _gpsMarker = L.circleMarker([lat, lng], {
+        radius: 9, color: '#fff', fillColor: '#3b82f6',
+        fillOpacity: 1, weight: 2.5
+      }).addTo(map)
+        .bindPopup('\uD83D\uDCCD <b>Pozi\u0163ia ta</b><br><small>\u00B1' + Math.round(acc) + ' m precizie</small>')
+        .openPopup();
+
+      map.flyTo([lat, lng], Math.max(map.getZoom(), 15), {duration: 1.2});
+
+      if (btn) { btn.textContent = '\uD83C\uDFAF Loca\u0163ia mea'; btn.disabled = false; }
+      showToast('\u2713 Pozi\u0163ie g\u0103sit\u0103 (\u00B1' + Math.round(acc) + ' m)');
+    },
+    function(err) {
+      if (btn) { btn.textContent = '\uD83C\uDFAF Loca\u0163ia mea'; btn.disabled = false; }
+      const msgs = {1:'Accesul la loca\u0163ie refuzat. Permite\u0163i permisiunea \u00EEn browser.',
+                    2:'Pozi\u0163ia nu a putut fi determinat\u0103.',
+                    3:'Timeout \u2014 \u00EEncerca\u0163i din nou.'};
+      showToast('\u274C ' + (msgs[err.code] || 'Eroare geoloca\u0163ie.'), true);
+    },
+    { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+  );
 }
 
 function printMap() {
