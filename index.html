@@ -5519,7 +5519,57 @@ function startUtilajeListener() {
   });
 }
 
-// Construiește lista din tabul de utilaje: checkbox vizibilitate + iconiţă + nume + ✏️ editare
+// ── Status online (LED verde/galben/roşu) + info sateliţi, pentru lista de utilaje ──
+// Bazat pe `timestampDevice` (ora la care tracker-ul a raportat efectiv poziţia),
+// NU pe `actualizatLa` (ora la care a scris scriptul local în Firestore) — dacă
+// tracker-ul se deconectează, Flespi tot mai întoarce ultima poziţie cunoscută la
+// fiecare interogare, deci `actualizatLa` ar rămâne "proaspăt" chiar şi cu utilajul
+// offline de ore întregi. `timestampDevice` rămâne îngheţat la ultima poziţie reală.
+const PRAG_ONLINE_VERDE_MS = 15 * 60 * 1000;  // ≤15 min de la ultima poziţie → verde (online)
+const PRAG_ONLINE_GALBEN_MS = 60 * 60 * 1000; // 15min–1h → galben; peste 1h → roşu
+
+function formatVarstaScurta(ms) {
+  const min = Math.round(ms / 60000);
+  if (min < 1) return 'chiar acum';
+  if (min < 60) return `${min} min`;
+  const ore = Math.floor(min / 60);
+  const minRest = min % 60;
+  return minRest ? `${ore}h ${minRest}min` : `${ore}h`;
+}
+
+function statusOnlineUtilaj(pozitie) {
+  const data = pozitie?.timestampDevice?.toDate ? pozitie.timestampDevice.toDate() : null;
+  if (!data) return { culoare: '#ef4444', eticheta: '🔴 Nicio poziţie primită încă', deconectat: true };
+  const varstaMs = Date.now() - data.getTime();
+  if (varstaMs <= PRAG_ONLINE_VERDE_MS) {
+    return { culoare: '#22c55e', eticheta: `🟢 Online — ultima poziţie ${formatVarstaScurta(varstaMs)}`, deconectat: false };
+  }
+  if (varstaMs <= PRAG_ONLINE_GALBEN_MS) {
+    return { culoare: '#eab308', eticheta: `🟡 Neconectat de ${formatVarstaScurta(varstaMs)} (sub o oră)`, deconectat: false };
+  }
+  return { culoare: '#ef4444', eticheta: `🔴 Deconectat de ${formatVarstaScurta(varstaMs)} (peste o oră)`, deconectat: true };
+}
+
+// Numărul de sateliţi GPS conectaţi vine din câmpul brut Flespi `position.satellites`
+// (deja capturat automat în `toateDatele`, la fel ca orice alt parametru Teltonika —
+// nu a fost nevoie de nicio modificare în flespi-bridge). Dacă tracker-ul nu trimite
+// acest parametru, arătăm explicit că informaţia nu e disponibilă (nu ascundem iconiţa).
+// Important: dacă utilajul e DECONECTAT (vezi statusOnlineUtilaj), valoarea cache-uită
+// din `toateDatele` e învechită şi nu mai reflectă realitatea (tracker-ul nu mai
+// transmite) — în acest caz arătăm explicit 0, nu ultima valoare primită.
+function infoSatelitiUtilaj(pozitie, statusOnline) {
+  if (statusOnline?.deconectat) {
+    return '🛰️ 0 sateliţi (deconectat)';
+  }
+  const nr = pozitie?.toateDatele?.['position.satellites'];
+  if (typeof nr === 'number') {
+    return nr === 1 ? '🛰️ 1 satelit conectat' : `🛰️ ${nr} sateliţi conectaţi`;
+  }
+  return '🛰️ Date sateliţi indisponibile pentru acest tracker';
+}
+
+// Construiește lista din tabul de utilaje: LED status + checkbox vizibilitate +
+// iconiţă + nume + info sateliţi + ✏️ editare
 function renderUtilajePanel() {
   const container = document.getElementById('utilajeListContainer');
   if (!container) return;
@@ -5542,19 +5592,35 @@ function renderUtilajePanel() {
     const setari = getUtilajSetari(ident, pozitie);
     const contact = pozitie.contact === true;
     const dataStr = pozitie.timestampDevice?.toDate ? pozitie.timestampDevice.toDate().toLocaleString('ro-RO') : '—';
+    const statusOnline = statusOnlineUtilaj(pozitie);
+    const satTitle = infoSatelitiUtilaj(pozitie, statusOnline);
     html += `<div class="tree-item" style="cursor:default;">
       <input type="checkbox" class="tree-checkbox" ${setari.vizibil!==false?'checked':''} onchange="toggleUtilajVizibil('${esc(ident)}',this.checked)">
-      <span style="font-size:15px;">${setari.icon||'🚜'}</span>
+      <span style="font-size:15px; position:relative; display:inline-flex;" title="${statusOnline.eticheta.replace(/"/g,'&quot;')}">
+        ${setari.icon||'🚜'}
+        <span style="position:absolute; bottom:-2px; right:-3px; width:9px; height:9px; border-radius:50%; background:${statusOnline.culoare}; border:1.5px solid var(--bg2); box-shadow:0 0 3px ${statusOnline.culoare};"></span>
+      </span>
       <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
         <span class="tree-item-name" style="color:${contact?'var(--green)':'var(--text)'};" title="${(setari.numeAfisat||ident).replace(/"/g,'&quot;')}">${setari.numeAfisat||ident}</span>
         <span style="font-size:9px; color:var(--muted); font-family:'JetBrains Mono',monospace;">${contact?'Contact pornit':'Contact oprit'} · ${pozitie.viteza ?? '—'} km/h · ${dataStr}</span>
       </div>
+      <span class="tree-add-btn" style="cursor:help;" title="${satTitle.replace(/"/g,'&quot;')}">🛰️</span>
       <span class="tree-add-btn" style="${utilajeTrasee[ident] ? 'opacity:1;filter:drop-shadow(0 0 3px var(--green));' : ''}" onclick="toggleUtilajTraseu('${esc(ident)}')" title="Arată/ascunde traseul parcurs">🛤️</span>
       <span class="tree-add-btn" onclick="editUtilajSetari('${esc(ident)}')" title="Editează nume/iconiţă">✏️</span>
     </div>`;
   });
   container.innerHTML = html;
 }
+
+// LED-ul de status online depinde doar de trecerea timpului (nu de un eveniment nou
+// din Firestore) — dacă un utilaj se deconectează, panoul nu s-ar mai redesena altfel
+// decât la următoarea poziţie primită. Reîmprospătăm aşadar periodic, dar STRICT cât
+// timp tab-ul Utilaje e vizibil, ca să nu facem randări inutile în fundal.
+setInterval(() => {
+  if (document.getElementById('tab-utilaje')?.classList.contains('active')) {
+    renderUtilajePanel();
+  }
+}, 60000);
 
 function setAllUtilajeVizibile(vizibil) {
   Object.keys(utilajeCunoscute).forEach(ident => {
